@@ -27,6 +27,7 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Scenamatica Scenario File"/>
+        <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.misc.ScenarioFileIconProvider"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
