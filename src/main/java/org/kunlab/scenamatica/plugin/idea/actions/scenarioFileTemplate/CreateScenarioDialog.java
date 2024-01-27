@@ -28,6 +28,7 @@ public class CreateScenarioDialog extends DialogWrapper
     private JPanel panelStage;
     private JCheckBox ckbTriggerManual;
     private JCheckBox ckbTriggerOnLoad;
+    private JTextField originalWorld;
 
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator)
     {
@@ -82,6 +83,8 @@ public class CreateScenarioDialog extends DialogWrapper
             boolean isSelected = ((JCheckBox) e.getSource()).isSelected();
             this.panelStage.setVisible(isSelected);
             this.panelStage.setEnabled(isSelected);
+
+            this.originalWorld.setEnabled(!isSelected);
         });
     }
 
@@ -189,6 +192,16 @@ public class CreateScenarioDialog extends DialogWrapper
     public StageType getStageType()
     {
         return (StageType) this.stageType.getSelectedItem();
+    }
+
+    public boolean hasOriginalWorld()
+    {
+        return !this.originalWorld.getText().isEmpty();
+    }
+
+    public String getOriginalWorld()
+    {
+        return this.originalWorld.getText();
     }
 
     public Long getStageSeed()

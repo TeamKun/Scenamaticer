@@ -71,10 +71,8 @@ public class ScenarioTemplateAction extends CreateFileAction
     {
         props.setProperty("SCENAMATICA_VERSION", wrapYAMLString(this.dialog.getScenamaticaVersion()));
         props.setProperty("SCENARIO_NAME", wrapYAMLString(this.dialog.getScenarioName()));
-        props.setProperty("SCENARIO_DESCRIPTION", wrapYAMLString(this.dialog.getScenarioDescription()));
-
-        if (this.dialog.isUseDedicatedStage())
-            props.setProperty("CONTEXT_USAGE", "true");
+        if (!this.dialog.getScenarioDescription().isEmpty())
+            props.setProperty("SCENARIO_DESCRIPTION", wrapYAMLString(this.dialog.getScenarioDescription()));
 
         // Trigger
         boolean hasTrigger = false;
@@ -85,9 +83,9 @@ public class ScenarioTemplateAction extends CreateFileAction
         if (!hasTrigger)
             props.setProperty("NO_TRIGGER", "true");
 
-
+        boolean contextUsage = false;
         // Stage
-        if (this.dialog.isUseDedicatedStage())
+        if (contextUsage |= this.dialog.isUseDedicatedStage())
         {
             props.setProperty("STAGE_USAGE", "true");
             if (this.dialog.getStageType() != StageType.NORMAL)
@@ -97,6 +95,15 @@ public class ScenarioTemplateAction extends CreateFileAction
             if (this.dialog.getStageSeed() != null)
                 props.setProperty("STAGE_SEED", wrapYAMLString(this.dialog.getStageSeed().toString()));
         }
+        else //noinspection ConstantValue
+            if (contextUsage |= this.dialog.hasOriginalWorld())
+            {
+                props.setProperty("STAGE_USAGE", "true");
+                props.setProperty("STAGE_ORIGINAL_NAME", wrapYAMLString(this.dialog.getOriginalWorld()));
+            }
+
+        if (contextUsage)
+            props.setProperty("CONTEXT_USAGE", "true");
     }
 
     @Override

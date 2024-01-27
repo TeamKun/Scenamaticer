@@ -4,30 +4,33 @@ name: "${SCENARIO_NAME}"
 description: "${SCENARIO_DESCRIPTION}"
 
 on:
-#if(${TRIGGER_MANUAL_DISPATCH})
+#if(${TRIGGER_MANUAL_DISPATCH} != "")
 - type: manual_dispatch
 #end
-#if(${TRIGGER_ON_LOAD})
+#if(${TRIGGER_ON_LOAD} != "")
 - type: on_load
 #end
-#if(${NO_TRIGGERS})
+#if(${NO_TRIGGER} != "")
   # TODO: Auto-generated scenario stub
 #end
 
-#if(${CONTEXT_USAGE})
+#if(${CONTEXT_USAGE} != "")
 context:
-#if(${STAGE_USAGE})
+#end
+#if(${STAGE_USAGE} != "")
   stage:
-#if(${STAGE_TYPE})
+#end
+#if(${STAGE_ORIGINAL_NAME} != "")
+    copyOf: "${STAGE_ORIGINAL_NAME}"
+#end
+#if(${STAGE_TYPE} != "")
     type: ${STAGE_TYPE}
 #end
-#if(${STAGE_ENVIRONMENT})
+#if(${STAGE_ENVIRONMENT} != "")
     env: "${STAGE_ENVIRONMENT}"
 #end
-#if(${STAGE_SEED})
+#if(${STAGE_SEED} != "")
     seed: ${STAGE_SEED}
-#end
-#end
 #end
 
 scenario:
