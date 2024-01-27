@@ -192,10 +192,4 @@ public class CreateScenarioDialog extends DialogWrapper
     {
         return this.centerPanel;
     }
-
-    public static void main(String[] args)
-    {
-        CreateScenarioDialog dialog = new CreateScenarioDialog(null, null);
-        dialog.show();
-    }
 }
