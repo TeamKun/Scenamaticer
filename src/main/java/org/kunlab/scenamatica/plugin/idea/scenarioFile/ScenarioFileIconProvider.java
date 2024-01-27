@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.misc;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile;
 
 import com.intellij.ide.FileIconProvider;
 import com.intellij.openapi.project.Project;

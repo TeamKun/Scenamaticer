@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.activities;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.ProjectActivity;
@@ -23,7 +23,7 @@ public class ScenamaticaSpellActivity implements ProjectActivity
     public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation)
     {
         SpellCheckerEngine spellCheckerEngine = SpellCheckerManager.getInstance(project).getSpellChecker();
-        if (spellCheckerEngine != null)
+        if (!(spellCheckerEngine == null || spellCheckerEngine.isDictionaryLoad(SCENAMATICA_DICTIONARY.getName())))
             spellCheckerEngine.addDictionary(SCENAMATICA_DICTIONARY);
 
         return null;

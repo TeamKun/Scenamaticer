@@ -27,11 +27,13 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Scenamatica Scenario File"/>
-        <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.misc.ScenarioFileIconProvider"/>
-        <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.activities.ScenamaticaSpellActivity"/>
+        <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider"/>
+        <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaSpellActivity"/>
+        <notificationGroup id="Scenamatica" displayType="NONE"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.SchemaProvider"/>
     </extensions>
     <actions>
         <action id="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"

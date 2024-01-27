@@ -15,7 +15,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import org.jetbrains.annotations.NotNull;
-import org.kunlab.scenamatica.plugin.idea.misc.ScenarioFileIconProvider;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider;
 
 import java.util.Properties;
 import java.util.function.Consumer;
