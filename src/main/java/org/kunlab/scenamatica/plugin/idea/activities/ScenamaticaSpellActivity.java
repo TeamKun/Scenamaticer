@@ -16,13 +16,15 @@ import java.util.Set;
 
 public class ScenamaticaSpellActivity implements ProjectActivity
 {
+    private static final Dictionary SCENAMATICA_DICTIONARY = new ScenamaticaDictionary();
+
     @Nullable
     @Override
     public Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation)
     {
         SpellCheckerEngine spellCheckerEngine = SpellCheckerManager.getInstance(project).getSpellChecker();
         if (spellCheckerEngine != null)
-            spellCheckerEngine.addDictionary(new ScenamaticaDictionary());
+            spellCheckerEngine.addDictionary(SCENAMATICA_DICTIONARY);
 
         return null;
     }
