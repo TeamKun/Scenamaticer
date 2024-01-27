@@ -76,6 +76,16 @@ public class ScenarioTemplateAction extends CreateFileAction
         if (this.dialog.isUseDedicatedStage())
             props.setProperty("CONTEXT_USAGE", "true");
 
+        // Trigger
+        boolean hasTrigger = false;
+        if (hasTrigger |= this.dialog.canTriggerManually())
+            props.setProperty("TRIGGER_MANUALLY_DISPATCH", "true");
+        if (hasTrigger |= this.dialog.shouldTriggerOnLoad())
+            props.setProperty("TRIGGER_ON_LOAD", "true");
+        if (!hasTrigger)
+            props.setProperty("NO_TRIGGER", "true");
+
+
         // Stage
         if (this.dialog.isUseDedicatedStage())
         {

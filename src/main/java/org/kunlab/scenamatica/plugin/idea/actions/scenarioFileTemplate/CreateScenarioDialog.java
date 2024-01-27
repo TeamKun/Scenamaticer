@@ -26,6 +26,8 @@ public class CreateScenarioDialog extends DialogWrapper
     private JComboBox<StageType> stageType;
     private JTextField stageSeed;
     private JPanel panelStage;
+    private JCheckBox ckbTriggerManual;
+    private JCheckBox ckbTriggerOnLoad;
 
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator)
     {
@@ -167,6 +169,16 @@ public class CreateScenarioDialog extends DialogWrapper
     public boolean isUseDedicatedStage()
     {
         return this.useDedicatedStageCheckBox.isSelected();
+    }
+
+    public boolean canTriggerManually()
+    {
+        return this.ckbTriggerManual.isSelected();
+    }
+
+    public boolean shouldTriggerOnLoad()
+    {
+        return this.ckbTriggerOnLoad.isSelected();
     }
 
     public StageEnvironment getStageEnvironment()
