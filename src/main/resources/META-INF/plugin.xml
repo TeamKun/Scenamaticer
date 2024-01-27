@@ -28,6 +28,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Scenamatica Scenario File"/>
         <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.misc.ScenarioFileIconProvider"/>
+        <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.activities.ScenamaticaSpellActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
