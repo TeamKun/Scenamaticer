@@ -30,6 +30,13 @@
         <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider"/>
         <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaSpellActivity"/>
         <notificationGroup id="Scenamatica" displayType="NONE"/>
+        <applicationService
+                serviceImplementation="org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsConfigurable"
+                displayName="Scenamatica"
+        />
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

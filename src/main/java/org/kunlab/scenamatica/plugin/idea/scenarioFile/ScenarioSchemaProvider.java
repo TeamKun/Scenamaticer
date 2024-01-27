@@ -12,12 +12,11 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
 import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 
 public class ScenarioSchemaProvider implements JsonSchemaFileProvider
 {
-    public static final String SCHEMA_URL = "https://scenamatica.kunlab.org/schema/scenamatica-file.json";
-
     private final Project project;
     private VirtualFile schemaFile;
     private boolean remoteDoesntEnabledWarned;
@@ -63,7 +62,7 @@ public class ScenarioSchemaProvider implements JsonSchemaFileProvider
             return null;
         }
 
-        return this.schemaFile = JsonFileResolver.urlToFile(SCHEMA_URL);
+        return this.schemaFile = JsonFileResolver.urlToFile(ScenamaticerSettingsState.getInstance().getSchemaURL());
     }
 
     @Override
@@ -75,7 +74,7 @@ public class ScenarioSchemaProvider implements JsonSchemaFileProvider
     @Override
     public @Nullable @NonNls String getRemoteSource()
     {
-        return SCHEMA_URL;
+        return ScenamaticerSettingsState.getInstance().getSchemaURL();
     }
 
     @Override
