@@ -45,6 +45,13 @@
         />
         <postStartupActivity
                 implementation="org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserListenerActivity"/>
+        <psi.referenceContributor
+                language="yaml"
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileReferenceContributor"
+        />
+        <annotator language="yaml"
+                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.HighlightAnnotator"/>
+        <fileBasedIndex implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
