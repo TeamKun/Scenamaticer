@@ -16,6 +16,9 @@ public class ScenamaticerSettingsState implements PersistentStateComponent<Scena
     public static final String DEFAULT_SCHEMA_URL = "https://scenamatica.kunlab.org/schema/scenamatica-file.json";
 
     private String schemaURL = DEFAULT_SCHEMA_URL;
+    private boolean refsWindowEnabled = true;
+    private boolean refsWindowAutoOpen = true;
+    private boolean refsWindowAutoClose = true;
 
     @Override
     public @Nullable ScenamaticerSettingsState getState()

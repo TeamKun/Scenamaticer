@@ -37,6 +37,14 @@
                 instance="org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsConfigurable"
                 displayName="Scenamatica"
         />
+        <toolWindow
+                id="Scenamatica"
+                factoryClass="org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindowFactory"
+                anchor="right"
+                icon="/icons/docs.png"
+        />
+        <postStartupActivity
+                implementation="org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserListenerActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

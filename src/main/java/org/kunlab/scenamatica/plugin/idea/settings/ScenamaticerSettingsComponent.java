@@ -1,32 +1,42 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
-import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.util.ui.FormBuilder;
 import javax.swing.JPanel;
 import lombok.Getter;
 
 public class ScenamaticerSettingsComponent
 {
     @Getter
-    private final JPanel mainPanel;
-    private final JBTextField schemaURLField;
+    private JPanel mainPanel;
+    private JBTextField schemaURL;
 
-    public ScenamaticerSettingsComponent()
-    {
-        this.mainPanel = FormBuilder.createFormBuilder()
-                .addLabeledComponent(new JBLabel("Schema URL: "), this.schemaURLField = new JBTextField())
-                .addComponentFillVertically(new JPanel(), 0)
-                .getPanel();
-    }
+    private JBCheckBox ckbRefsWindowEnabled;
+    private JBCheckBox ckbRefsWindowAutoOpen;
+    private JBCheckBox ckbRefsWindowAutoClose;
 
     public String getSchemaURL()
     {
-        return this.schemaURLField.getText();
+        return this.schemaURL.getText();
     }
 
     public void setSchemaURL(String schemaURL)
     {
-        this.schemaURLField.setText(schemaURL);
+        this.schemaURL.setText(schemaURL);
+    }
+
+    public boolean isRefsWindowEnabled()
+    {
+        return this.ckbRefsWindowEnabled.isSelected();
+    }
+
+    public boolean isRefsWindowAutoOpen()
+    {
+        return this.ckbRefsWindowAutoOpen.isSelected();
+    }
+
+    public boolean isRefsWindowAutoClose()
+    {
+        return this.ckbRefsWindowAutoClose.isSelected();
     }
 }

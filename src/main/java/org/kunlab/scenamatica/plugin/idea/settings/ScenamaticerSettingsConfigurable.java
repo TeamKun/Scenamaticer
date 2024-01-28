@@ -37,7 +37,12 @@ public class ScenamaticerSettingsConfigurable implements Configurable
     public boolean isModified()
     {
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
-        return !this.settings.getSchemaURL().equals(state.getSchemaURL());
+        boolean isNotModified = this.settings.getSchemaURL().equals(state.getSchemaURL())
+                || this.settings.isRefsWindowEnabled() == state.isRefsWindowEnabled()
+                || this.settings.isRefsWindowAutoOpen() == state.isRefsWindowAutoOpen()
+                || this.settings.isRefsWindowAutoClose() == state.isRefsWindowAutoClose();
+
+        return !isNotModified;
     }
 
     @Override
@@ -49,6 +54,15 @@ public class ScenamaticerSettingsConfigurable implements Configurable
             throw new ConfigurationException("Invalid URL provided");
         state.setSchemaURL(this.settings.getSchemaURL());
 
+        state.setRefsWindowEnabled(this.settings.isRefsWindowEnabled());
+        state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());
+        state.setRefsWindowAutoClose(this.settings.isRefsWindowAutoClose());
+
+        this.reloadSchema();
+    }
+
+    private void reloadSchema()
+    {
         ApplicationManager.getApplication().runWriteAction(() ->
         {
             for (Project proj : ProjectManager.getInstance().getOpenProjects())

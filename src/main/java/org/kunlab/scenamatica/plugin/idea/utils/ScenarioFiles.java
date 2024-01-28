@@ -16,6 +16,9 @@ public class ScenarioFiles
 
     public static boolean isScenarioFile(Project proj, VirtualFile file)
     {
+        if (file == null || file.isDirectory() || !file.isValid())
+            return false;
+
         if (!ApplicationManager.getApplication().isReadAccessAllowed())
             return false;
 
