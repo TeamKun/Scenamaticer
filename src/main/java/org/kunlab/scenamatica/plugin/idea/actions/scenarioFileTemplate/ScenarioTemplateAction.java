@@ -35,7 +35,7 @@ public class ScenarioTemplateAction extends CreateFileAction
     protected void invokeDialog(@NotNull Project project, @NotNull PsiDirectory directory, @NotNull Consumer<? super PsiElement[]> elementsConsumer)
     {
         CreateElementActionBase.MyInputValidator validator = new MyValidator(project, directory);
-        this.dialog = new CreateScenarioDialog(project, validator);
+        this.dialog = new CreateScenarioDialog(project, validator, directory);
         this.dialog.show();
 
         if (this.dialog.isOK())

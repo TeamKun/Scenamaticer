@@ -3,6 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.InputValidator;
+import com.intellij.psi.PsiDirectory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -18,6 +19,7 @@ public class CreateScenarioDialog extends DialogWrapper
 {
     private final Project project;
     private final InputValidator validator;
+    private final PsiDirectory directory;
     private JPanel centerPanel;
     private JTextField scenarioName;
     private JTextField fileName;
@@ -32,11 +34,12 @@ public class CreateScenarioDialog extends DialogWrapper
     private JCheckBox ckbTriggerOnLoad;
     private JTextField originalWorld;
 
-    protected CreateScenarioDialog(@Nullable Project project, InputValidator validator)
+    protected CreateScenarioDialog(@Nullable Project project, InputValidator validator, PsiDirectory directory)
     {
         super(project, true, IdeModalityType.PROJECT);
         this.project = project;
         this.validator = validator;
+        this.directory = directory;
 
         this.setTitle("Create new Scenamatica Scenario");
         this.init();
@@ -93,41 +96,68 @@ public class CreateScenarioDialog extends DialogWrapper
 
     private void checkValid()
     {
-        if (this.scenarioName.getText().isEmpty())
+        boolean errors = false;
+        JComponent errorComponent = null;
+
+        errorComponent = this.scenarioName;
         {
-            this.setOKActionEnabled(false);
-            this.setErrorText("Scenario name cannot be empty.", this.scenarioName);
-            return;
+            String errorMessage = null;
+            if (this.scenarioName.getText().isEmpty())
+                errorMessage = "Scenario name cannot be empty.";
+            else if (ScenarioFileIndexer.hasIndexFor(this.project, this.scenarioName.getText()))
+                errorMessage = "Scenario name is duplicated.";
+
+            if (errorMessage != null)
+            {
+                errors = true;
+                this.setOKActionEnabled(false);
+                this.setErrorText(errorMessage, errorComponent);
+            }
         }
 
-        if (ScenarioFileIndexer.isDuplicated(this.project, this.scenarioName.getText()))
+        errorComponent = this.fileName;
         {
-            this.setOKActionEnabled(false);
-            this.setErrorText("Scenario name is duplicated.", this.scenarioName);
-            return;
-        }
+            String errorMessage = null;
+            if (this.fileName.getText().isEmpty())
+                errorMessage = "File name cannot be empty.";
+            else if (!this.validator.checkInput(this.fileName.getText()))
+                errorMessage = "File name is invalid.";
+            else if (this.directory.findFile(this.fileName.getText() + ".yml") != null)
+                errorMessage = "File name is duplicated.";
 
-        boolean isFileNameValid = !this.fileName.getText().isEmpty() && this.validator.checkInput(this.fileName.getText());
-        if (!isFileNameValid)
-        {
-            this.setOKActionEnabled(false);
-            this.setErrorText("Invalid file name.", this.fileName);
-            return;
+            if (errorMessage != null)
+            {
+                errors = true;
+                this.setOKActionEnabled(false);
+                this.setErrorText(errorMessage, errorComponent);
+            }
+
         }
 
         if (this.useDedicatedStageCheckBox.isSelected())
         {
-            boolean isStageSeedValid = this.stageSeed.getText().isEmpty() || this.stageSeed.getText().matches("[0-9]+");
-            if (!isStageSeedValid)
+            errorComponent = this.stageSeed;
             {
-                this.setOKActionEnabled(false);
-                this.setErrorText("Invalid stage seed.", this.stageSeed);
-                return;
+                String errorMessage = null;
+                boolean isStageSeedValid = this.stageSeed.getText().isEmpty() || this.stageSeed.getText().matches("[0-9]+");
+                if (!isStageSeedValid)
+                    errorMessage = "Stage seed is invalid.";
+
+                if (errorMessage != null)
+                {
+                    errors = true;
+                    this.setOKActionEnabled(false);
+                    this.setErrorText(errorMessage, errorComponent);
+                }
             }
+
         }
 
-        this.setOKActionEnabled(true);
-        this.setErrorText(null);
+        if (errors)
+        {
+            this.setOKActionEnabled(true);
+            this.setErrorText(null);
+        }
     }
 
     private void updateFileName()

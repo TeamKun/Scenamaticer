@@ -118,4 +118,9 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
     {
         return FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)).size() > 1;
     }
+
+    public static boolean hasIndexFor(Project proj, String name)
+    {
+        return !FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)).isEmpty();
+    }
 }
