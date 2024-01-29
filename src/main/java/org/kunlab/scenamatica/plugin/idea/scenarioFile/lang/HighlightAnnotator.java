@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNamedElement;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.fixes.ValueIncrementalFix;
 import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -55,6 +56,7 @@ public class HighlightAnnotator implements Annotator
         else if (ScenarioFileIndexer.isDuplicated(element.getProject(), scenarioName))
             holder.newAnnotation(HighlightSeverity.ERROR, "Scenario name is duplicated")
                     .range(element)
+                    .withFix(new ValueIncrementalFix(element, scenarioName))
                     .create();
 
         if (scenarioName.length() > 16)

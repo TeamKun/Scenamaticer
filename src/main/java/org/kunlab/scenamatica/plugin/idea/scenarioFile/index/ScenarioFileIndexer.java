@@ -86,7 +86,7 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
             public boolean acceptInput(@NotNull IndexedFile file)
             {
                 PsiFile psiFile = YAMLUtils.toPSIFile(file.getProject(), file.getFile());
-                return ScenarioFiles.isScenarioFile(psiFile) && YAMLUtils.hasKey(psiFile, ScenarioFiles.KEY_NAME);
+                return ScenarioFiles.isScenarioFile(psiFile) && YAMLUtils.getValueText(psiFile, ScenarioFiles.KEY_NAME) != null;
             }
         };
     }
