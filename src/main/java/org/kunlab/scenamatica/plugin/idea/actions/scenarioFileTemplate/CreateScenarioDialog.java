@@ -12,9 +12,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
 
 public class CreateScenarioDialog extends DialogWrapper
 {
+    private final Project project;
     private final InputValidator validator;
     private JPanel centerPanel;
     private JTextField scenarioName;
@@ -33,6 +35,7 @@ public class CreateScenarioDialog extends DialogWrapper
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator)
     {
         super(project, true, IdeModalityType.PROJECT);
+        this.project = project;
         this.validator = validator;
 
         this.setTitle("Create new Scenamatica Scenario");
@@ -90,11 +93,17 @@ public class CreateScenarioDialog extends DialogWrapper
 
     private void checkValid()
     {
-        boolean isNameValid = !this.scenarioName.getText().isEmpty();
-        if (!isNameValid)
+        if (this.scenarioName.getText().isEmpty())
         {
             this.setOKActionEnabled(false);
             this.setErrorText("Scenario name cannot be empty.", this.scenarioName);
+            return;
+        }
+
+        if (ScenarioFileIndexer.isDuplicated(this.project, this.scenarioName.getText()))
+        {
+            this.setOKActionEnabled(false);
+            this.setErrorText("Scenario name is duplicated.", this.scenarioName);
             return;
         }
 
