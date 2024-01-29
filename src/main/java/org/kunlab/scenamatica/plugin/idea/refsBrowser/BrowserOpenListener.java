@@ -10,7 +10,7 @@ public class BrowserOpenListener implements ToolWindowManagerListener
     @Override
     public void stateChanged(@NotNull ToolWindowManager toolWindowManager, @NotNull ToolWindowManagerListener.ToolWindowManagerEventType changeType)
     {
-        if (changeType != ToolWindowManagerEventType.ShowToolWindow)
+        if (changeType != ToolWindowManagerEventType.ActivateToolWindow)
             return;
 
         ToolWindow window = toolWindowManager.getToolWindow("Scenamatica");
