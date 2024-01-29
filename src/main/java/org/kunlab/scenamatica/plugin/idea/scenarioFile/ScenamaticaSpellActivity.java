@@ -37,6 +37,8 @@ public class ScenamaticaSpellActivity implements ProjectActivity
         {
             ArrayListSet<String> keywords = new ArrayListSet<>();
             keywords.add("scenamatica");
+            keywords.add("GameMode".toLowerCase());
+            keywords.add("NamespacedKey".toLowerCase());
 
             KEYWORDS = Collections.unmodifiableSet(keywords);
         }
