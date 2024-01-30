@@ -43,8 +43,10 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
 
             String name = YAMLUtils.getValueText(file, ScenarioFiles.KEY_NAME);
             assert name != null;
-            String description = YAMLUtils.getValueText(file, ScenarioFiles.KEY_DESCRIPTION);
-            if (description == null)
+            String description;
+            if (YAMLUtils.hasValidKey(file, ScenarioFiles.KEY_DESCRIPTION))
+                description = YAMLUtils.getValueText(file, ScenarioFiles.KEY_DESCRIPTION);
+            else
                 description = "";
 
             return Map.of(
@@ -86,7 +88,7 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
             public boolean acceptInput(@NotNull IndexedFile file)
             {
                 PsiFile psiFile = YAMLUtils.toPSIFile(file.getProject(), file.getFile());
-                return ScenarioFiles.isScenarioFile(psiFile) && YAMLUtils.getValueText(psiFile, ScenarioFiles.KEY_NAME) != null;
+                return ScenarioFiles.isScenarioFile(psiFile) && YAMLUtils.hasValidKey(psiFile, ScenarioFiles.KEY_NAME);
             }
         };
     }
@@ -122,5 +124,10 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
     public static boolean hasIndexFor(Project proj, String name)
     {
         return !FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)).isEmpty();
+    }
+
+    public static List<ScenarioFileIndex> getIndicesFor(Project proj, String name)
+    {
+        return new ArrayList<>(FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)));
     }
 }

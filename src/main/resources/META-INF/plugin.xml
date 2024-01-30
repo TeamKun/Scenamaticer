@@ -49,9 +49,12 @@
                 language="yaml"
                 implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileReferenceContributor"
         />
-        <annotator language="yaml"
-                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.HighlightAnnotator"/>
         <fileBasedIndex implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer"/>
+        <localInspection
+                groupName="Scenamatica"
+                enabledByDefault="true"
+                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.inspections.ScenarioFileDuplicationInspector"
+                language="yaml" displayName="Duplicated Scenario names"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

@@ -7,6 +7,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+@NotNull
 public record ScenarioFileIndex(String name,
                                 String description,
                                 String path) implements DataExternalizer<ScenarioFileIndex>

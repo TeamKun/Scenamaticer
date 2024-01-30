@@ -35,10 +35,15 @@ public class YAMLUtils
                 && ((LeafPsiElement) psiElement).getElementType() == YAMLTokenTypes.SCALAR_KEY;
     }
 
+    public static boolean isKeyValue(PsiElement psiElement)
+    {
+        return psiElement instanceof YAMLKeyValue;
+    }
+
     public static boolean isValue(PsiElement psiElement)
     {
-        if (psiElement.getParent() instanceof YAMLKeyValue)
-            return true;
+        if (psiElement == null)
+            return false;
 
         IElementType elementType;
         if (psiElement instanceof LeafPsiElement)
@@ -60,8 +65,12 @@ public class YAMLUtils
     {
         if (isKey(psiElement))
             return psiElement;
+        else if (psiElement instanceof YAMLKeyValue)
+            return psiElement.getFirstChild();
+        else if (isValue(psiElement))
+            return psiElement.getParent().getFirstChild();
         else
-            return psiElement.getParent().getParent().getFirstChild();
+            throw new IllegalArgumentException("Cannot get key from " + psiElement);
     }
 
     public static PsiElement getValue(PsiElement psiElement)
@@ -73,7 +82,7 @@ public class YAMLUtils
         else if (isValue(psiElement))
             return psiElement;
         else
-            return null;
+            throw new IllegalArgumentException("Cannot get value from " + psiElement);
     }
 
     public static String getKeyText(PsiElement psiElement)
@@ -81,19 +90,15 @@ public class YAMLUtils
         return getKey(psiElement).getText();
     }
 
-    public static String getValueText(PsiElement psiElement)
+    public static String getValueTextByKey(PsiElement psiElement)
     {
-        PsiElement value = getValue(psiElement);
-        if (value == null)
-            return null;
-
-        return getValueText(psiElement, value);
+        return getValueText(getValue(psiElement));
     }
 
-    public static String getValueText(PsiElement key, PsiElement value)
+    public static String getValueText(PsiElement value)
     {
         String text = value.getText();
-        if (key instanceof YAMLQuotedText || value.getParent().getParent().getLastChild() instanceof YAMLQuotedText)
+        if (value instanceof YAMLQuotedText)
             return text.substring(1, text.length() - 1);
         else
             return text;
@@ -120,41 +125,46 @@ public class YAMLUtils
         return String.join(".", getAbsoluteKeys(psiElement));
     }
 
-    public static String isInKey(PsiElement element, String key)
+    public static boolean isInKey(PsiElement element, String key)
     {
         String[] keys = getAbsoluteKeys(element);
-        for (String s : keys)
-        {
-            if (s.equals(key) || "*".equals(s))
-                return s;
-        }
-        return null;
+        String[] keyParts = key.split("\\.");
+        if (keys.length < keyParts.length)
+            return false;
+
+        for (int i = 0; i < keyParts.length; i++)
+            if (!keys[i].equals(keyParts[i]))
+                return false;
+
+        return true;
     }
 
     public static PsiElement getValue(PsiFile file, String key)
     {
-        if (file == null || !file.isValid() || file.getFileType() != YAMLFileType.YML)
-            return null;
+        if (!isValidYAMLFile(file))
+            throw new IllegalArgumentException("Cannot get value of key " + key + " in file " + file);
 
         YAMLKeyValue kv = YAMLUtil.getQualifiedKeyInFile((YAMLFile) file, key.split("\\."));
         if (kv == null)
-            return null;
+            throw new IllegalArgumentException("Cannot find key " + key + " in file " + file.getName());
 
         return kv.getValue();
     }
 
     public static String getValueText(PsiFile file, String key)
     {
-        PsiElement element = getValue(file, key);
-        if (element == null)
-            return null;
-        else
-            return getValueText(element);
+        return getValueTextByKey(getValue(file, key));
     }
 
-    public static boolean hasKey(PsiFile file, String key)
+    public static boolean hasValidKey(PsiFile file, String key)
     {
-        return getValue(file, key) != null;
+        YAMLKeyValue kv = YAMLUtil.getQualifiedKeyInFile((YAMLFile) file, key.split("\\."));
+        return kv != null && isValue(kv.getValue());
+    }
+
+    private static boolean isValidYAMLFile(PsiFile file)
+    {
+        return file != null && file.isValid() && file.getFileType() == YAMLFileType.YML;
     }
 
     public static PsiFile toPSIFile(Project proj, VirtualFile file)

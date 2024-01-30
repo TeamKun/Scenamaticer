@@ -1,6 +1,5 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.fixes;
 
-import com.intellij.codeInsight.FileModificationService;
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.codeInspection.util.IntentionFamilyName;
 import com.intellij.codeInspection.util.IntentionName;
@@ -51,8 +50,6 @@ public class ValueIncrementalFix extends LocalQuickFixAndIntentionActionOnPsiEle
         if (this.isAvailable(project, editor, file))
         {
             LOG.assertTrue(file == element.getContainingFile());
-            if (!FileModificationService.getInstance().prepareFileForWrite(file))
-                return;
 
             int start = element.getTextRange().getStartOffset();
             int end = element.getTextRange().getEndOffset();
