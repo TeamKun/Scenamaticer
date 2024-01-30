@@ -37,6 +37,9 @@ public class YAMLUtils
 
     public static boolean isValue(PsiElement psiElement)
     {
+        if (psiElement.getParent() instanceof YAMLKeyValue)
+            return true;
+
         IElementType elementType;
         if (psiElement instanceof LeafPsiElement)
             elementType = ((LeafPsiElement) psiElement).getElementType();
