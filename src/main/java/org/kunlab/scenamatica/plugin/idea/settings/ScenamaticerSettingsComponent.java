@@ -3,6 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.settings;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import lombok.Getter;
 
 public class ScenamaticerSettingsComponent
@@ -10,6 +11,7 @@ public class ScenamaticerSettingsComponent
     @Getter
     private JPanel mainPanel;
     private JBTextField schemaURL;
+    private JTextField contentServerURL;
 
     private JBCheckBox ckbRefsWindowEnabled;
     private JBCheckBox ckbRefsWindowAutoOpen;
@@ -25,7 +27,17 @@ public class ScenamaticerSettingsComponent
         this.schemaURL.setText(schemaURL);
     }
 
-    public boolean isRefsWindowEnabled()
+    public String getContentServerURL()
+    {
+        return this.contentServerURL.getText();
+    }
+
+    public void setContentServerURL(String contentServerURL)
+    {
+        this.contentServerURL.setText(contentServerURL);
+    }
+
+    public boolean isRefsNavigationEnabled()
     {
         return this.ckbRefsWindowEnabled.isSelected();
     }
@@ -35,8 +47,23 @@ public class ScenamaticerSettingsComponent
         return this.ckbRefsWindowAutoOpen.isSelected();
     }
 
+    public void setRefsWindowAutoOpen(boolean refsWindowAutoOpen)
+    {
+        this.ckbRefsWindowAutoOpen.setSelected(refsWindowAutoOpen);
+    }
+
     public boolean isRefsWindowAutoClose()
     {
         return this.ckbRefsWindowAutoClose.isSelected();
+    }
+
+    public void setRefsWindowAutoClose(boolean refsWindowAutoClose)
+    {
+        this.ckbRefsWindowAutoClose.setSelected(refsWindowAutoClose);
+    }
+
+    public void setRefsWindowEnabled(boolean refsWindowEnabled)
+    {
+        this.ckbRefsWindowEnabled.setSelected(refsWindowEnabled);
     }
 }

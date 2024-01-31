@@ -9,6 +9,7 @@ import com.intellij.openapi.util.NlsContexts;
 import com.jetbrains.jsonSchema.ide.JsonSchemaService;
 import javax.swing.JComponent;
 import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 
 import java.net.URL;
 
@@ -29,6 +30,11 @@ public class ScenamaticerSettingsConfigurable implements Configurable
 
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
         this.settings.setSchemaURL(state.getSchemaURL());
+        this.settings.setContentServerURL(state.getContentServerURL());
+
+        this.settings.setRefsWindowEnabled(state.isRefsNavigationEnabled());
+        this.settings.setRefsWindowAutoOpen(state.isRefsWindowAutoOpen());
+        this.settings.setRefsWindowAutoClose(state.isRefsWindowAutoClose());
 
         return this.settings.getMainPanel();
     }
@@ -38,9 +44,10 @@ public class ScenamaticerSettingsConfigurable implements Configurable
     {
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
         boolean isNotModified = this.settings.getSchemaURL().equals(state.getSchemaURL())
-                || this.settings.isRefsWindowEnabled() == state.isRefsWindowEnabled()
-                || this.settings.isRefsWindowAutoOpen() == state.isRefsWindowAutoOpen()
-                || this.settings.isRefsWindowAutoClose() == state.isRefsWindowAutoClose();
+                && this.settings.getContentServerURL().equals(state.getContentServerURL())
+                && this.settings.isRefsNavigationEnabled() == state.isRefsNavigationEnabled()
+                && this.settings.isRefsWindowAutoOpen() == state.isRefsWindowAutoOpen()
+                && this.settings.isRefsWindowAutoClose() == state.isRefsWindowAutoClose();
 
         return !isNotModified;
     }
@@ -51,13 +58,17 @@ public class ScenamaticerSettingsConfigurable implements Configurable
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
 
         if (!isValidUrl(this.settings.getSchemaURL()))
-            throw new ConfigurationException("Invalid URL provided");
+            throw new ConfigurationException("Invalid URL provided for schema");
         state.setSchemaURL(this.settings.getSchemaURL());
+        if (!isValidUrl(state.getSchemaURL()))
+            throw new ConfigurationException("Invalid URL provided for scenamatica contents");
+        state.setContentServerURL(this.settings.getContentServerURL());
 
-        state.setRefsWindowEnabled(this.settings.isRefsWindowEnabled());
+        state.setRefsNavigationEnabled(this.settings.isRefsNavigationEnabled());
         state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());
         state.setRefsWindowAutoClose(this.settings.isRefsWindowAutoClose());
 
+        SchemaProviderService.getInstance().getSchemaProvider().setContentServerURL(state.getContentServerURL());
         this.reloadSchema();
     }
 

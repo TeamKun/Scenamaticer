@@ -36,6 +36,6 @@ public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
     @Override
     public boolean isApplicable(@NotNull Project project)
     {
-        return ScenamaticerSettingsState.getInstance().isRefsWindowEnabled();
+        return ScenamaticerSettingsState.getInstance().isRefsNavigationEnabled();
     }
 }

@@ -14,9 +14,11 @@ import org.jetbrains.annotations.Nullable;
 public class ScenamaticerSettingsState implements PersistentStateComponent<ScenamaticerSettingsState>
 {
     public static final String DEFAULT_SCHEMA_URL = "https://scenamatica.kunlab.org/schema/scenamatica-file.json";
+    public static final String DEFAULT_CONTENT_SERVER_URL = "https://scenamatica.kunlab.org/schema/";
 
     private String schemaURL = DEFAULT_SCHEMA_URL;
-    private boolean refsWindowEnabled = true;
+    private String contentServerURL = DEFAULT_CONTENT_SERVER_URL;
+    private boolean refsNavigationEnabled = true;
     private boolean refsWindowAutoOpen = true;
     private boolean refsWindowAutoClose = true;
 
