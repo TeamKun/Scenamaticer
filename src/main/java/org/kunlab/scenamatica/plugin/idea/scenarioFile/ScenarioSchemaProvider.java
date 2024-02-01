@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
-import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 
 public class ScenarioSchemaProvider implements JsonSchemaFileProvider
 {

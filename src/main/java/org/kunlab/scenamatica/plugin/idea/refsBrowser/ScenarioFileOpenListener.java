@@ -8,8 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
-import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 
 public class ScenarioFileOpenListener implements FileEditorManagerListener
 {

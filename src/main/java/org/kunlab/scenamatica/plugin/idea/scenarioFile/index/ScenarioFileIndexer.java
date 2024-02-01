@@ -15,7 +15,7 @@ import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLFileType;
-import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;

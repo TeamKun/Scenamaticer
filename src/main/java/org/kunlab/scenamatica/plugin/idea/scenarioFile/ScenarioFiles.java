@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.utils;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -11,6 +11,7 @@ import org.jetbrains.yaml.YAMLFileType;
 import org.jetbrains.yaml.YAMLUtil;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -23,6 +24,9 @@ public class ScenarioFiles
 
     public static boolean isScenarioFile(Project proj, VirtualFile file)
     {
+        if (file.getFileType() != YAMLFileType.YML)
+            return false;
+
         PsiFile psiFile = YAMLUtils.toPSIFile(proj, file);
         if (psiFile == null || !(psiFile.getFileType() instanceof YAMLFileType))
             return false;

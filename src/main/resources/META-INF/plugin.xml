@@ -55,6 +55,8 @@
                 enabledByDefault="true"
                 implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.inspections.ScenarioFileDuplicationInspector"
                 language="yaml" displayName="Duplicated Scenario names"/>
+        <postStartupActivity
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioTreeActivity"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

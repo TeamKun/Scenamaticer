@@ -18,6 +18,9 @@ import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLQuotedText;
 import org.jetbrains.yaml.psi.YAMLScalar;
+import org.jetbrains.yaml.psi.YAMLSequenceItem;
+import org.jetbrains.yaml.psi.YAMLValue;
+import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +47,8 @@ public class YAMLUtils
     {
         if (psiElement == null)
             return false;
+        else if (psiElement instanceof YAMLValue)
+            return true;
 
         IElementType elementType;
         if (psiElement instanceof LeafPsiElement)
@@ -61,7 +66,7 @@ public class YAMLUtils
                 || type == YAMLElementTypes.SCALAR_LIST_VALUE;
     }
 
-    public static PsiElement getKey(PsiElement psiElement)
+    private static PsiElement getKey(PsiElement psiElement)
     {
         if (isKey(psiElement))
             return psiElement;
@@ -87,6 +92,21 @@ public class YAMLUtils
 
     public static String getKeyText(PsiElement psiElement)
     {
+        if (psiElement instanceof YAMLBlockMappingImpl)
+        {
+            String text = psiElement.getText();
+            if (text.endsWith(":"))
+                return text.substring(0, text.length() - 1);
+            else
+                return text;
+        }
+        else if (psiElement instanceof YAMLSequenceItem)
+        {
+            PsiElement[] children = psiElement.getParent().getChildren();
+            for (int i = 0; i < children.length; i++)
+                if (children[i] == psiElement)
+                    return "\0" + i + "\0";
+        }
         return getKey(psiElement).getText();
     }
 
@@ -108,16 +128,21 @@ public class YAMLUtils
     {
         List<String> keys = new ArrayList<>();
         PsiElement current = psiElement;
-        keys.add(getKeyText(current));
 
         while (current != null)
         {
-            if (isKey(current))
+            if (isKeyValue(current) || isSequenceItem(current))
                 keys.add(0, getKeyText(current));
             current = current.getParent();
         }
 
+
         return keys.toArray(new String[0]);
+    }
+
+    private static boolean isSequenceItem(PsiElement current)
+    {
+        return current instanceof YAMLSequenceItem;
     }
 
     public static String getAbsoluteKeyText(PsiElement psiElement)
@@ -180,6 +205,7 @@ public class YAMLUtils
 
     public static boolean isTopLevelKey(PsiElement element)
     {
-        return element.getParent().getParent().getParent() instanceof YAMLDocument;
+        return element.getParent().getParent().getParent() instanceof YAMLDocument
+                || element.getParent().getParent() instanceof YAMLDocument;
     }
 }

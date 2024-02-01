@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLFileType;
 import org.jetbrains.yaml.psi.YAMLFile;
-import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 
 public class ScenarioFileIconProvider implements FileIconProvider
 {

@@ -10,10 +10,10 @@ import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndex;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.fixes.ValueIncrementalFix;
-import org.kunlab.scenamatica.plugin.idea.utils.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenarioFileDuplicationInspector extends LocalInspectionTool
