@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
@@ -72,6 +73,16 @@ public class SchemaResolver
             JsonObject properties = current.getAsJsonObject("properties");
             if (properties.has(part))
                 return properties.getAsJsonObject(part);
+        }
+        else if (current.has("anyOf"))
+        {
+            for (JsonElement anyOf : current.getAsJsonArray("anyOf"))
+            {
+                JsonObject obj = anyOf.getAsJsonObject();
+                boolean canApplicable = processPart(obj, part) != null;
+                if (canApplicable)
+                    return obj;
+            }
         }
 
         if (this.provider.hasDefinition(typeName))
