@@ -8,7 +8,6 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.jcef.JBCefApp;
 import org.jetbrains.annotations.NotNull;
-import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
 
 public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
 {
@@ -31,11 +30,5 @@ public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
 
         toolWindow.getContentManager().addContent(content);
         toolWindow.setStripeTitle("Scenamatica References");
-    }
-
-    @Override
-    public boolean isApplicable(@NotNull Project project)
-    {
-        return ScenamaticerSettingsState.getInstance().isRefsNavigationEnabled();
     }
 }
