@@ -3,10 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.refsBrowser;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
@@ -19,7 +16,7 @@ public class ScenarioFileOpenListener implements FileEditorManagerListener
         if (!ScenamaticerSettingsState.getInstance().isRefsWindowAutoOpen())
             return;
 
-        RefsBrowserWindow window = getCurrentWindow(source.getProject());
+        RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(source.getProject());
         if (window == null || window.isOpen())
             return;
 
@@ -31,11 +28,14 @@ public class ScenarioFileOpenListener implements FileEditorManagerListener
     public void selectionChanged(@NotNull FileEditorManagerEvent event)
     {
 
-        RefsBrowserWindow window = getCurrentWindow(event.getManager().getProject());
+        RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(event.getManager().getProject());
         if (window == null)
             return;
 
         VirtualFile newFile = event.getNewFile();
+        if (newFile == null)
+            return;
+
         boolean isScenarioFile = ScenarioFiles.isScenarioFile(event.getManager().getProject(), newFile);
         if (!isScenarioFile && window.isOpen())
         {
@@ -55,19 +55,11 @@ public class ScenarioFileOpenListener implements FileEditorManagerListener
         if (!ScenamaticerSettingsState.getInstance().isRefsWindowAutoClose())
             return;
 
-        RefsBrowserWindow window = getCurrentWindow(source.getProject());
+        RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(source.getProject());
         if (window == null || !window.isOpen())
             return;
 
         window.hide();
     }
 
-    private static RefsBrowserWindow getCurrentWindow(Project proj)
-    {
-        ToolWindow window = ToolWindowManager.getInstance(proj).getToolWindow("Scenamatica");
-        if (window == null)
-            return null;
-
-        return RefsBrowserWindow.getCurrentWindow(window);
-    }
 }

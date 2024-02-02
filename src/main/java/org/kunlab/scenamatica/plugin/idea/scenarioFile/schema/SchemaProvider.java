@@ -1,24 +1,23 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
+import com.google.gson.JsonObject;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.impl.http.FileDownloadingAdapter;
-import com.intellij.openapi.vfs.impl.http.HttpVirtualFile;
-import com.intellij.openapi.vfs.impl.http.RemoteFileInfo;
+import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader;
 import org.kunlab.scenamatica.plugin.idea.utils.URLUtils;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 public class SchemaProvider
 {
     public static final String PATH_FILE_META = "meta.json";
 
-    private final Map<String, VirtualFile> actionsCache;
-    private final Map<String, VirtualFile> definitionCache;
+    @Getter
+    private final SchemaResolver schemaResolver;
+    private final Map<String, JsonObject> actionsCache;
+    private final Map<String, JsonObject> definitionCache;
 
     private String contentServerURL;
 
@@ -27,9 +26,15 @@ public class SchemaProvider
     @Getter
     private SchemaMeta meta;
 
+    @Getter
+    private JsonObject primeFile;
+
+    private boolean initialized;
+
     public SchemaProvider(String contentServerURL)
     {
         this.contentServerURL = contentServerURL;
+        this.schemaResolver = new SchemaResolver(this);
         this.actionsCache = new HashMap<>();
         this.definitionCache = new HashMap<>();
 
@@ -39,51 +44,60 @@ public class SchemaProvider
     public void setContentServerURL(String contentServerURL)
     {
         this.contentServerURL = contentServerURL;
-        this.updateFiles(true);
+        this.initialized = false;
     }
 
-    public VirtualFile getActionFile(String action)
+    public JsonObject getActionFile(String action)
     {
         checkMetaLoaded();
 
         if (this.actionsCache.containsKey(action))
             return this.actionsCache.get(action);
 
-        ensureActionExistence(action);
+        if (!this.meta.isActionExists(action))
+            throw new IllegalStateException("Action '" + action + "' does not exist");
 
         String group = this.meta.getActionGroup(action);
         String path = buildActionFilePath(action, group);
-        VirtualFile file = getFileByUrl(path);
+        JsonObject file = TempFileDownloader.downloadJsonSync(path);
 
         this.actionsCache.put(action, file);
         return file;
     }
 
-    public VirtualFile getDefinitionFile(String definition)
+    public boolean hasDefinition(String definition)
+    {
+        checkMetaLoaded();
+        return this.meta.isDefinitionExists(definition);
+    }
+
+    public boolean hasAction(String action)
+    {
+        checkMetaLoaded();
+        return this.meta.isActionExists(action);
+    }
+
+    public JsonObject getDefinitionFile(String definition)
     {
         checkMetaLoaded();
 
-        if (this.definitionCache.containsKey(definition))
-            return this.definitionCache.get(definition);
-
-        validateDefinitionExistence(definition);
-
-        String path = buildDefinitionFilePath(definition);
-        VirtualFile file = getFileByUrl(path);
-
-        this.definitionCache.put(definition, file);
-        return file;
-    }
-
-    private void validateDefinitionExistence(String definition)
-    {
         if (!this.meta.isDefinitionExists(definition))
             throw new IllegalStateException("Definition '" + definition + "' does not exist");
+
+        String definitionGroup = this.meta.getDefinitionGroup(definition);
+        if (this.definitionCache.containsKey(definitionGroup))
+            return findDefinition(this.definitionCache.get(definitionGroup), definition);
+
+        String path = buildDefinitionFilePath(definitionGroup);
+        JsonObject file = TempFileDownloader.downloadJsonSync(path);
+
+        this.definitionCache.put(definitionGroup, file);
+        return findDefinition(file, definition);
     }
 
-    private String buildDefinitionFilePath(String definition)
+    private String buildDefinitionFilePath(String definitionGroup)
     {
-        return URLUtils.concat(this.contentServerURL, this.meta.getDefinitionsDir(), definition + ".json");
+        return URLUtils.concat(this.contentServerURL, this.meta.getDefinitionsDir(), definitionGroup + ".json");
     }
 
     private void checkMetaLoaded()
@@ -92,57 +106,32 @@ public class SchemaProvider
             throw new IllegalStateException("Meta file is not loaded yet");
     }
 
-    private void ensureActionExistence(String action)
-    {
-        if (!this.meta.isActionExists(action))
-            throw new IllegalStateException("Action '" + action + "' does not exist");
-    }
-
     private String buildActionFilePath(String action, String group)
     {
         return URLUtils.concat(this.contentServerURL, this.meta.getActionsDir(), group, action + ".json");
     }
 
-    private void updateFiles(boolean changed)
+    @RequiresBackgroundThread
+    public void initIfNeeded()
     {
-        if (this.metaFile == null || changed)
-            this.metaFile = VirtualFileManager.getInstance().findFileByUrl(URLUtils.concat(this.contentServerURL, PATH_FILE_META));
-        if (this.metaFile == null)
-            throw new IllegalStateException("Failed to download meta file from the Scenamatica content server: " + this.contentServerURL);
-
-        RemoteFileInfo info = ((HttpVirtualFile) this.metaFile).getFileInfo();
-        if (info == null)
-            throw new IllegalStateException("Failed to download meta file from the Scenamatica content server: " + this.contentServerURL);
-
-        info.addDownloadingListener(new FileDownloadingAdapter()
-        {
-            @Override
-            public void fileDownloaded(@NotNull VirtualFile localFile)
-            {
-                SchemaProvider.this.meta = SchemaMeta.fromJSON(SchemaProvider.this.metaFile);
-            }
-        });
-        this.metaFile.refresh(true, false);
+        if (this.initialized)
+            return;
+        this.metaFile = TempFileDownloader.downloadSync(getContentURL(this.contentServerURL, PATH_FILE_META));
+        this.meta = SchemaMeta.fromJSON(this.metaFile);
+        this.primeFile = TempFileDownloader.downloadJsonSync(getContentURL(this.contentServerURL, this.meta.getPrime()));
+        this.initialized = true;
     }
 
-    private static VirtualFile getFileByUrl(String url)
+    private static JsonObject findDefinition(JsonObject obj, String definition)
     {
-        VirtualFile file = VirtualFileManager.getInstance().findFileByUrl(url);
-        if (file == null)
-            throw new IllegalStateException("Failed to download " + url + "  from the Scenamatica content server: " + url);
+        if (obj.has(definition))
+            return obj.getAsJsonObject(definition);
+        else
+            throw new IllegalStateException("Definition '" + definition + "' does not exist in file");
+    }
 
-        CountDownLatch latch = new CountDownLatch(1);
-        file.refresh(true, false, latch::countDown);
-
-        try
-        {
-            latch.await();
-        }
-        catch (InterruptedException e)
-        {
-            throw new IllegalStateException(e);
-        }
-
-        return file;
+    private static String getContentURL(String contentServerURL, String path)
+    {
+        return URLUtils.concat(contentServerURL, path);
     }
 }

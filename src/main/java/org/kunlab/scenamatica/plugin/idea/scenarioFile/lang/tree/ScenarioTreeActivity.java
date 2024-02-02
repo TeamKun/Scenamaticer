@@ -1,7 +1,5 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree;
 
-import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.ProjectActivity;
@@ -23,9 +21,7 @@ public class ScenarioTreeActivity implements ProjectActivity
                 ScenamaticerPluginDisposable.getInstance(project)
         );
 
-        Application app = ApplicationManager.getApplication();
         ProgressManager.getInstance().run(new ScenarioTreeScanTask(project));
-        //app.invokeLater(() -> app.runReadAction(() -> ProgressManager.getInstance().run(new ScenarioTreeScanTask(project))));
         return null;
     }
 

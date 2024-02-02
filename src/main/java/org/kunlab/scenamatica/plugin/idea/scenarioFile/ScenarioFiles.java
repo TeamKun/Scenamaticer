@@ -24,7 +24,7 @@ public class ScenarioFiles
 
     public static boolean isScenarioFile(Project proj, VirtualFile file)
     {
-        if (file.getFileType() != YAMLFileType.YML)
+        if (file == null || file.getFileType() != YAMLFileType.YML)
             return false;
 
         PsiFile psiFile = YAMLUtils.toPSIFile(proj, file);

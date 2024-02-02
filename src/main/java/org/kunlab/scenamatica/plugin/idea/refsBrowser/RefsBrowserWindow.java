@@ -3,6 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.refsBrowser;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.jcef.JBCefBrowser;
 import javax.swing.BoxLayout;
@@ -50,6 +51,9 @@ public class RefsBrowserWindow implements Disposable
     {
         this.isLoad = false;
         this.currentURL = url;
+
+        if (this.isOpen())
+            this.onOpen();
     }
 
     public void onOpen()
@@ -123,6 +127,15 @@ public class RefsBrowserWindow implements Disposable
         }
 
         return null;
+    }
+
+    public static RefsBrowserWindow getCurrentWindow(Project proj)
+    {
+        ToolWindow window = ToolWindowManager.getInstance(proj).getToolWindow("Scenamatica");
+        if (window == null)
+            return null;
+
+        return getCurrentWindow(window);
     }
 
     @Getter

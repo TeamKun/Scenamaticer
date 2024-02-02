@@ -45,10 +45,6 @@
         />
         <postStartupActivity
                 implementation="org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserListenerActivity"/>
-        <psi.referenceContributor
-                language="yaml"
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileReferenceContributor"
-        />
         <fileBasedIndex implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer"/>
         <localInspection
                 groupName="Scenamatica"
@@ -56,7 +52,10 @@
                 implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.inspections.ScenarioFileDuplicationInspector"
                 language="yaml" displayName="Duplicated Scenario names"/>
         <postStartupActivity
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioTreeActivity"/>
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTreeActivity"/>
+        <gotoDeclarationHandler
+                order="first"
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileGotoDeclarationHandler"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

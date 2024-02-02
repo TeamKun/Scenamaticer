@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;

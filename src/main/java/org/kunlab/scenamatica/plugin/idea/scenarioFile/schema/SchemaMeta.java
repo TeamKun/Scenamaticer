@@ -1,10 +1,13 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.vfs.VirtualFile;
 import lombok.Value;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,28 +18,30 @@ public class SchemaMeta
 
     String definitionsDir;
     String actionsDir;
+    String prime;
     Map<String, String[]> definitions;
     Map<String, Map<String, String>> actions;
 
     @JsonIgnore
     Map<String, String> groupByAction;
+    @JsonIgnore
+    Map<String, String> groupByDefinition;
 
-    public SchemaMeta(String definitionsDir,
-                      String actionsDir,
-                      Map<String, String[]> definitions,
-                      Map<String, Map<String, String>> actions)
+    @JsonCreator
+    public SchemaMeta(@JsonProperty("definitionsDir") String definitionsDir,
+                      @JsonProperty("actionsDir") String actionsDir,
+                      @JsonProperty("prime") String prime,
+                      @JsonProperty("definitions") Map<String, String[]> definitions,
+                      @JsonProperty("actions") Map<String, Map<String, String>> actions)
     {
         this.definitionsDir = definitionsDir;
         this.actionsDir = actionsDir;
+        this.prime = prime;
         this.definitions = definitions;
         this.actions = actions;
 
         this.groupByAction = groupByAction(actions);
-    }
-
-    public SchemaMeta()
-    {
-        this(null, null, null, null);
+        this.groupByDefinition = groupByDefinition(definitions);
     }
 
     public boolean isActionExists(String action)
@@ -49,6 +54,11 @@ public class SchemaMeta
         return this.groupByAction.get(action);
     }
 
+    public String getDefinitionGroup(String definition)
+    {
+        return this.groupByDefinition.get(definition);
+    }
+
     public boolean isDefinitionExists(String definition)
     {
         for (String[] definitionGroup : this.definitions.values())
@@ -57,6 +67,14 @@ public class SchemaMeta
                     return true;
 
         return false;
+    }
+
+    private Map<String, String> groupByDefinition(Map<String, String[]> definitions)
+    {
+        return definitions.entrySet().stream()
+                .flatMap(entry -> Map.of(entry.getKey(), entry.getValue()).entrySet().stream()
+                        .flatMap(e -> Arrays.stream(e.getValue()).map(s -> Map.entry(s, e.getKey()))))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static Map<String, String> groupByAction(Map<String, ? extends Map<String, String>> actions)

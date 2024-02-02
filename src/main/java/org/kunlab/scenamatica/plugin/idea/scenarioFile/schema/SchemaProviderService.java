@@ -18,6 +18,16 @@ public final class SchemaProviderService
         );
     }
 
+    public static SchemaProvider getProvider()
+    {
+        return getInstance().getSchemaProvider();
+    }
+
+    public static SchemaResolver getResolver()
+    {
+        return getProvider().getSchemaResolver();
+    }
+
     public static SchemaProviderService getInstance()
     {
         return ApplicationManager.getApplication().getService(SchemaProviderService.class);

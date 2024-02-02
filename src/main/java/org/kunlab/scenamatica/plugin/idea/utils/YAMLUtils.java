@@ -2,6 +2,7 @@ package org.kunlab.scenamatica.plugin.idea.utils;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -27,6 +28,9 @@ import java.util.List;
 
 public class YAMLUtils
 {
+    public static final char MARKER_YAML_SEQUENCE_ITEM = '\0';
+    public static final String MARKER_YAML_SEQUENCE_ITEM_STR = String.valueOf(MARKER_YAML_SEQUENCE_ITEM);
+
     public static boolean isYAMLRelated(PsiElement psiElement)
     {
         return psiElement instanceof YAMLScalar || psiElement instanceof YAMLKeyValue;
@@ -102,12 +106,18 @@ public class YAMLUtils
         }
         else if (psiElement instanceof YAMLSequenceItem)
         {
-            PsiElement[] children = psiElement.getParent().getChildren();
+            PsiElement[] children = ApplicationManager.getApplication().runReadAction((Computable<? extends PsiElement[]>) () -> psiElement.getParent().getChildren());
             for (int i = 0; i < children.length; i++)
                 if (children[i] == psiElement)
-                    return "\0" + i + "\0";
+                    return MARKER_YAML_SEQUENCE_ITEM + String.valueOf(i) + MARKER_YAML_SEQUENCE_ITEM;
         }
         return getKey(psiElement).getText();
+    }
+
+    public static boolean isSequenceKey(String key)
+    {
+        return key.startsWith(MARKER_YAML_SEQUENCE_ITEM_STR)
+                && key.endsWith(MARKER_YAML_SEQUENCE_ITEM_STR);
     }
 
     public static String getValueTextByKey(PsiElement psiElement)
@@ -131,9 +141,12 @@ public class YAMLUtils
 
         while (current != null)
         {
-            if (isKeyValue(current) || isSequenceItem(current))
+            if (current instanceof YAMLDocument)
+                break;
+            else if (isKeyValue(current) || isSequenceItem(current))
                 keys.add(0, getKeyText(current));
-            current = current.getParent();
+
+            current = ApplicationManager.getApplication().runReadAction((Computable<? extends PsiElement>) current::getParent);
         }
 
 
