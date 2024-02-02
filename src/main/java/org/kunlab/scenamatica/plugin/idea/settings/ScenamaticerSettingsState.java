@@ -18,7 +18,6 @@ public class ScenamaticerSettingsState implements PersistentStateComponent<Scena
 
     private String schemaURL = DEFAULT_SCHEMA_URL;
     private String contentServerURL = DEFAULT_CONTENT_SERVER_URL;
-    private boolean refsNavigationEnabled = true;
     private boolean refsWindowAutoOpen = true;
     private boolean refsWindowAutoClose = true;
 

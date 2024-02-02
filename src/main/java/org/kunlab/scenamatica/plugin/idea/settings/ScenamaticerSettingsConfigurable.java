@@ -32,7 +32,6 @@ public class ScenamaticerSettingsConfigurable implements Configurable
         this.settings.setSchemaURL(state.getSchemaURL());
         this.settings.setContentServerURL(state.getContentServerURL());
 
-        this.settings.setRefsWindowEnabled(state.isRefsNavigationEnabled());
         this.settings.setRefsWindowAutoOpen(state.isRefsWindowAutoOpen());
         this.settings.setRefsWindowAutoClose(state.isRefsWindowAutoClose());
 
@@ -45,7 +44,6 @@ public class ScenamaticerSettingsConfigurable implements Configurable
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
         boolean isNotModified = this.settings.getSchemaURL().equals(state.getSchemaURL())
                 && this.settings.getContentServerURL().equals(state.getContentServerURL())
-                && this.settings.isRefsNavigationEnabled() == state.isRefsNavigationEnabled()
                 && this.settings.isRefsWindowAutoOpen() == state.isRefsWindowAutoOpen()
                 && this.settings.isRefsWindowAutoClose() == state.isRefsWindowAutoClose();
 
@@ -64,7 +62,6 @@ public class ScenamaticerSettingsConfigurable implements Configurable
             throw new ConfigurationException("Invalid URL provided for scenamatica contents");
         state.setContentServerURL(this.settings.getContentServerURL());
 
-        state.setRefsNavigationEnabled(this.settings.isRefsNavigationEnabled());
         state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());
         state.setRefsWindowAutoClose(this.settings.isRefsWindowAutoClose());
 

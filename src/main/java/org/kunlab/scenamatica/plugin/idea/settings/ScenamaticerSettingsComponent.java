@@ -37,11 +37,6 @@ public class ScenamaticerSettingsComponent
         this.contentServerURL.setText(contentServerURL);
     }
 
-    public boolean isRefsNavigationEnabled()
-    {
-        return this.ckbRefsWindowEnabled.isSelected();
-    }
-
     public boolean isRefsWindowAutoOpen()
     {
         return this.ckbRefsWindowAutoOpen.isSelected();
