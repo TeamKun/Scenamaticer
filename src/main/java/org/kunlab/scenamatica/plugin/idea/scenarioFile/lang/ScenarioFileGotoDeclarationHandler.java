@@ -1,10 +1,8 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang;
 
+import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.navigation.ItemPresentation;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.progress.util.ProgressWindow;
@@ -29,7 +27,7 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
             return null;
 
         if (YAMLUtils.isKey(psiElement))
-            return new PsiElement[]{new FakeElement(psiElement)};
+            return new PsiElement[]{new FakeElement(psiElement, editor)};
         else
             return null;
     }
@@ -58,10 +56,12 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
         };
 
         private final PsiElement element;
+        private final Editor editor;
 
-        public FakeElement(PsiElement element)
+        public FakeElement(PsiElement element, Editor editor)
         {
             this.element = element;
+            this.editor = editor;
         }
 
         @Override
@@ -95,13 +95,10 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
                     String typeName = SchemaProviderService.getResolver().getTypeName(this.element);
                     if (typeName == null)
                     {
-                        Notification notification = new Notification(
-                                "Scenamatica",
-                                "Error",
-                                "Cannot resolve the type of the element for navigation",
-                                NotificationType.ERROR
+                        HintManager.getInstance().showErrorHint(
+                                this.editor,
+                                "Cannot find the type of the reference"
                         );
-                        Notifications.Bus.notify(notification, this.element.getProject());
                     }
                     else
                     {

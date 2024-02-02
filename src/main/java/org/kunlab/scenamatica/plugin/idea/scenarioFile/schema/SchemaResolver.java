@@ -121,6 +121,8 @@ public class SchemaResolver
         else if (current.has("properties"))
         {
             JsonObject properties = current.getAsJsonObject("properties");
+            if (properties == null)
+                return null;
             if (properties.has(part))
                 return properties.getAsJsonObject(part);
         }
