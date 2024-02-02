@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import lombok.Getter;
+import org.kunlab.scenamatica.plugin.idea.utils.JsonUtils;
 import org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader;
 import org.kunlab.scenamatica.plugin.idea.utils.URLUtils;
 
@@ -57,9 +58,16 @@ public class SchemaProvider
         if (!this.meta.isActionExists(action))
             throw new IllegalStateException("Action '" + action + "' does not exist");
 
-        String group = this.meta.getActionGroup(action);
-        String path = buildActionFilePath(action, group);
+        String actionGroup = this.meta.getActionGroupOf(action);
+        SchemaMeta.Action actionMeta = this.meta.getAction(actionGroup, action);
+        String path = buildActionFilePath(actionGroup, actionMeta.getFile());
         JsonObject file = TempFileDownloader.downloadJsonSync(path);
+        if (hasBaseActionInAction(file))
+        {
+            String baseAction = file.get("base").getAsString();
+            JsonObject baseFile = getActionFile(baseAction);
+            file = JsonUtils.mergeRecursive(baseFile, file);
+        }
 
         this.actionsCache.put(action, file);
         return file;
@@ -106,9 +114,9 @@ public class SchemaProvider
             throw new IllegalStateException("Meta file is not loaded yet");
     }
 
-    private String buildActionFilePath(String action, String group)
+    private String buildActionFilePath(String group, String action)
     {
-        return URLUtils.concat(this.contentServerURL, this.meta.getActionsDir(), group, action + ".json");
+        return URLUtils.concat(this.contentServerURL, this.meta.getActionsDir(), group, action);
     }
 
     @RequiresBackgroundThread
@@ -120,6 +128,11 @@ public class SchemaProvider
         this.meta = SchemaMeta.fromJSON(this.metaFile);
         this.primeFile = TempFileDownloader.downloadJsonSync(getContentURL(this.contentServerURL, this.meta.getPrime()));
         this.initialized = true;
+    }
+
+    private static boolean hasBaseActionInAction(JsonObject file)
+    {
+        return file.has("base");
     }
 
     private static JsonObject findDefinition(JsonObject obj, String definition)

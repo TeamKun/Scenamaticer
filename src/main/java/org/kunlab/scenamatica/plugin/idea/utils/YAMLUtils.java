@@ -17,8 +17,10 @@ import org.jetbrains.yaml.YAMLUtil;
 import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.jetbrains.yaml.psi.YAMLPsiElement;
 import org.jetbrains.yaml.psi.YAMLQuotedText;
 import org.jetbrains.yaml.psi.YAMLScalar;
+import org.jetbrains.yaml.psi.YAMLSequence;
 import org.jetbrains.yaml.psi.YAMLSequenceItem;
 import org.jetbrains.yaml.psi.YAMLValue;
 import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
@@ -187,6 +189,49 @@ public class YAMLUtils
             throw new IllegalArgumentException("Cannot find key " + key + " in file " + file.getName());
 
         return kv.getValue();
+    }
+
+    public static PsiElement getValue(PsiFile file, String[] keys)
+    {
+        if (!isValidYAMLFile(file))
+            throw new IllegalArgumentException("Cannot get value of key " + String.join(".", keys) + " in file " + file);
+
+        YAMLPsiElement current = null;
+        for (int i = 0; i < keys.length; i++)
+        {
+            String key = keys[i];
+            if (i == 0 || current == null)
+            {
+                current = ApplicationManager.getApplication().runReadAction((Computable<? extends YAMLKeyValue>) () -> YAMLUtil.getQualifiedKeyInFile((YAMLFile) file, key));
+                if (current == null)
+                    throw new IllegalArgumentException("Cannot find key " + key + " in file " + file.getName());
+            }
+            else if (current instanceof YAMLSequence)
+            {
+                List<YAMLSequenceItem> items = ((YAMLSequence) current).getItems();
+                if (!isSequenceKey(key))
+                    throw new IllegalArgumentException("Key " + key + " is not a sequence key");
+                int index = Integer.parseInt(key.substring(1, key.length() - 1));  // remove markers
+                if (index < 0 || index >= items.size())
+                    throw new IllegalArgumentException("Index " + index + " is out of range");
+
+                current = items.get(index).getValue();
+            }
+            else if (current instanceof YAMLBlockMappingImpl)
+            {
+                YAMLKeyValue kv = ((YAMLBlockMappingImpl) current).getKeyValueByKey(key);
+                if (kv == null)
+                    throw new IllegalArgumentException("Cannot find key " + key + " in file " + file.getName());
+                current = kv.getValue();
+            }
+            else
+                throw new IllegalArgumentException("Cannot find key " + key + " in file " + file.getName());
+
+            if (current instanceof YAMLKeyValue)
+                current = ((YAMLKeyValue) current).getValue();
+        }
+
+        return current;
     }
 
     public static String getValueText(PsiFile file, String key)

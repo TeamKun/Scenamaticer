@@ -2,10 +2,12 @@ package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.yaml.psi.YAMLFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -47,37 +49,61 @@ public class SchemaResolver
         if (cache != null && cache.equalElement(element))
             return cache.typeName();
 
-        String absolutePath = ScenarioTrees.getKeyFor(element);
-        if (absolutePath == null)
-            return null;
-
-        String typeName = resolveTypeName(absolutePath);
+        String typeName = resolveTypeName(element);
         if (typeName != null)
             element.putUserData(KEY_TYPE_NAME, TypeCache.of(element, typeName));
 
         return typeName;
     }
 
-    private String resolveTypeName(@NotNull String absolutePath)
+    private String resolveTypeName(PsiElement ownerElement)
     {
+        String absolutePath = ScenarioTrees.getKeyFor(ownerElement);
+        if (absolutePath == null)
+            return null;
+
         List<String> parts = new ArrayList<>(Arrays.asList(absolutePath.split("\\.")));
         JsonObject current = this.provider.getPrimeFile();
 
         String lastType = "prime";
-        while (!parts.isEmpty())
+        for (int i = 0; i < parts.size(); i++)
         {
-            String part = parts.remove(0);
-
-            JsonObject result = processPart(current, part);
+            String part = parts.get(i);
+            // Actions のための特殊処理
+            JsonObject result;
+            if (lastType != null && lastType.equals("scenario") && part.equals("with"))
+            {
+                assert current != null;
+                // JsonObject を偽装する。アクションの引数は、 properties に噛まされていないため。
+                result = createFakeActionInputJsonObject(current.getAsJsonObject("arguments"));
+            }
+            else
+                result = processPart(current, part);
             if (result == null)
                 return null;
 
+            String typeName = getTypeName(result);
+            // Actions のための特殊処理
+            if (typeName != null && typeName.equals("scenario"))
+            {
+                List<String> accessors = parts.subList(0, i + 1);
+                result = processScenarioInput(ownerElement, accessors);
+            }
+
             current = result;
-            if (!isPrimitiveType(current))
-                lastType = getTypeName(current);
+            if (!isPrimitiveType(typeName))
+                lastType = typeName;
         }
 
         return lastType;
+    }
+
+    private JsonObject createFakeActionInputJsonObject(JsonObject arguments)
+    {
+        JsonObject fakeActionInput = new JsonObject();
+        fakeActionInput.addProperty("type", "object");
+        fakeActionInput.add("properties", arguments);
+        return fakeActionInput;
     }
 
     private JsonObject processPart(JsonObject current, String part)
@@ -134,6 +160,29 @@ public class SchemaResolver
             return this.provider.getDefinitionFile(getTypeName(current));
         else
             return null;
+    }
+
+    private JsonObject processScenarioInput(PsiElement ownerElement, List<String> elements)
+    {
+        String resolveActionNameBy = resolveActionNameBy(ownerElement, elements);
+
+        if (this.provider.hasAction(resolveActionNameBy))
+            return this.provider.getActionFile(resolveActionNameBy);
+        else
+            return null;
+    }
+
+    private static String resolveActionNameBy(PsiElement ownerElement, List<String> elements)
+    {
+        return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
+            YAMLFile yamlFile = (YAMLFile) ownerElement.getContainingFile();
+
+            List<String> keys = new ArrayList<>(elements);
+            keys.add("action");  // Action name marker
+
+            PsiElement elm = YAMLUtils.getValue(yamlFile, keys.toArray(new String[0]));
+            return elm.getText();
+        });
     }
 
     private static boolean isPrimitiveType(JsonObject obj)

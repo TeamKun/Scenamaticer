@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.vfs.VirtualFile;
+import lombok.Getter;
 import lombok.Value;
 
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public class SchemaMeta
     String actionsDir;
     String prime;
     Map<String, String[]> definitions;
-    Map<String, Map<String, String>> actions;
+    Map<String, Map<String, Action>> actions;
 
     @JsonIgnore
     Map<String, String> groupByAction;
@@ -32,7 +33,7 @@ public class SchemaMeta
                       @JsonProperty("actionsDir") String actionsDir,
                       @JsonProperty("prime") String prime,
                       @JsonProperty("definitions") Map<String, String[]> definitions,
-                      @JsonProperty("actions") Map<String, Map<String, String>> actions)
+                      @JsonProperty("actions") Map<String, Map<String, Action>> actions)
     {
         this.definitionsDir = definitionsDir;
         this.actionsDir = actionsDir;
@@ -49,7 +50,7 @@ public class SchemaMeta
         return this.groupByAction.containsKey(action);
     }
 
-    public String getActionGroup(String action)
+    public String getActionGroupOf(String action)
     {
         return this.groupByAction.get(action);
     }
@@ -57,6 +58,16 @@ public class SchemaMeta
     public String getDefinitionGroup(String definition)
     {
         return this.groupByDefinition.get(definition);
+    }
+
+    public Action getAction(String action)
+    {
+        return this.getAction(this.getActionGroupOf(action), action);
+    }
+
+    public Action getAction(String actionGroup, String action)
+    {
+        return this.actions.get(actionGroup).get(action);
     }
 
     public boolean isDefinitionExists(String definition)
@@ -77,10 +88,11 @@ public class SchemaMeta
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private static Map<String, String> groupByAction(Map<String, ? extends Map<String, String>> actions)
+    private static Map<String, String> groupByAction(Map<String, ? extends Map<String, Action>> actions)
     {
         return actions.entrySet().stream()
-                .flatMap(entry -> entry.getValue().keySet().stream().map(s -> Map.entry(s, entry.getKey())))
+                .flatMap(entry -> entry.getValue().keySet().stream()
+                        .map(action -> Map.entry(action, entry.getKey())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -93,6 +105,19 @@ public class SchemaMeta
         catch (Exception e)
         {
             throw new RuntimeException("Failed to parse meta file: " + metaFile.getPath(), e);
+        }
+    }
+
+    @Getter
+    public static class Action
+    {
+        private final String file;
+        private final String description;
+
+        public Action()
+        {
+            this.file = null;
+            this.description = null;
         }
     }
 }
