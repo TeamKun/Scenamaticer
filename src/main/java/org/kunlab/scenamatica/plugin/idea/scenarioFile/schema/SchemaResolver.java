@@ -180,8 +180,15 @@ public class SchemaResolver
             List<String> keys = new ArrayList<>(elements);
             keys.add("action");  // Action name marker
 
-            PsiElement elm = YAMLUtils.getValue(yamlFile, keys.toArray(new String[0]));
-            return elm.getText();
+            try
+            {
+                PsiElement elm = YAMLUtils.getValue(yamlFile, keys.toArray(new String[0]));
+                return elm.getText();
+            }
+            catch (IllegalArgumentException e)
+            {
+                return null;
+            }
         });
     }
 
