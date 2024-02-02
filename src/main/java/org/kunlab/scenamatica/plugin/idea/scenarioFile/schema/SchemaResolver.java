@@ -2,10 +2,12 @@ package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees;
+import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,11 +15,25 @@ import java.util.List;
 
 public class SchemaResolver
 {
+    private static final Key<TypeCache> KEY_TYPE_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.TypeName");
+
     private final SchemaProvider provider;
 
     public SchemaResolver(SchemaProvider provider)
     {
         this.provider = provider;
+    }
+
+    public void createCacheAll(PsiElement element)
+    {
+        if (element == null)
+            return;
+
+        for (PsiElement children : element.getChildren())
+            createCacheAll(children);
+
+        if (YAMLUtils.isKey(element))
+            getTypeName(element);
     }
 
     @RequiresBackgroundThread
@@ -27,11 +43,19 @@ public class SchemaResolver
         if (element == null)
             return null;
 
+        TypeCache cache = element.getUserData(KEY_TYPE_NAME);
+        if (cache != null && cache.equalElement(element))
+            return cache.typeName();
+
         String absolutePath = ScenarioTrees.getKeyFor(element);
         if (absolutePath == null)
             return null;
 
-        return this.resolveTypeName(absolutePath);
+        String typeName = resolveTypeName(absolutePath);
+        if (typeName != null)
+            element.putUserData(KEY_TYPE_NAME, TypeCache.of(element, typeName));
+
+        return typeName;
     }
 
     private String resolveTypeName(@NotNull String absolutePath)
@@ -135,5 +159,18 @@ public class SchemaResolver
                 || type.equals("null")
                 || type.equals("array")
                 || type.equals("object"));
+    }
+
+    private record TypeCache(int hash, String typeName)
+    {
+        public boolean equalElement(PsiElement element)
+        {
+            return element.hashCode() == this.hash;
+        }
+
+        public static TypeCache of(PsiElement element, String typeName)
+        {
+            return new TypeCache(element.hashCode(), typeName);
+        }
     }
 }
