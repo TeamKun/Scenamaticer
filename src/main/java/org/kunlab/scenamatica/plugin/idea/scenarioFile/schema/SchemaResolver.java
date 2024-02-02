@@ -73,14 +73,11 @@ public class SchemaResolver
             JsonObject result;
             if (lastType != null && lastType.equals("scenario") && part.equals("with"))
             {
-                assert current != null;
                 // JsonObject を偽装する。アクションの引数は、 properties に噛まされていないため。
                 result = createFakeActionInputJsonObject(current.getAsJsonObject("arguments"));
             }
             else
                 result = processPart(current, part);
-            if (result == null)
-                return null;
 
             String typeName = getTypeName(result);
             // Actions のための特殊処理
@@ -89,6 +86,9 @@ public class SchemaResolver
                 List<String> accessors = parts.subList(0, i + 1);
                 result = processScenarioInput(ownerElement, accessors);
             }
+
+            if (result == null)
+                return null;
 
             current = result;
             if (!isPrimitiveType(typeName))

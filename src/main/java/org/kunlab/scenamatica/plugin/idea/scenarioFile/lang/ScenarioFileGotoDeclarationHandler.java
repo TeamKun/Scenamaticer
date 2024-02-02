@@ -77,6 +77,12 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
         }
 
         @Override
+        public String getName()
+        {
+            return "Navigate to the reference";
+        }
+
+        @Override
         public ItemPresentation getPresentation()
         {
             return PRESENTATION;
@@ -95,10 +101,10 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
                     String typeName = SchemaProviderService.getResolver().getTypeName(this.element);
                     if (typeName == null)
                     {
-                        HintManager.getInstance().showErrorHint(
+                        ApplicationManager.getApplication().invokeLater(() -> HintManager.getInstance().showErrorHint(
                                 this.editor,
                                 "Cannot find the type of the reference"
-                        );
+                        ));
                     }
                     else
                     {
