@@ -16,6 +16,7 @@ import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
@@ -48,6 +49,8 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
                 description = YAMLUtils.getValueText(file, ScenarioFiles.KEY_DESCRIPTION);
             else
                 description = "";
+
+            SchemaProviderService.getResolver().createCacheAll(file);
 
             return Map.of(
                     name,

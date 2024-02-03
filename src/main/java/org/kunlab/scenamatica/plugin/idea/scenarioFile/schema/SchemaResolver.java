@@ -28,11 +28,16 @@ public class SchemaResolver
 
     public void createCacheAll(PsiElement element)
     {
+        ApplicationManager.getApplication().executeOnPooledThread(() -> cacheAllRecursive(element));
+    }
+
+    private void cacheAllRecursive(PsiElement element)
+    {
         if (element == null)
             return;
 
-        for (PsiElement children : element.getChildren())
-            createCacheAll(children);
+        for (PsiElement children : ApplicationManager.getApplication().runReadAction((Computable<PsiElement[]>) element::getChildren))
+            cacheAllRecursive(children);
 
         if (YAMLUtils.isKey(element))
             getTypeName(element);

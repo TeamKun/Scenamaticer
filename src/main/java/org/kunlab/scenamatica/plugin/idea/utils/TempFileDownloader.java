@@ -2,6 +2,7 @@ package org.kunlab.scenamatica.plugin.idea.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.impl.http.HttpVirtualFile;
@@ -16,6 +17,8 @@ import java.util.logging.Logger;
 public class TempFileDownloader
 {
     public static final Logger LOGGER = Logger.getLogger(TempFileDownloader.class.getName());
+    private static final Key<Object> KEY_DOWNLOAD_STARTED = Key.create("org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader.DownloadStarted");
+    private static final Object VALUE_DOWNLOAD_STARTED = new Object();
     private static final Gson GSON = new Gson();
 
     public static VirtualFile download(String url, Consumer<? super VirtualFile> callback)
@@ -25,6 +28,14 @@ public class TempFileDownloader
         VirtualFile vf = VirtualFileManager.getInstance().findFileByUrl(url);
         if (vf == null)
             throw new IllegalArgumentException("Cannot find file by url: " + url);
+        else if (vf.getUserData(KEY_DOWNLOAD_STARTED) != null)
+        {
+            LOGGER.info("File already downloading: " + url);
+            callback.accept(vf);
+            return vf;
+        }
+        else
+            vf.putUserData(KEY_DOWNLOAD_STARTED, VALUE_DOWNLOAD_STARTED);
 
         RemoteFileInfo fi = ((HttpVirtualFile) vf).getFileInfo();
         if (fi == null)

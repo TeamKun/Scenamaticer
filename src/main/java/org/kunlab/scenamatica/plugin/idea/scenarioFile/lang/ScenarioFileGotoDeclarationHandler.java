@@ -99,19 +99,21 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
                 try
                 {
                     String typeName = SchemaProviderService.getResolver().getTypeName(this.element);
-                    if (typeName == null)
-                    {
-                        ApplicationManager.getApplication().invokeLater(() -> HintManager.getInstance().showErrorHint(
-                                this.editor,
-                                "Cannot find the type of the reference"
-                        ));
-                    }
-                    else
-                    {
-                        RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(this.element.getProject());
-                        if (window != null)
-                            window.navigateTo(WebReference.typeToWebReference(typeName));
-                    }
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        if (typeName == null)
+                        {
+                            HintManager.getInstance().showErrorHint(
+                                    this.editor,
+                                    "Cannot find the type of the reference"
+                            );
+                        }
+                        else
+                        {
+                            RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(this.element.getProject());
+                            if (window != null)
+                                window.navigateTo(WebReference.typeToWebReference(typeName));
+                        }
+                    });
                 }
                 finally
                 {
