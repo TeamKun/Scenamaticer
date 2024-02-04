@@ -7,6 +7,8 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
+import org.jetbrains.yaml.psi.YAMLPsiElement;
+import org.jetbrains.yaml.psi.YAMLSequenceItem;
 import org.jetbrains.yaml.psi.YAMLValue;
 import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
@@ -51,11 +53,12 @@ public class WebReference
         else
             return false;
 
-        YAMLKeyValue kv = (YAMLKeyValue) yamlValue.getParent();
-        if (kv == null)
-            return false;
+        YAMLPsiElement parentContainer = (YAMLPsiElement) yamlValue.getParent();
+        if (parentContainer instanceof YAMLSequenceItem)
+            parentContainer = (YAMLPsiElement) parentContainer.getParent();
+        
 
-        YAMLMapping blockMapping = (YAMLBlockMappingImpl) kv.getParent();
+        YAMLMapping blockMapping = (YAMLBlockMappingImpl) parentContainer.getParent();
         if (blockMapping == null)
             return false;
 
