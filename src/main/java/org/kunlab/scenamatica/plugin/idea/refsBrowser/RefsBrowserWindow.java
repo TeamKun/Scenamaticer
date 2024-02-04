@@ -68,7 +68,6 @@ public class RefsBrowserWindow implements Disposable
         this.patchURLBar();
         this.patchFreeScrollCursor();
 
-
         this.navigateTo("https://scenamatica.kunlab.org/references");
     }
 
@@ -115,6 +114,26 @@ public class RefsBrowserWindow implements Disposable
                 "navigation.addEventListener('navigate', function(e) { "
                         + query.inject("e.destination.url")
                         + "});",
+                browser.getCefBrowser().getURL(),
+                0
+        );
+    }
+
+    private void installServiceWorker(JBCefBrowser browser)
+    {
+        String url = browser.getCefBrowser().getURL();
+        if (!url.startsWith("https://scenamatica.kunlab.org/"))
+            return;
+
+        browser.openDevtools();
+        browser.getCefBrowser().executeJavaScript(
+                "if ('serviceWorker' in navigator) {"
+                        + "navigator.serviceWorker.register('/sw.js').then(function(registration) {"
+                        + "console.log('ServiceWorker registration successful with scope: ', registration.scope);"
+                        + "}).catch(function(err) {"
+                        + "console.log('ServiceWorker registration failed: ', err);"
+                        + "});"
+                        + "}",
                 browser.getCefBrowser().getURL(),
                 0
         );
@@ -258,6 +277,7 @@ public class RefsBrowserWindow implements Disposable
             assert browserComponent != null;
             ApplicationManager.getApplication().invokeLater(() -> {
                 RefsBrowserWindow.this.injectURLBar(browserComponent);
+                RefsBrowserWindow.this.installServiceWorker(browserComponent);
             });
 
             return false;
