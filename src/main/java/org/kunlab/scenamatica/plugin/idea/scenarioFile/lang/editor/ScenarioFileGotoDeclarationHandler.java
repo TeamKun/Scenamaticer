@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor;
 
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;

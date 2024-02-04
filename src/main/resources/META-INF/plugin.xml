@@ -55,7 +55,7 @@
                 implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTreeActivity"/>
         <gotoDeclarationHandler
                 order="first"
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileGotoDeclarationHandler"/>
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ScenarioFileGotoDeclarationHandler"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
