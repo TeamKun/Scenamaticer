@@ -8,39 +8,48 @@ import org.jetbrains.yaml.psi.YAMLValue;
 import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.Stack;
 
 public class ScenarioTrees
 {
     public static final Key<String> KEY_YAML_KEY = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees.YamlKEY");
 
-    public static void embedKeyAll(PsiElement element)
+    public static void embedKeyAll(PsiElement root)
     {
-        if (!canHasKey(element))
+        if (!canHasKey(root))
             return;
 
-        String key = YAMLUtils.getAbsoluteKeyText(element);
-        String knownKey = element.getUserData(KEY_YAML_KEY);
-        if (Objects.equals(key, knownKey))
-            return;
+        Iterator<PsiElement> iterator = new DepthFirstIterator(root);
 
-        for (PsiElement child : element.getChildren())
-            embedKeyAll(child);
-
-        if (YAMLUtils.isValue(element))
+        while (iterator.hasNext())
         {
-            element.putUserData(KEY_YAML_KEY, key);
-            element = element.getParent(); // => KV
-        }
+            PsiElement currentElement = iterator.next();
 
-        if (YAMLUtils.isKeyValue(element))
-        {
-            element.putUserData(KEY_YAML_KEY, key);
-            element = element.getFirstChild(); // => KEY
-        }
+            if (!canHasKey(currentElement))
+                continue;
 
-        if (YAMLUtils.isKey(element))
-            element.putUserData(KEY_YAML_KEY, key);
+            String key = YAMLUtils.getAbsoluteKeyText(currentElement);
+            String knownKey = currentElement.getUserData(KEY_YAML_KEY);
+            if (Objects.equals(key, knownKey))
+                continue;
+
+            if (YAMLUtils.isValue(currentElement))
+            {
+                currentElement.putUserData(KEY_YAML_KEY, key);
+                currentElement = currentElement.getParent(); // => KV
+            }
+
+            if (YAMLUtils.isKeyValue(currentElement))
+            {
+                currentElement.putUserData(KEY_YAML_KEY, key);
+                currentElement = currentElement.getFirstChild(); // => KEY
+            }
+
+            if (YAMLUtils.isKey(currentElement))
+                currentElement.putUserData(KEY_YAML_KEY, key);
+        }
     }
 
     private static boolean canHasKey(PsiElement element)
@@ -63,6 +72,37 @@ public class ScenarioTrees
         }
 
         return result;
+    }
+
+    private static class DepthFirstIterator implements Iterator<PsiElement>
+    {
+        private final Stack<PsiElement> stack = new Stack<>();
+
+        public DepthFirstIterator(PsiElement root)
+        {
+            this.stack.push(root);
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return !this.stack.isEmpty();
+        }
+
+        @Override
+        public PsiElement next()
+        {
+            PsiElement current = this.stack.pop();
+
+            if (current != null)
+            {
+                PsiElement[] children = current.getChildren();
+                for (int i = children.length - 1; i >= 0; i--)
+                    this.stack.push(children[i]);
+            }
+
+            return current;
+        }
     }
 }
 
