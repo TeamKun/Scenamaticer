@@ -74,7 +74,7 @@ public class ScenarioTrees
         return result;
     }
 
-    private static class DepthFirstIterator implements Iterator<PsiElement>
+    public static class DepthFirstIterator implements Iterator<PsiElement>
     {
         private final Stack<PsiElement> stack = new Stack<>();
 

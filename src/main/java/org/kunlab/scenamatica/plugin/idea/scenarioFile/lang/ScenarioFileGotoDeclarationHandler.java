@@ -15,7 +15,6 @@ import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandler
@@ -26,7 +25,8 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
         if (psiElement == null || !ScenarioFiles.isScenarioFile(psiElement.getContainingFile()))
             return null;
 
-        if (YAMLUtils.isKey(psiElement))
+
+        if (YAMLUtils.isKey(psiElement) || WebReference.isActionSpecifier(psiElement))
             return new PsiElement[]{new FakeElement(psiElement, editor)};
         else
             return null;
@@ -95,37 +95,48 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
             progressWindow.setTitle("Navigating to the reference");
             progressWindow.setIndeterminate(true);
             progressWindow.start();
-            ApplicationManager.getApplication().executeOnPooledThread(() -> {
-                try
-                {
-                    String typeName = SchemaProviderService.getResolver().getTypeName(this.element);
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        if (typeName == null)
-                        {
-                            HintManager.getInstance().showErrorHint(
-                                    this.editor,
-                                    "Cannot find the type of the reference"
-                            );
-                        }
-                        else
-                        {
-                            RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(this.element.getProject());
-                            if (window != null)
-                                window.navigateTo(WebReference.typeToWebReference(typeName));
-                        }
-                    });
-                }
-                finally
-                {
-                    progressWindow.stop();
-                }
-            });
+            try
+            {
+                ApplicationManager.getApplication().executeOnPooledThread(() -> actualNavigate(this.element, this.editor));
+            }
+            finally
+            {
+                progressWindow.stop();
+            }
         }
 
         @Override
         public PsiElement getParent()
         {
             return this.element;
+        }
+
+        private static void actualNavigate(PsiElement element, Editor editor)
+        {
+            String reference = WebReference.findElementReferenceURL(element);
+            RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(element.getProject());
+            if (reference == null || window == null)
+            {
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    if (reference == null)
+                    {
+                        HintManager.getInstance().showErrorHint(
+                                editor,
+                                "Cannot find the reference of this element."
+                        );
+                    }
+                    else /* assert window == null */
+                    {
+                        HintManager.getInstance().showErrorHint(
+                                editor,
+                                "Unable to find the reference window."
+                        );
+                    }
+                });
+                return;
+            }
+
+            window.navigateTo(reference);
         }
     }
 }

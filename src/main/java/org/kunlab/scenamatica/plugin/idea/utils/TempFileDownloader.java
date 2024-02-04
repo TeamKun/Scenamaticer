@@ -2,6 +2,7 @@ package org.kunlab.scenamatica.plugin.idea.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -10,6 +11,8 @@ import com.intellij.openapi.vfs.impl.http.RemoteFileInfo;
 import com.intellij.openapi.vfs.impl.http.RemoteFileState;
 
 import java.io.InputStream;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -20,6 +23,55 @@ public class TempFileDownloader
     private static final Key<Object> KEY_DOWNLOAD_STARTED = Key.create("org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader.DownloadStarted");
     private static final Object VALUE_DOWNLOAD_STARTED = new Object();
     private static final Gson GSON = new Gson();
+    private static final Map<VirtualFile, Consumer<? super VirtualFile>> DOWNLOAD_CALLBACKS = new WeakHashMap<>();
+
+    static
+    {
+        // Create timer and poll changes
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            //noinspection InfiniteLoopStatement
+            while (true)
+            {
+                try
+                {
+                    //noinspection BusyWait
+                    Thread.sleep(100);
+                    watchDog();
+                }
+                catch (InterruptedException ignored)
+                {
+                }
+            }
+        });
+    }
+
+    private static void watchDog()
+    {
+        for (VirtualFile vf : DOWNLOAD_CALLBACKS.keySet())
+        {
+            if (vf.getUserData(KEY_DOWNLOAD_STARTED) == null)
+                continue;
+
+            RemoteFileInfo fi = ((HttpVirtualFile) vf).getFileInfo();
+            if (fi == null)
+                continue;
+
+            if (fi.getState() == RemoteFileState.DOWNLOADED)
+            {
+                vf.putUserData(KEY_DOWNLOAD_STARTED, null);
+                Consumer<? super VirtualFile> callback = DOWNLOAD_CALLBACKS.remove(vf);
+                if (callback != null)
+                    callback.accept(vf);
+            }
+            else if (fi.getState() == RemoteFileState.ERROR_OCCURRED)
+            {
+                vf.putUserData(KEY_DOWNLOAD_STARTED, null);
+                Consumer<? super VirtualFile> callback = DOWNLOAD_CALLBACKS.remove(vf);
+                if (callback != null)
+                    throw new IllegalStateException("Unable to download file from url: " + vf.getUrl() + ", error: " + fi.getErrorMessage());
+            }
+        }
+    }
 
     public static VirtualFile download(String url, Consumer<? super VirtualFile> callback)
     {
@@ -47,13 +99,16 @@ public class TempFileDownloader
             return vf;
         }
 
-        vf.refresh(false, true, () -> {
+        DOWNLOAD_CALLBACKS.put(vf, callback);
+
+        LOGGER.info("Start downloading file: " + url);
+        vf.refresh(true, true, () -> {
             LOGGER.info("File downloaded: " + url);
-            if (fi.getState() != RemoteFileState.ERROR_OCCURRED)
-                callback.accept(vf);
-            else
-                throw new IllegalStateException("Unable to download file from url: " + url + ", error: " + fi.getErrorMessage());
+            Consumer<? super VirtualFile> cb = DOWNLOAD_CALLBACKS.remove(vf);
+            if (cb != null)
+                cb.accept(vf);
         });
+
         return vf;
     }
 

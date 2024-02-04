@@ -55,7 +55,7 @@ public class SchemaMeta
         return this.groupByAction.get(action);
     }
 
-    public String getDefinitionGroup(String definition)
+    public String getDefinitionGroupOf(String definition)
     {
         return this.groupByDefinition.get(definition);
     }

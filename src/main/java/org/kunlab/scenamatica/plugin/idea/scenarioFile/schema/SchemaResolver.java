@@ -13,11 +13,13 @@ import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class SchemaResolver
 {
     private static final Key<TypeCache> KEY_TYPE_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.TypeName");
+    private static final Key<TypeCache> KEY_ACTION_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ActionName");
 
     private final SchemaProvider provider;
 
@@ -40,7 +42,10 @@ public class SchemaResolver
             cacheAllRecursive(children);
 
         if (YAMLUtils.isKey(element))
+        {
             getTypeName(element);
+            getActionName(element);
+        }
     }
 
     @RequiresBackgroundThread
@@ -61,6 +66,46 @@ public class SchemaResolver
         return typeName;
     }
 
+    public String getActionName(PsiElement element)
+    {
+        this.provider.initIfNeeded();
+        if (element == null)
+            return null;
+
+        TypeCache cache = element.getUserData(KEY_ACTION_NAME);
+        if (cache != null && cache.equalElement(element))
+            return cache.typeName();
+
+        String actionName = resolveActionName(element);
+        if (actionName != null)
+            cacheActionNameDeeply(element, actionName);
+
+        return actionName;
+    }
+
+    private String resolveActionName(PsiElement element)
+    {
+        return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
+            PsiElement actionElement = findActionByParents(element);
+            return actionElement == null ? null: actionElement.getText();
+        });
+    }
+
+    private PsiElement findActionByParents(PsiElement element)
+    {
+        PsiElement current = element;
+        while (current != null)
+        {
+            String typeName = getTypeName(current);
+            if (typeName != null && typeName.equals("action"))
+                return current;
+
+            current = current.getParent();
+        }
+
+        return null;
+    }
+
     private String resolveTypeName(PsiElement ownerElement)
     {
         String absolutePath = ScenarioTrees.getKeyFor(ownerElement);
@@ -75,13 +120,17 @@ public class SchemaResolver
         {
             String part = parts.get(i);
             // Actions のための特殊処理
-            JsonObject result;
-            if (lastType != null && lastType.equals("scenario") && part.equals("with"))
+            JsonObject result = null;
+            if (lastType != null && lastType.equals("scenario"))
             {
-                // JsonObject を偽装する。アクションの引数は、 properties に噛まされていないため。
-                result = createFakeActionInputJsonObject(current.getAsJsonObject("arguments"));
+                if (part.equals("with"))
+                    // JsonObject を偽装する。アクションの引数は、 properties に噛まされていないため。
+                    result = createFakeActionInputJsonObject(current.getAsJsonObject("arguments"));
+                else if (part.equals("action"))
+                    return "action"; // Secnario 内の action は特別扱い
             }
-            else
+
+            if (result == null)
                 result = processPart(current, part);
 
             String typeName = getTypeName(result);
@@ -177,6 +226,21 @@ public class SchemaResolver
             return this.provider.getActionFile(resolveActionNameBy);
         else
             return null;
+    }
+
+    private static void cacheActionNameDeeply(PsiElement element, String actionName)
+    {
+        if (element == null)
+            return;
+
+        element.putUserData(KEY_ACTION_NAME, TypeCache.of(element, actionName));
+
+        Iterator<PsiElement> iterator = new ScenarioTrees.DepthFirstIterator(element);
+        while (iterator.hasNext())
+        {
+            PsiElement current = iterator.next();
+            current.putUserData(KEY_ACTION_NAME, TypeCache.of(current, actionName));
+        }
     }
 
     private static String resolveActionNameBy(PsiElement ownerElement, List<String> elements)

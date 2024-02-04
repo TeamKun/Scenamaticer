@@ -56,10 +56,10 @@ public class YAMLUtils
         else if (psiElement instanceof YAMLValue)
             return true;
 
-        IElementType elementType;
+        IElementType elementType = null;
         if (psiElement instanceof LeafPsiElement)
             elementType = ((LeafPsiElement) psiElement).getElementType();
-        else
+        else if (psiElement.getNode() != null)
             elementType = psiElement.getNode().getElementType();
         if (!(elementType instanceof YAMLElementType type))
             return false;

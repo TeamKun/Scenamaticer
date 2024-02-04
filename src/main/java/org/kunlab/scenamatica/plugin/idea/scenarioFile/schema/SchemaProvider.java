@@ -92,7 +92,7 @@ public class SchemaProvider
         if (!this.meta.isDefinitionExists(definition))
             throw new IllegalStateException("Definition '" + definition + "' does not exist");
 
-        String definitionGroup = this.meta.getDefinitionGroup(definition);
+        String definitionGroup = this.meta.getDefinitionGroupOf(definition);
         if (this.definitionCache.containsKey(definitionGroup))
             return findDefinition(this.definitionCache.get(definitionGroup), definition);
 
