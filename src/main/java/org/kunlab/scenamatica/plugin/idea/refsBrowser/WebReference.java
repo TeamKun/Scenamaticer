@@ -18,12 +18,12 @@ public class WebReference
             String definitionsGroup = SchemaProviderService.getProvider().getMeta().getDefinitionGroup(type);
             if (definitionsGroup == null)
                 return null;
-            return switch (definitionsGroup)
-            {
-                case "scenamatica" -> processAnchor(BASE_URL, type);  // Scenamatica グループは root に配置される。
-                case "entity" -> processAnchor(URLUtils.concat(BASE_URL, "entities"), type);
-                default -> processAnchor(URLUtils.concat(BASE_URL, StringUtils.toKebabCase(definitionsGroup)), type);
-            };
+            if (definitionsGroup.equals("scenamatica"))
+                return processAnchor(BASE_URL, type);  // Scenamatica グループは root に配置される。
+            else if ("entity".equals(definitionsGroup) || definitionsGroup.startsWith("entities/"))
+                return processAnchor(URLUtils.concat(BASE_URL, "entities"), type);
+            else
+                return processAnchor(URLUtils.concat(BASE_URL, StringUtils.toKebabCase(definitionsGroup)), type);
         }
 
         return processAnchor(BASE_URL + type, null);

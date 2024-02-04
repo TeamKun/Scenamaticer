@@ -38,6 +38,7 @@ public class RefsBrowserWindow implements Disposable
     private JPanel panel;
     private JTextField tbURL;
     private BrowserPanel browserPanel;
+    private JBCefJSQuery urlBarQuery;
 
     private String currentURL;
     private boolean isLoad;
@@ -88,6 +89,9 @@ public class RefsBrowserWindow implements Disposable
             return null;
         });
 
+        if (this.urlBarQuery != null)
+            this.urlBarQuery.dispose();
+        this.urlBarQuery = query;
         browser.getCefBrowser().executeJavaScript(
                 "navigation.addEventListener('navigate', function(e) { "
                         + query.inject("e.destination.url")
@@ -164,7 +168,7 @@ public class RefsBrowserWindow implements Disposable
     {
         RegistryValue value = Registry.get("ide.browser.jcef.jsQueryPoolSize");
         if (value.asInteger() == 0)
-            value.setValue(5);
+            value.setValue(1000);
     }
 
     private static void patchScrolling(JBCefBrowser browser)
