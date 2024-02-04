@@ -30,6 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RefsBrowserWindow implements Disposable
 {
+    public static final Cursor CURSOR_CROSS_ARROW = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR);
+    public static final Cursor CURSOR_TEXT = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
+
     @Getter
     private final Project project;
     private final ToolWindow window;
@@ -53,15 +56,18 @@ public class RefsBrowserWindow implements Disposable
         this.project = project;
         this.window = window;
         this.browser = JBCefBrowser.createBuilder()
-                .setCreateImmediately(true)
                 .setMouseWheelEventEnable(true)
+                .setCreateImmediately(true)
                 .build();
         this.browser.getJBCefClient().addRequestHandler(new URLRequestHandler(), this.browser.getCefBrowser());
 
         JComponent component = this.browser.getComponent();
         this.browserPanel.add(component);
         // Patch scrolling
-        patchScrolling(this.browser);
+        this.patchScrolling();
+        this.patchURLBar();
+        this.patchFreeScrollCursor();
+
 
         this.navigateTo("https://scenamatica.kunlab.org/references");
     }
@@ -78,7 +84,20 @@ public class RefsBrowserWindow implements Disposable
         });
 
         // Change cursor
-        this.tbURL.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+        this.tbURL.setCursor(CURSOR_TEXT);
+    }
+
+    private void patchFreeScrollCursor()
+    {
+        this.browser.getCefBrowser().getUIComponent().addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if (e.getButton() == MouseEvent.BUTTON2)
+                    RefsBrowserWindow.this.browser.getCefBrowser().getUIComponent().setCursor(CURSOR_CROSS_ARROW);
+            }
+        });
     }
 
     private void injectURLBar(JBCefBrowser browser)
@@ -92,23 +111,6 @@ public class RefsBrowserWindow implements Disposable
         if (this.urlBarQuery != null)
             this.urlBarQuery.dispose();
         this.urlBarQuery = query;
-        browser.getCefBrowser().executeJavaScript(
-                "navigation.addEventListener('navigate', function(e) { "
-                        + query.inject("e.destination.url")
-                        + "});",
-                browser.getCefBrowser().getURL(),
-                0
-        );
-    }
-
-    private void injectURLBarHandler(JBCefBrowser browser)
-    {
-        JBCefJSQuery query = JBCefJSQuery.create((JBCefBrowserBase) browser);
-        query.addHandler(link -> {
-            BrowserUtil.browse(link);
-            return null;
-        });
-
         browser.getCefBrowser().executeJavaScript(
                 "navigation.addEventListener('navigate', function(e) { "
                         + query.inject("e.destination.url")
@@ -164,21 +166,15 @@ public class RefsBrowserWindow implements Disposable
         this.window.hide();
     }
 
-    private static void injectPoolSize()
+    private void patchScrolling()
     {
-        RegistryValue value = Registry.get("ide.browser.jcef.jsQueryPoolSize");
-        if (value.asInteger() == 0)
-            value.setValue(1000);
-    }
-
-    private static void patchScrolling(JBCefBrowser browser)
-    {
+        CefBrowser cefBrowser = this.browser.getCefBrowser();
         AtomicBoolean isScrolling = new AtomicBoolean(false);
-        browser.getCefBrowser().getUIComponent().addMouseWheelListener(e -> {
+        cefBrowser.getUIComponent().addMouseWheelListener(e -> {
             if (isScrolling.get())
                 return;
             MouseWheelEvent event = new MouseWheelEvent(
-                    browser.getCefBrowser().getUIComponent(),
+                    cefBrowser.getUIComponent(),
                     e.getID(),
                     e.getWhen(),
                     e.getModifiersEx(),
@@ -192,9 +188,16 @@ public class RefsBrowserWindow implements Disposable
             );
             isScrolling.set(true);
             for (int i = 0; i < 4; i++)
-                browser.getCefBrowser().getUIComponent().dispatchEvent(event);
+                cefBrowser.getUIComponent().dispatchEvent(event);
             isScrolling.set(false);
         });
+    }
+
+    private static void injectPoolSize()
+    {
+        RegistryValue value = Registry.get("ide.browser.jcef.jsQueryPoolSize");
+        if (value.asInteger() == 0)
+            value.setValue(1000);
     }
 
     public static RefsBrowserWindow getCurrentWindow(ToolWindow window)
