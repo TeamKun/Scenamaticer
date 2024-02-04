@@ -8,6 +8,8 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.jetbrains.yaml.psi.YAMLFile;
+import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -97,8 +99,15 @@ public class SchemaResolver
         while (current != null)
         {
             String typeName = getTypeName(current);
-            if (typeName != null && typeName.equals("action"))
-                return current;
+            if (typeName != null)
+                if (typeName.equals("action"))
+                    return current;
+                else if (typeName.equals("scenario"))
+                {
+                    String actionName = resolveActionNameBy(current);
+                    if (actionName != null)
+                        return current;
+                }
 
             current = current.getParent();
         }
@@ -243,10 +252,10 @@ public class SchemaResolver
         }
     }
 
-    private static String resolveActionNameBy(PsiElement ownerElement, List<String> elements)
+    private static String resolveActionNameBy(PsiElement apexElement, List<String> elements)
     {
         return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
-            YAMLFile yamlFile = (YAMLFile) ownerElement.getContainingFile();
+            YAMLFile yamlFile = (YAMLFile) apexElement.getContainingFile();
 
             List<String> keys = new ArrayList<>(elements);
             keys.add("action");  // Action name marker
@@ -261,6 +270,34 @@ public class SchemaResolver
                 return null;
             }
         });
+    }
+
+    private static String resolveActionNameBy(PsiElement ownerElement)
+    {
+        YAMLMapping mapping = null;
+        if (ownerElement instanceof YAMLMapping)
+            mapping = (YAMLMapping) ownerElement.getParent();
+        else
+        {
+            PsiElement current = ownerElement;
+            while (current != null)
+            {
+                if (current instanceof YAMLMapping)
+                {
+                    mapping = (YAMLMapping) current;
+                    break;
+                }
+                current = current.getParent();
+            }
+
+            if (mapping == null)
+                return null;
+        }
+
+        YAMLKeyValue action = mapping.getKeyValueByKey("action");
+        if (action == null)
+            return null;
+        return action.getValueText();
     }
 
     private static boolean isPrimitiveType(JsonObject obj)

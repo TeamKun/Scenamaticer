@@ -8,9 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.jetbrains.yaml.psi.YAMLPsiElement;
-import org.jetbrains.yaml.psi.YAMLSequenceItem;
 import org.jetbrains.yaml.psi.YAMLValue;
-import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.utils.StringUtils;
 import org.kunlab.scenamatica.plugin.idea.utils.URLUtils;
@@ -54,11 +52,11 @@ public class WebReference
             return false;
 
         YAMLPsiElement parentContainer = (YAMLPsiElement) yamlValue.getParent();
-        if (parentContainer instanceof YAMLSequenceItem)
-            parentContainer = (YAMLPsiElement) parentContainer.getParent();
-        
+        if (!(parentContainer instanceof YAMLMapping))
+            return false;
 
-        YAMLMapping blockMapping = (YAMLBlockMappingImpl) parentContainer.getParent();
+
+        YAMLMapping blockMapping = (YAMLMapping) parentContainer.getParent();
         if (blockMapping == null)
             return false;
 
