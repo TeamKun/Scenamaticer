@@ -67,6 +67,13 @@ public class SchemaMeta
 
     public Action getAction(String actionGroup, String action)
     {
+        if (actionGroup == null)
+        {
+            if (this.isActionExists(action))
+                return getAction(action);
+            else
+                return null;
+        }
         return this.actions.get(actionGroup).get(action);
     }
 

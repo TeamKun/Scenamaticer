@@ -167,7 +167,7 @@ public class SchemaResolver
     private JsonObject createFakeActionInputJsonObject(JsonObject arguments)
     {
         JsonObject fakeActionInput = new JsonObject();
-        fakeActionInput.addProperty("type", "object");
+        fakeActionInput.addProperty("type", "actionArgument");
         fakeActionInput.add("properties", arguments);
         return fakeActionInput;
     }
