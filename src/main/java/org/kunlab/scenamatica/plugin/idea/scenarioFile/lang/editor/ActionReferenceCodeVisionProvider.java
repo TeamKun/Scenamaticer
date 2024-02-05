@@ -139,7 +139,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         public ActionReferenceCodeVisionEntry(@NotNull PsiElement element, @NotNull String actionName, @Nullable String actionDesc)
         {
             super(
-                    getHint(actionDesc, actionName),
+                    getHint(actionName, actionDesc),
                     "org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ActionReferenceCodeVisionProvider",
                     null,
                     "aDAWD",
@@ -170,10 +170,9 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
             window.navigateTo(reference);
         }
 
-        private static String getHint(@Nullable String actionDesc, @NotNull String actionName)
+        private static String getHint(@NotNull String actionName, @Nullable String actionDesc)
         {
-            return actionDesc == null ? "View action reference":
-                    "View action reference: " + actionName + "(" + actionDesc + ")";
+            return "Action: " + actionName + (actionDesc == null ? "": " - " + actionDesc);
         }
 
         private static void showErrorMessage(@NotNull Editor editor, @NotNull String message)
