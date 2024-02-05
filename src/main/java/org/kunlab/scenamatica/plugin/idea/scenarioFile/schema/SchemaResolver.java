@@ -7,6 +7,7 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
@@ -32,7 +33,7 @@ public class SchemaResolver
 
     public void createCacheAll(PsiElement element)
     {
-        ApplicationManager.getApplication().executeOnPooledThread(() -> cacheAllRecursive(element));
+        ApplicationManager.getApplication().runReadAction(() -> cacheAllRecursive(element));
     }
 
     private void cacheAllRecursive(PsiElement element)
@@ -40,7 +41,7 @@ public class SchemaResolver
         if (element == null)
             return;
 
-        for (PsiElement children : ApplicationManager.getApplication().runReadAction((Computable<PsiElement[]>) element::getChildren))
+        for (PsiElement children : element.getChildren())
             cacheAllRecursive(children);
 
         if (YAMLUtils.isKey(element))
@@ -88,12 +89,14 @@ public class SchemaResolver
     private String resolveActionName(PsiElement element)
     {
         return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
-            PsiElement actionElement = findActionByParents(element);
-            return actionElement == null ? null: actionElement.getText();
+            YAMLMapping actionElement = findActionByParents(element);
+            if (actionElement == null)
+                return null;
+            return getActionNameByActionObject(actionElement);
         });
     }
 
-    private PsiElement findActionByParents(PsiElement element)
+    private YAMLMapping findActionByParents(PsiElement element)
     {
         PsiElement current = element;
         while (current != null)
@@ -101,12 +104,12 @@ public class SchemaResolver
             String typeName = getTypeName(current);
             if (typeName != null)
                 if (typeName.equals("action"))
-                    return current;
+                    return (YAMLMapping) current;
                 else if (typeName.equals("scenario"))
                 {
-                    String actionName = resolveActionNameBy(current);
-                    if (actionName != null)
-                        return current;
+                    YAMLMapping action = resolveActionObjectBy(current);
+                    if (action != null)
+                        return action;
                 }
 
             current = current.getParent();
@@ -237,6 +240,15 @@ public class SchemaResolver
             return null;
     }
 
+    private static String getActionNameByActionObject(YAMLMapping mapping)
+    {
+        if (mapping == null)
+            return null;
+
+        YAMLKeyValue action = mapping.getKeyValueByKey("action");
+        return action == null ? null: action.getValueText();
+    }
+
     private static void cacheActionNameDeeply(PsiElement element, String actionName)
     {
         if (element == null)
@@ -244,7 +256,7 @@ public class SchemaResolver
 
         element.putUserData(KEY_ACTION_NAME, TypeCache.of(element, actionName));
 
-        Iterator<PsiElement> iterator = new ScenarioTrees.DepthFirstIterator(element);
+        Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
         while (iterator.hasNext())
         {
             PsiElement current = iterator.next();
@@ -263,6 +275,8 @@ public class SchemaResolver
             try
             {
                 PsiElement elm = YAMLUtils.getValue(yamlFile, keys.toArray(new String[0]));
+                if (elm == null)
+                    return null;
                 return elm.getText();
             }
             catch (IllegalArgumentException e)
@@ -272,11 +286,11 @@ public class SchemaResolver
         });
     }
 
-    private static String resolveActionNameBy(PsiElement ownerElement)
+    private static YAMLMapping resolveActionObjectBy(PsiElement ownerElement)
     {
         YAMLMapping mapping = null;
         if (ownerElement instanceof YAMLMapping)
-            mapping = (YAMLMapping) ownerElement.getParent();
+            mapping = (YAMLMapping) ownerElement;
         else
         {
             PsiElement current = ownerElement;
@@ -287,6 +301,8 @@ public class SchemaResolver
                     mapping = (YAMLMapping) current;
                     break;
                 }
+                else if (current instanceof YAMLDocument)
+                    return null;
                 current = current.getParent();
             }
 
@@ -297,7 +313,8 @@ public class SchemaResolver
         YAMLKeyValue action = mapping.getKeyValueByKey("action");
         if (action == null)
             return null;
-        return action.getValueText();
+        else
+            return mapping;
     }
 
     private static boolean isPrimitiveType(JsonObject obj)
@@ -329,12 +346,24 @@ public class SchemaResolver
     {
         public boolean equalElement(PsiElement element)
         {
-            return element.hashCode() == this.hash;
+            return this.hash == calcHash(element);
         }
 
         public static TypeCache of(PsiElement element, String typeName)
         {
-            return new TypeCache(element.hashCode(), typeName);
+            return new TypeCache(calcHash(element), typeName);
+        }
+
+        private static int calcHash(PsiElement element)
+        {
+            return ApplicationManager.getApplication().runReadAction((Computable<Integer>) () -> {
+                Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
+                int hash = element.hashCode();
+                while (iterator.hasNext())
+                    hash ^= iterator.next().hashCode();
+
+                return hash;
+            });
         }
     }
 }

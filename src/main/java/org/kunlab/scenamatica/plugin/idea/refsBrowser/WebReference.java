@@ -100,7 +100,7 @@ public class WebReference
         return processAnchor(BASE_URL_TYPE + type, null);
     }
 
-    private static String actionToWebReference(String action)
+    public static String actionToWebReference(String action)
     {
         String actionsGroup = SchemaProviderService.getProvider().getMeta().getActionGroupOf(action);
         if (actionsGroup == null)

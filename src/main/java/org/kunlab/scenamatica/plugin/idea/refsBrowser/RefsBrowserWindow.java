@@ -125,7 +125,6 @@ public class RefsBrowserWindow implements Disposable
         if (!url.startsWith("https://scenamatica.kunlab.org/"))
             return;
 
-        browser.openDevtools();
         browser.getCefBrowser().executeJavaScript(
                 "if ('serviceWorker' in navigator) {"
                         + "navigator.serviceWorker.register('/sw.js').then(function(registration) {"

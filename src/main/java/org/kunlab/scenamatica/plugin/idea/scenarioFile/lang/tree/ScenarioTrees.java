@@ -10,7 +10,6 @@ import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.Stack;
 
 public class ScenarioTrees
 {
@@ -21,7 +20,7 @@ public class ScenarioTrees
         if (!canHasKey(root))
             return;
 
-        Iterator<PsiElement> iterator = new DepthFirstIterator(root);
+        Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(root);
 
         while (iterator.hasNext())
         {
@@ -54,7 +53,11 @@ public class ScenarioTrees
 
     private static boolean canHasKey(PsiElement element)
     {
-        PsiElement parent = ApplicationManager.getApplication().runReadAction((Computable<? extends PsiElement>) element::getParent);
+        PsiElement parent;
+        if (ApplicationManager.getApplication().isReadAccessAllowed())
+            parent = element.getParent();
+        else
+            parent = ApplicationManager.getApplication().runReadAction((Computable<PsiElement>) element::getParent);
 
         return (parent instanceof YAMLBlockMappingImpl && element instanceof YAMLValue)
                 || YAMLUtils.isValue(element)
@@ -74,35 +77,5 @@ public class ScenarioTrees
         return result;
     }
 
-    public static class DepthFirstIterator implements Iterator<PsiElement>
-    {
-        private final Stack<PsiElement> stack = new Stack<>();
-
-        public DepthFirstIterator(PsiElement root)
-        {
-            this.stack.push(root);
-        }
-
-        @Override
-        public boolean hasNext()
-        {
-            return !this.stack.isEmpty();
-        }
-
-        @Override
-        public PsiElement next()
-        {
-            PsiElement current = this.stack.pop();
-
-            if (current != null)
-            {
-                PsiElement[] children = current.getChildren();
-                for (int i = children.length - 1; i >= 0; i--)
-                    this.stack.push(children[i]);
-            }
-
-            return current;
-        }
-    }
 }
 

@@ -26,7 +26,9 @@ import org.jetbrains.yaml.psi.YAMLValue;
 import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 public class YAMLUtils
 {
@@ -265,5 +267,41 @@ public class YAMLUtils
     {
         return element.getParent().getParent().getParent() instanceof YAMLDocument
                 || element.getParent().getParent() instanceof YAMLDocument;
+    }
+
+    public static Iterator<PsiElement> getDepthFirstIterator(PsiElement root)
+    {
+        return new DepthFirstIterator(root);
+    }
+
+    public static class DepthFirstIterator implements Iterator<PsiElement>
+    {
+        private final Stack<PsiElement> stack = new Stack<>();
+
+        public DepthFirstIterator(PsiElement root)
+        {
+            this.stack.push(root);
+        }
+
+        @Override
+        public boolean hasNext()
+        {
+            return !this.stack.isEmpty();
+        }
+
+        @Override
+        public PsiElement next()
+        {
+            PsiElement current = this.stack.pop();
+
+            if (current != null)
+            {
+                PsiElement[] children = current.getChildren();
+                for (int i = children.length - 1; i >= 0; i--)
+                    this.stack.push(children[i]);
+            }
+
+            return current;
+        }
     }
 }
