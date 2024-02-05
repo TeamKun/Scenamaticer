@@ -82,7 +82,9 @@ public class WebReference
 
     public static String typeToWebReference(String type)
     {
-        if (type == null || type.equals("prime"))
+        if (type == null)
+            return null;
+        else if (type.equals("prime"))
             return processAnchor(BASE_URL_TYPE, "scenario-file");
         else if (SchemaProviderService.getProvider().hasDefinition(type))
         {
@@ -96,8 +98,8 @@ public class WebReference
             else
                 return processAnchor(URLUtils.concat(BASE_URL_TYPE, StringUtils.toKebabCase(definitionsGroup)), type);
         }
-
-        return processAnchor(BASE_URL_TYPE + type, null);
+        else
+            return processAnchor(BASE_URL_TYPE + type, null);
     }
 
     public static String actionToWebReference(String action)
