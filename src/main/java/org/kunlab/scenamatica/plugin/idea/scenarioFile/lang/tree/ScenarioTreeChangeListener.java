@@ -14,16 +14,12 @@ public class ScenarioTreeChangeListener extends PsiTreeChangeAdapter
     @Override
     public void childAdded(@NotNull PsiTreeChangeEvent event)
     {
-        long start = System.currentTimeMillis();
         if (!shouldProcess(event))
             return;
 
         PsiElement element = event.getChild();
         if (!(element instanceof PsiWhiteSpace || element instanceof LeafPsiElement))
             ScenarioTrees.embedKeyAll(element);
-
-        long end = System.currentTimeMillis();
-        System.out.println("ScenarioTreeChangeListener.childAdded: " + (end - start) + "ms");
     }
 
     @Override

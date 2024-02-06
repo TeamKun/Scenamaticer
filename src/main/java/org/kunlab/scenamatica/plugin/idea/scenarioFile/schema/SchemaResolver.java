@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
@@ -23,6 +24,8 @@ public class SchemaResolver
 {
     private static final Key<TypeCache> KEY_TYPE_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.TypeName");
     private static final Key<TypeCache> KEY_ACTION_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ActionName");
+    private static final Key<Object> KEY_ACTION_SPECFIFIER = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ActionSpecifier");
+    private static final Object ACTION_SPECIFIER = new Object();
 
     private final SchemaProvider provider;
 
@@ -84,6 +87,23 @@ public class SchemaResolver
             cacheActionNameDeeply(element, actionName);
 
         return actionName;
+    }
+
+    public boolean isActionSpecificElement(PsiElement element)
+    {
+        if (element == null)
+            return false;
+        else if (element.getUserData(KEY_ACTION_SPECFIFIER) != null)
+            return true;
+
+        if (element instanceof LeafPsiElement)
+        {
+            PsiElement parent = element.getParent();
+            if (parent instanceof YAMLKeyValue)
+                return isActionSpecificElement(parent);
+        }
+
+        return false;
     }
 
     private String resolveActionName(PsiElement element)
@@ -246,7 +266,11 @@ public class SchemaResolver
             return null;
 
         YAMLKeyValue action = mapping.getKeyValueByKey("action");
-        return action == null ? null: action.getValueText();
+        if (action == null)
+            return null;
+
+        action.putUserData(KEY_ACTION_SPECFIFIER, ACTION_SPECIFIER);
+        return action.getValueText();
     }
 
     private static void cacheActionNameDeeply(PsiElement element, String actionName)
