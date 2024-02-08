@@ -1,23 +1,37 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import kotlin.Pair;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.utils.JsonUtils;
 import org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader;
 import org.kunlab.scenamatica.plugin.idea.utils.URLUtils;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SchemaProvider
 {
     public static final String PATH_FILE_META = "meta.json";
+    public static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(AvailableStatus.class, new AvailableStatus(false, null))
+            .create();
 
     @Getter
     private final SchemaResolver schemaResolver;
-    private final Map<String, JsonObject> actionsCache;
+    private final Map<String, Pair<JsonObject, Action>> actionsCache;
     private final Map<String, JsonObject> definitionCache;
 
     private String contentServerURL;
@@ -48,10 +62,22 @@ public class SchemaProvider
         this.initialized = false;
     }
 
+    public Action getAction(String action)
+    {
+        checkMetaLoaded();
+
+        return getActionJsonRecursive(action).getSecond();
+    }
+
     public JsonObject getActionFile(String action)
     {
         checkMetaLoaded();
 
+        return getActionJsonRecursive(action).getFirst();
+    }
+
+    private Pair<JsonObject, Action> getActionJsonRecursive(String action)
+    {
         if (this.actionsCache.containsKey(action))
             return this.actionsCache.get(action);
 
@@ -59,18 +85,21 @@ public class SchemaProvider
             throw new IllegalStateException("Action '" + action + "' does not exist");
 
         String actionGroup = this.meta.getActionGroupOf(action);
-        SchemaMeta.Action actionMeta = this.meta.getAction(actionGroup, action);
-        String path = buildActionFilePath(actionGroup, actionMeta.getFile());
+        SchemaMeta.ActionDescriptor actionDescriptorMeta = this.meta.getAction(actionGroup, action);
+        String path = buildActionFilePath(actionGroup, actionDescriptorMeta.getFile());
         JsonObject file = TempFileDownloader.downloadJsonSync(path);
         if (hasBaseActionInAction(file))
         {
             String baseAction = file.get("base").getAsString();
-            JsonObject baseFile = getActionFile(baseAction);
+            JsonObject baseFile = getActionJsonRecursive(baseAction).getFirst();
             file = JsonUtils.mergeRecursive(baseFile, file);
         }
 
-        this.actionsCache.put(action, file);
-        return file;
+        Action actionObj = GSON.fromJson(file, Action.class);
+        Pair<JsonObject, Action> pair = new Pair<>(file, actionObj);
+
+        this.actionsCache.put(action, pair);
+        return pair;
     }
 
     public boolean hasDefinition(String definition)
@@ -146,5 +175,76 @@ public class SchemaProvider
     private static String getContentURL(String contentServerURL, String path)
     {
         return URLUtils.concat(contentServerURL, path);
+    }
+
+    public record Action(String name, String description, String base, String[] events, AvailableStatus executable,
+                         AvailableStatus watchable, AvailableStatus requireable, Map<String, Object> arguments,
+                         Map<String, Object> outputs)
+    {
+        public boolean isAvailableFor(@Nullable ScenarioType type)
+        {
+            if (type == null)
+                return this.executable.isAvailable()
+                        || this.watchable.isAvailable()
+                        || this.requireable.isAvailable();
+
+            switch (type)
+            {
+                case EXECUTE ->
+                {
+                    return this.executable.isAvailable();
+                }
+                case EXPECT ->
+                {
+                    return this.watchable.isAvailable();
+                }
+                case REQUIRE ->
+                {
+                    return this.requireable.isAvailable();
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + type);
+            }
+        }
+
+        public String getDescriptionFor(@Nullable ScenarioType type)
+        {
+            if (type == null)
+                return this.description();
+
+            switch (type)
+            {
+                case EXECUTE ->
+                {
+                    return this.executable.description() == null ? this.description(): this.executable.description();
+                }
+                case EXPECT ->
+                {
+                    return this.watchable.description() == null ? this.description(): this.watchable.description();
+                }
+                case REQUIRE ->
+                {
+                    return this.requireable.description() == null ? this.description(): this.requireable.description();
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + type);
+            }
+        }
+    }
+
+    public record AvailableStatus(boolean isAvailable, String description) implements JsonDeserializer<AvailableStatus>
+    {
+        @Override
+        public AvailableStatus deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
+        {
+            if (!jsonElement.isJsonPrimitive())
+                throw new JsonParseException("AvailableStatus must be a primitive type, got " + jsonElement.getClass().getSimpleName());
+
+            JsonPrimitive primitive = jsonElement.getAsJsonPrimitive();
+            if (primitive.isBoolean())
+                return new AvailableStatus(primitive.getAsBoolean(), null);
+            else if (primitive.isString())
+                return new AvailableStatus(true, primitive.getAsString());
+            else
+                throw new JsonParseException("AvailableStatus must be a primitive type, got " + primitive.getClass().getSimpleName());
+        }
     }
 }

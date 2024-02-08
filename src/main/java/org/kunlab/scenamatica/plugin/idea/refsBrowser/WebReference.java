@@ -72,7 +72,7 @@ public class WebReference
 
     private static String resolveActionName(PsiElement element)
     {
-        return SchemaProviderService.getResolver().getActionName(element);
+        return SchemaProviderService.getResolver().getAction(element).getName();
     }
 
     private static String resolveTypeName(PsiElement element)

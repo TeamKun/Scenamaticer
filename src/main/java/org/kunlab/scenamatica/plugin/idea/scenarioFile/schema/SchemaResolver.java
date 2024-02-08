@@ -8,11 +8,14 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
+import lombok.Data;
+import lombok.Getter;
 import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
@@ -23,7 +26,7 @@ import java.util.List;
 public class SchemaResolver
 {
     private static final Key<TypeCache> KEY_TYPE_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.TypeName");
-    private static final Key<TypeCache> KEY_ACTION_NAME = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ActionName");
+    private static final Key<ScenarioAction> KEY_SCENARIO_ACTION = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ScenarioAction");
     private static final Key<Object> KEY_ACTION_SPECFIFIER = Key.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver.ActionSpecifier");
     private static final Object ACTION_SPECIFIER = new Object();
 
@@ -50,7 +53,7 @@ public class SchemaResolver
         if (YAMLUtils.isKey(element))
         {
             getTypeName(element);
-            getActionName(element);
+            getAction(element);
         }
     }
 
@@ -63,7 +66,7 @@ public class SchemaResolver
 
         TypeCache cache = element.getUserData(KEY_TYPE_NAME);
         if (cache != null && cache.equalElement(element))
-            return cache.typeName();
+            return cache.getName();
 
         String typeName = resolveTypeName(element);
         if (typeName != null)
@@ -72,21 +75,35 @@ public class SchemaResolver
         return typeName;
     }
 
-    public String getActionName(PsiElement element)
+    public ScenarioAction getAction(PsiElement element)
     {
         this.provider.initIfNeeded();
         if (element == null)
             return null;
 
-        TypeCache cache = element.getUserData(KEY_ACTION_NAME);
+        ScenarioAction cache = element.getUserData(KEY_SCENARIO_ACTION);
         if (cache != null && cache.equalElement(element))
-            return cache.typeName();
+            return cache;
 
-        String actionName = resolveActionName(element);
-        if (actionName != null)
-            cacheActionNameDeeply(element, actionName);
+        return ApplicationManager.getApplication().runReadAction((Computable<ScenarioAction>) () -> getActionInternal(element));
+    }
 
-        return actionName;
+    private ScenarioAction getActionInternal(PsiElement element)
+    {
+        YAMLMapping actionElement = findActionByParents(element);
+        if (actionElement == null)
+            return null;
+
+        YAMLKeyValue action = actionElement.getKeyValueByKey("action");
+        if (action == null)
+            return null;
+
+        action.putUserData(KEY_ACTION_SPECFIFIER, ACTION_SPECIFIER);
+        YAMLKeyValue type = actionElement.getKeyValueByKey("type");
+
+        String actionName = action.getValueText();
+        ScenarioType typeEnum = type != null ? org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType.of(type.getValueText()): null;
+        return cacheActionDeeply(actionElement, actionName, typeEnum);
     }
 
     public boolean isActionSpecificElement(PsiElement element)
@@ -104,16 +121,6 @@ public class SchemaResolver
         }
 
         return false;
-    }
-
-    private String resolveActionName(PsiElement element)
-    {
-        return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> {
-            YAMLMapping actionElement = findActionByParents(element);
-            if (actionElement == null)
-                return null;
-            return getActionNameByActionObject(actionElement);
-        });
     }
 
     private YAMLMapping findActionByParents(PsiElement element)
@@ -273,19 +280,19 @@ public class SchemaResolver
         return action.getValueText();
     }
 
-    private static void cacheActionNameDeeply(PsiElement element, String actionName)
+    private static ScenarioAction cacheActionDeeply(PsiElement element, String actionName, ScenarioType type)
     {
-        if (element == null)
-            return;
-
-        element.putUserData(KEY_ACTION_NAME, TypeCache.of(element, actionName));
+        ScenarioAction cache = ScenarioAction.of(element, actionName, type);
+        element.putUserData(KEY_SCENARIO_ACTION, cache);
 
         Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
         while (iterator.hasNext())
         {
             PsiElement current = iterator.next();
-            current.putUserData(KEY_ACTION_NAME, TypeCache.of(current, actionName));
+            current.putUserData(KEY_SCENARIO_ACTION, cache);
         }
+
+        return cache;
     }
 
     private static String resolveActionNameBy(PsiElement apexElement, List<String> elements)
@@ -366,8 +373,18 @@ public class SchemaResolver
                 || type.equals("object"));
     }
 
-    private record TypeCache(int hash, String typeName)
+    @Data
+    private static class TypeCache
     {
+        private final int hash;
+        private final String name;
+
+        private TypeCache(int hash, String name)
+        {
+            this.hash = hash;
+            this.name = name;
+        }
+
         public boolean equalElement(PsiElement element)
         {
             return this.hash == calcHash(element);
@@ -388,6 +405,23 @@ public class SchemaResolver
 
                 return hash;
             });
+        }
+    }
+
+    @Getter
+    public static class ScenarioAction extends TypeCache
+    {
+        private final ScenarioType type;
+
+        private ScenarioAction(int hash, String typeName, ScenarioType type)
+        {
+            super(hash, typeName);
+            this.type = type;
+        }
+
+        public static ScenarioAction of(PsiElement element, String typeName, ScenarioType type)
+        {
+            return new ScenarioAction(TypeCache.calcHash(element), typeName, type);
         }
     }
 }

@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.impl.http.RemoteFileInfo;
 import com.intellij.openapi.vfs.impl.http.RemoteFileState;
 
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.CyclicBarrier;
@@ -47,8 +48,12 @@ public class TempFileDownloader
 
     private static void watchDog()
     {
-        for (VirtualFile vf : DOWNLOAD_CALLBACKS.keySet())
+        Iterator<Map.Entry<VirtualFile, Consumer<? super VirtualFile>>> it = DOWNLOAD_CALLBACKS.entrySet().iterator();
+        while (it.hasNext())
         {
+            Map.Entry<VirtualFile, Consumer<? super VirtualFile>> entry = it.next();
+            VirtualFile vf = entry.getKey();
+            Consumer<? super VirtualFile> callback = entry.getValue();
             if (vf.getUserData(KEY_DOWNLOAD_STARTED) == null)
                 continue;
 
@@ -59,14 +64,14 @@ public class TempFileDownloader
             if (fi.getState() == RemoteFileState.DOWNLOADED)
             {
                 vf.putUserData(KEY_DOWNLOAD_STARTED, null);
-                Consumer<? super VirtualFile> callback = DOWNLOAD_CALLBACKS.remove(vf);
+                it.remove();
                 if (callback != null)
                     callback.accept(vf);
             }
             else if (fi.getState() == RemoteFileState.ERROR_OCCURRED)
             {
                 vf.putUserData(KEY_DOWNLOAD_STARTED, null);
-                Consumer<? super VirtualFile> callback = DOWNLOAD_CALLBACKS.remove(vf);
+                it.remove();
                 if (callback != null)
                     throw new IllegalStateException("Unable to download file from url: " + vf.getUrl() + ", error: " + fi.getErrorMessage());
             }
@@ -83,7 +88,6 @@ public class TempFileDownloader
         else if (vf.getUserData(KEY_DOWNLOAD_STARTED) != null)
         {
             LOGGER.info("File already downloading: " + url);
-            callback.accept(vf);
             return vf;
         }
         else

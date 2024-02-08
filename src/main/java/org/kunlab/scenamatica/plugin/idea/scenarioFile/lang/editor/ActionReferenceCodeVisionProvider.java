@@ -26,8 +26,9 @@ import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaMeta;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProvider;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
@@ -98,15 +99,23 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
             PsiElement element = elements.next();
             if (acceptsElement(element))
             {
-                String actionName = SchemaProviderService.getResolver().getActionName(element);
-                if (actionName == null)
+                SchemaResolver.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(element);
+                if (scenarioAction == null)
                     continue;
-                String desc = null;
-                SchemaMeta.Action actionDesc = SchemaProviderService.getProvider().getMeta().getAction(actionName);
-                if (actionDesc != null)
-                    desc = actionDesc.getDescription();
 
-                entries.add(new Pair<>(element.getTextRange(), new ActionReferenceCodeVisionEntry(element, actionName, desc)));
+                String desc = null;
+                SchemaProvider.Action action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
+                if (action != null)
+                    desc = action.getDescriptionFor(scenarioAction.getType());
+
+                entries.add(new Pair<>(
+                        element.getTextRange(),
+                        new ActionReferenceCodeVisionEntry(
+                                element,
+                                scenarioAction.getName(),
+                                desc
+                        )
+                ));
             }
         }
 

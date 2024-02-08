@@ -21,7 +21,7 @@ public class SchemaMeta
     String actionsDir;
     String prime;
     Map<String, String[]> definitions;
-    Map<String, Map<String, Action>> actions;
+    Map<String, ? extends Map<String, ActionDescriptor>> actions;
 
     @JsonIgnore
     Map<String, String> groupByAction;
@@ -33,7 +33,7 @@ public class SchemaMeta
                       @JsonProperty("actionsDir") String actionsDir,
                       @JsonProperty("prime") String prime,
                       @JsonProperty("definitions") Map<String, String[]> definitions,
-                      @JsonProperty("actions") Map<String, Map<String, Action>> actions)
+                      @JsonProperty("actions") Map<String, ? extends Map<String, ActionDescriptor>> actions)
     {
         this.definitionsDir = definitionsDir;
         this.actionsDir = actionsDir;
@@ -60,12 +60,12 @@ public class SchemaMeta
         return this.groupByDefinition.get(definition);
     }
 
-    public Action getAction(String action)
+    public ActionDescriptor getAction(String action)
     {
         return this.getAction(this.getActionGroupOf(action), action);
     }
 
-    public Action getAction(String actionGroup, String action)
+    public ActionDescriptor getAction(String actionGroup, String action)
     {
         if (actionGroup == null)
         {
@@ -95,7 +95,7 @@ public class SchemaMeta
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private static Map<String, String> groupByAction(Map<String, ? extends Map<String, Action>> actions)
+    private static Map<String, String> groupByAction(Map<String, ? extends Map<String, ActionDescriptor>> actions)
     {
         return actions.entrySet().stream()
                 .flatMap(entry -> entry.getValue().keySet().stream()
@@ -116,12 +116,12 @@ public class SchemaMeta
     }
 
     @Getter
-    public static class Action
+    public static class ActionDescriptor
     {
         private final String file;
         private final String description;
 
-        public Action()
+        public ActionDescriptor()
         {
             this.file = null;
             this.description = null;
