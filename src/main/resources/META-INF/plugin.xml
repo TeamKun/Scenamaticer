@@ -50,7 +50,9 @@
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.ScenarioNameDuplicationInspector"
-                language="yaml" displayName="Duplicated Scenario names"/>
+                language="yaml"
+                level="ERROR"
+                displayName="Duplicated Scenario names"/>
         <postStartupActivity
                 implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.tree.ScenarioTreeActivity"/>
         <gotoDeclarationHandler

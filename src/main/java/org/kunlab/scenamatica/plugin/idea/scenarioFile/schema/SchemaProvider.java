@@ -66,14 +66,16 @@ public class SchemaProvider
     {
         checkMetaLoaded();
 
-        return getActionJsonRecursive(action).getSecond();
+        Pair<JsonObject, Action> pair = getActionJsonRecursive(action);
+        return pair == null ? null: pair.getSecond();
     }
 
     public JsonObject getActionFile(String action)
     {
         checkMetaLoaded();
 
-        return getActionJsonRecursive(action).getFirst();
+        Pair<JsonObject, Action> pair = getActionJsonRecursive(action);
+        return pair == null ? null: pair.getFirst();
     }
 
     private Pair<JsonObject, Action> getActionJsonRecursive(String action)
@@ -82,7 +84,7 @@ public class SchemaProvider
             return this.actionsCache.get(action);
 
         if (!this.meta.isActionExists(action))
-            throw new IllegalStateException("Action '" + action + "' does not exist");
+            return null;
 
         String actionGroup = this.meta.getActionGroupOf(action);
         SchemaMeta.ActionDescriptor actionDescriptorMeta = this.meta.getAction(actionGroup, action);
@@ -91,8 +93,11 @@ public class SchemaProvider
         if (hasBaseActionInAction(file))
         {
             String baseAction = file.get("base").getAsString();
-            JsonObject baseFile = getActionJsonRecursive(baseAction).getFirst();
-            file = JsonUtils.mergeRecursive(baseFile, file);
+
+            Pair<JsonObject, Action> basePair = getActionJsonRecursive(baseAction);
+            if (basePair == null)
+                throw new IllegalStateException("Base action '" + baseAction + "' does not exist");
+            file = JsonUtils.mergeRecursive(basePair.getFirst(), file);
         }
 
         Action actionObj = GSON.fromJson(file, Action.class);

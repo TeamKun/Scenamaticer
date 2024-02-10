@@ -12,7 +12,7 @@ on:
 #end
 #if(${NO_TRIGGER} != "")
   # TODO: ${AUTO_GENERATED_STUB}
-#end
+#end:
 
 #if(${CONTEXT_USAGE} != "")
 context:

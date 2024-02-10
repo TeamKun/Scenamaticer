@@ -55,7 +55,10 @@ public class TempFileDownloader
             VirtualFile vf = entry.getKey();
             Consumer<? super VirtualFile> callback = entry.getValue();
             if (vf.getUserData(KEY_DOWNLOAD_STARTED) == null)
+            {
+                it.remove();
                 continue;
+            }
 
             RemoteFileInfo fi = ((HttpVirtualFile) vf).getFileInfo();
             if (fi == null)
@@ -108,7 +111,8 @@ public class TempFileDownloader
         LOGGER.info("Start downloading file: " + url);
         vf.refresh(true, true, () -> {
             LOGGER.info("File downloaded: " + url);
-            Consumer<? super VirtualFile> cb = DOWNLOAD_CALLBACKS.remove(vf);
+            Consumer<? super VirtualFile> cb = DOWNLOAD_CALLBACKS.get(vf);
+            vf.putUserData(KEY_DOWNLOAD_STARTED, null);
             if (cb != null)
                 cb.accept(vf);
         });

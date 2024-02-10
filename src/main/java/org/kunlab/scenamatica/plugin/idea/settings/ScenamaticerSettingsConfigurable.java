@@ -64,7 +64,7 @@ public class ScenamaticerSettingsConfigurable implements Configurable
             throw new ConfigurationException(ScenamaticerBundle.of("windows.settings.schema.jsonSchemaURL.invalid"));
         state.setSchemaURL(this.settings.getSchemaURL());
         if (!isValidUrl(state.getSchemaURL()))
-            throw new ConfigurationException(String.format(ScenamaticerBundle.of("windows.settings.schema.jsonSchemaURL.invalid")));
+            throw new ConfigurationException(String.format(ScenamaticerBundle.of("windows.settings.schema.contentServerURL.invalid")));
         state.setContentServerURL(this.settings.getContentServerURL());
 
         state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());

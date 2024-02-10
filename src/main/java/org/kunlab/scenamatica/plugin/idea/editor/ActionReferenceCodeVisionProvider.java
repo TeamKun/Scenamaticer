@@ -104,17 +104,16 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                 if (scenarioAction == null)
                     continue;
 
-                String desc = null;
                 SchemaProvider.Action action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
-                if (action != null)
-                    desc = action.getDescriptionFor(scenarioAction.getType());
+                if (action == null)
+                    continue;
 
                 entries.add(new Pair<>(
                         element.getTextRange(),
                         new ActionReferenceCodeVisionEntry(
                                 element,
                                 scenarioAction.getName(),
-                                desc
+                                action.getDescriptionFor(scenarioAction.getType())
                         )
                 ));
             }

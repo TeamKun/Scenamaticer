@@ -31,7 +31,7 @@ public class ScenamaticerBundle extends AbstractBundle
 
         if (!this.locale.equals(Locale.ENGLISH))
         {
-            String localizedPath = pathToBundle + "@" + this.locale.getLanguage();
+            String localizedPath = pathToBundle + "_" + this.locale.getLanguage();
             ResourceBundle localeBundle = super.findBundle(localizedPath, ScenamaticerPluginDisposable.class.getClassLoader(), control);
             if (base.equals(localeBundle))
                 return base;

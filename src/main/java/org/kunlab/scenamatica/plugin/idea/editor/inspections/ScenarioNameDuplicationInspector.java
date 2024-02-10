@@ -1,7 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.editor.inspections;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
-import com.intellij.codeInspection.ProblemHighlightType;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -17,11 +16,12 @@ import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenarioNameDuplicationInspector extends AbstractScenamaticaInspection
 {
-    public static final String ID = "duplication";
+    public static final String ID = "Duplication";
 
     public ScenarioNameDuplicationInspector()
     {
         super(ID, "DuplicatedScenarioName", HighlightDisplayLevel.ERROR);
+
     }
 
     @Override
@@ -44,7 +44,6 @@ public class ScenarioNameDuplicationInspector extends AbstractScenamaticaInspect
                     holder.registerProblem(
                             scenarioNameElement,
                             getDuplicatedText(holder.getProject(), file, scenarioName),
-                            ProblemHighlightType.GENERIC_ERROR,
                             new ValueIncrementalFix(scenarioNameElement, scenarioName)
                     );
             }
