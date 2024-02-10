@@ -11,7 +11,7 @@ on:
 - type: on_load
 #end
 #if(${NO_TRIGGER} != "")
-  # TODO: Auto-generated scenario stub
+  # TODO: ${AUTO_GENERATED_STUB}
 #end
 
 #if(${CONTEXT_USAGE} != "")
@@ -34,4 +34,4 @@ context:
 #end
 
 scenario:
-  # TODO: Auto-generated scenario stub
+  # TODO: ${AUTO_GENERATED_STUB}

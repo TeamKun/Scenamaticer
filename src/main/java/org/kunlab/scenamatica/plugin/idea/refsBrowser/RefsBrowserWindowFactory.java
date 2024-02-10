@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.jcef.JBCefApp;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 
 public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
 {
@@ -16,7 +17,7 @@ public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
     {
         if (!JBCefApp.isSupported())
         {
-            JBLabel label = new JBLabel("Unable to provide Scenamatica docs: JCEF is not supported on this platform.");
+            JBLabel label = new JBLabel(ScenamaticerBundle.of("windows.reference.jcefNotSupported"));
             toolWindow.getContentManager().addContent(toolWindow.getContentManager().getFactory().createContent(label, "", false));
             return;
         }
@@ -29,6 +30,6 @@ public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
         );
 
         toolWindow.getContentManager().addContent(content);
-        toolWindow.setStripeTitle("Scenamatica References");
+        toolWindow.setStripeTitle(ScenamaticerBundle.of("windows.reference.title"));
     }
 }

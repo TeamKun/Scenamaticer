@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree;
+package org.kunlab.scenamatica.plugin.idea.scenarioFile.tree;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;

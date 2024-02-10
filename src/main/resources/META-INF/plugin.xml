@@ -49,15 +49,15 @@
         <localInspection
                 groupName="Scenamatica"
                 enabledByDefault="true"
-                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.inspections.ScenarioFileDuplicationInspector"
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.ScenarioNameDuplicationInspector"
                 language="yaml" displayName="Duplicated Scenario names"/>
         <postStartupActivity
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTreeActivity"/>
+                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.tree.ScenarioTreeActivity"/>
         <gotoDeclarationHandler
                 order="first"
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ScenarioFileGotoDeclarationHandler"/>
+                implementation="org.kunlab.scenamatica.plugin.idea.editor.ScenarioFileGotoDeclarationHandler"/>
         <codeInsight.daemonBoundCodeVisionProvider
-                implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ActionReferenceCodeVisionProvider"/>
+                implementation="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceCodeVisionProvider"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

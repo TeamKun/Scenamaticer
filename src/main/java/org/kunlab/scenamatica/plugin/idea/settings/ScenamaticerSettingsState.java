@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
+import com.intellij.lang.LangBundle;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -18,6 +19,7 @@ public class ScenamaticerSettingsState implements PersistentStateComponent<Scena
 
     private String schemaURL = DEFAULT_SCHEMA_URL;
     private String contentServerURL = DEFAULT_CONTENT_SERVER_URL;
+    private String language = LangBundle.getLocale().getLanguage();
     private boolean refsWindowAutoOpen = true;
     private boolean refsWindowAutoClose = true;
 

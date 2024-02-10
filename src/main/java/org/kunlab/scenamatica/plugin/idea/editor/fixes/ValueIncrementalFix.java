@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.fixes;
+package org.kunlab.scenamatica.plugin.idea.editor.fixes;
 
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.codeInspection.util.IntentionFamilyName;
@@ -11,6 +11,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLQuotedText;
+import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,13 +36,13 @@ public class ValueIncrementalFix extends LocalQuickFixAndIntentionActionOnPsiEle
     @Override
     public @IntentionName @NotNull String getText()
     {
-        return "Rename to \"" + this.incrementedName + "\"";
+        return ScenamaticerBundle.of("editor.fixes.valueIncremental.title", this.incrementedName);
     }
 
     @Override
     public @NotNull @IntentionFamilyName String getFamilyName()
     {
-        return "Increment name index";
+        return "Scenamatica";
     }
 
     @Override

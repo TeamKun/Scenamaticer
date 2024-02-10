@@ -1,10 +1,14 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
+import com.intellij.lang.LangBundle;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import lombok.Getter;
+
+import java.util.Locale;
 
 public class ScenamaticerSettingsComponent
 {
@@ -13,9 +17,9 @@ public class ScenamaticerSettingsComponent
     private JBTextField schemaURL;
     private JTextField contentServerURL;
 
-    private JBCheckBox ckbRefsWindowEnabled;
     private JBCheckBox ckbRefsWindowAutoOpen;
     private JBCheckBox ckbRefsWindowAutoClose;
+    private JComboBox<String> scenamaticerLocale;
 
     public String getSchemaURL()
     {
@@ -57,8 +61,26 @@ public class ScenamaticerSettingsComponent
         this.ckbRefsWindowAutoClose.setSelected(refsWindowAutoClose);
     }
 
-    public void setRefsWindowEnabled(boolean refsWindowEnabled)
+    public Locale getScenamaticerLocale()
     {
-        this.ckbRefsWindowEnabled.setSelected(refsWindowEnabled);
+        String lang = (String) this.scenamaticerLocale.getSelectedItem();
+        assert lang != null;
+        return switch (lang)
+        {
+            case "English" -> Locale.ENGLISH;
+            case "日本語" -> Locale.JAPANESE;
+            default -> LangBundle.getLocale();
+        };
+    }
+
+    public void setScenamaticerLocale(Locale locale)
+    {
+        String lang = switch (locale.getLanguage())
+        {
+            case "en" -> "English";
+            case "ja" -> "日本語";
+            default -> "Default";
+        };
+        this.scenamaticerLocale.setSelectedItem(lang);
     }
 }

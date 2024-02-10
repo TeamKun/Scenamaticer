@@ -13,7 +13,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
 import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageEnvironment;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageType;
 
 public class CreateScenarioDialog extends DialogWrapper
 {
@@ -41,7 +44,7 @@ public class CreateScenarioDialog extends DialogWrapper
         this.validator = validator;
         this.directory = directory;
 
-        this.setTitle("Create new Scenamatica Scenario");
+        this.setTitle(ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.title"));
         this.init();
 
     }
@@ -52,7 +55,7 @@ public class CreateScenarioDialog extends DialogWrapper
         super.init();
         this.setSize(700, 900);
         this.setOKActionEnabled(false);
-        this.setOKButtonText("Create");
+        this.setOKButtonText(ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.create"));
 
         this.panelStage.setVisible(false);
         this.panelStage.setEnabled(false);
@@ -97,15 +100,15 @@ public class CreateScenarioDialog extends DialogWrapper
     private void checkValid()
     {
         boolean errors = false;
-        JComponent errorComponent = null;
+        JComponent errorComponent;
 
         errorComponent = this.scenarioName;
         {
             String errorMessage = null;
             if (this.scenarioName.getText().isEmpty())
-                errorMessage = "Scenario name cannot be empty.";
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.scenarioName.errors.empty");
             else if (ScenarioFileIndexer.hasIndexFor(this.project, this.scenarioName.getText()))
-                errorMessage = "Scenario name is duplicated.";
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.scenarioName.errors.duplicated", this.scenarioName.getText());
 
             if (errorMessage != null)
             {
@@ -117,14 +120,14 @@ public class CreateScenarioDialog extends DialogWrapper
 
         errorComponent = this.fileName;
         {
+            String fileName = this.fileName.getText();
             String errorMessage = null;
-            if (this.fileName.getText().isEmpty())
-                errorMessage = "File name cannot be empty.";
-            else if (!this.validator.checkInput(this.fileName.getText()))
-                errorMessage = "File name is invalid.";
-            else if (this.directory.findFile(this.fileName.getText() + ".yml") != null)
-                errorMessage = "File name is duplicated.";
-
+            if (fileName.isEmpty())
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.fileName.errors.empty");
+            else if (!this.validator.checkInput(fileName))
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.fileName.errors.invalid", fileName);
+            else if (this.directory.findFile(fileName + ".yml") != null)
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.fileName.errors.duplicated", fileName);
             if (errorMessage != null)
             {
                 errors = true;
@@ -139,9 +142,9 @@ public class CreateScenarioDialog extends DialogWrapper
             errorComponent = this.stageSeed;
             {
                 String errorMessage = null;
-                boolean isStageSeedValid = this.stageSeed.getText().isEmpty() || this.stageSeed.getText().matches("[0-9]+");
+                boolean isStageSeedValid = this.stageSeed.getText().isEmpty() || this.stageSeed.getText().matches("^-?[0-9]+$");
                 if (!isStageSeedValid)
-                    errorMessage = "Stage seed is invalid.";
+                    errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.stage.options.createDedicated.seed.errors.invalid");
 
                 if (errorMessage != null)
                 {

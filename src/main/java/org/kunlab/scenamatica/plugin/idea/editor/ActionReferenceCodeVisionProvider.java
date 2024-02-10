@@ -1,4 +1,4 @@
-package org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor;
+package org.kunlab.scenamatica.plugin.idea.editor;
 
 import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind;
 import com.intellij.codeInsight.codeVision.CodeVisionEntry;
@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
+import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
@@ -43,7 +44,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     @Override
     public String getId()
     {
-        return "org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ActionReferenceCodeVisionProvider";
+        return "org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceCodeVisionProvider";
     }
 
     @Nls
@@ -51,7 +52,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     @Override
     public String getName()
     {
-        return "Action Reference";
+        return ScenamaticerBundle.of("editor.codeVision.actionReference.name");
     }
 
     @NotNull
@@ -149,10 +150,10 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         {
             super(
                     getHint(actionName, actionDesc),
-                    "org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.editor.ActionReferenceCodeVisionProvider",
+                    ActionReferenceCodeVisionProvider.class.getName(),
                     null,
-                    "aDAWD",
-                    "Click to view action reference",
+                    "('・ω・')",
+                    ScenamaticerBundle.of("editor.codeVision.actionReference.tooltip"),
                     Collections.emptyList()
             );
             this.element = element;
@@ -165,14 +166,14 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
             String reference = WebReference.actionToWebReference(this.actionName);
             if (reference == null)
             {
-                showErrorMessage(editor, "Unable to resolve action reference URL");
+                showErrorMessage(editor, ScenamaticerBundle.of("editor.codeVision.actionReference.errors.unableToResolve"));
                 return;
             }
 
             RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(this.element.getProject());
             if (window == null)
             {
-                showErrorMessage(editor, "Unable to find the reference window");
+                showErrorMessage(editor, ScenamaticerBundle.of("editor.codeVision.actionReference.errors.unableToFindWindow"));
                 return;
             }
 
@@ -181,7 +182,11 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
 
         private static String getHint(@NotNull String actionName, @Nullable String actionDesc)
         {
-            return "Action: " + actionName + (actionDesc == null ? "": " - " + actionDesc);
+            return ScenamaticerBundle.of(
+                    "editor.codeVision.actionReference.hint",
+                    actionName,
+                    actionDesc == null ? ScenamaticerBundle.of("editor.codeVision.actionReference.hint.noDescription"): actionDesc
+            );
         }
 
         private static void showErrorMessage(@NotNull Editor editor, @NotNull String message)

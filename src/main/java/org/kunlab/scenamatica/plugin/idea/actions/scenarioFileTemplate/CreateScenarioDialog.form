@@ -30,7 +30,7 @@
                 </constraints>
                 <properties>
                   <alignmentY value="0.5"/>
-                  <text value="Name: "/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.scenarioName"/>
                   <verticalAlignment value="1"/>
                 </properties>
               </component>
@@ -50,7 +50,7 @@
                 </constraints>
                 <properties>
                   <requestFocusEnabled value="false"/>
-                  <text value="File Name: "/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.fileName"/>
                 </properties>
               </component>
             </children>
@@ -69,7 +69,7 @@
                 </constraints>
                 <properties>
                   <alignmentY value="0.5"/>
-                  <text value="Description:"/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.description"/>
                   <verticalAlignment value="1"/>
                 </properties>
               </component>
@@ -98,7 +98,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Stage:"/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage"/>
                 </properties>
               </component>
             </children>
@@ -194,7 +194,7 @@
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Create dedicated Stage"/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.createDedicated"/>
                 </properties>
               </component>
               <grid id="83c06" binding="panelStage" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -222,7 +222,7 @@
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Type:"/>
+                          <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.createDedicated.type"/>
                         </properties>
                       </component>
                       <component id="7282f" class="javax.swing.JComboBox" binding="stageType">
@@ -254,7 +254,7 @@
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Environment:"/>
+                          <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.createDedicated.environment"/>
                         </properties>
                       </component>
                       <component id="3fb18" class="javax.swing.JComboBox" binding="stageEnvironment">
@@ -280,7 +280,7 @@
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
-                          <text value="Seed:"/>
+                          <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.createDedicated.seed"/>
                         </properties>
                       </component>
                       <component id="7e564" class="javax.swing.JTextField" binding="stageSeed">
@@ -308,7 +308,7 @@
                   <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="Copy existing world from:"/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.copyFrom"/>
                 </properties>
               </component>
               <component id="80f4b" class="javax.swing.JLabel">
@@ -316,7 +316,7 @@
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="or"/>
+                  <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.stage.options.or"/>
                 </properties>
               </component>
               <vspacer id="15c9b">
@@ -356,7 +356,7 @@
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Scenamatica Version:"/>
+              <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.scenamaticaVersion"/>
             </properties>
           </component>
         </children>
@@ -374,7 +374,7 @@
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Execution:"/>
+              <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.execution"/>
             </properties>
           </component>
           <component id="c2704" class="javax.swing.JLabel">
@@ -382,7 +382,7 @@
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="(Triggers)"/>
+              <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.execution.triggers"/>
             </properties>
           </component>
         </children>
@@ -400,7 +400,7 @@
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Allow run this manually"/>
+              <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.execution.onManuallyDispatch"/>
             </properties>
           </component>
           <component id="5a9e4" class="javax.swing.JCheckBox" binding="ckbTriggerOnLoad">
@@ -408,7 +408,7 @@
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Run this after plugin load"/>
+              <text resource-bundle="messages/ScenamaticerBundle" key="actions.scenarioFileTemplate.ui.execution.onLoad"/>
             </properties>
           </component>
           <hspacer id="3e9b8">

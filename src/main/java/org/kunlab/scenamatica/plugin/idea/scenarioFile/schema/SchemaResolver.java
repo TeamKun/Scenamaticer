@@ -14,8 +14,8 @@ import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.tree.ScenarioTrees;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.tree.ScenarioTrees;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
