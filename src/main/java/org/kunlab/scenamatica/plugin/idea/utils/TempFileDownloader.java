@@ -9,12 +9,12 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.impl.http.HttpVirtualFile;
 import com.intellij.openapi.vfs.impl.http.RemoteFileInfo;
 import com.intellij.openapi.vfs.impl.http.RemoteFileState;
+import kotlin.Pair;
 
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.CyclicBarrier;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -24,7 +24,7 @@ public class TempFileDownloader
     private static final Key<Object> KEY_DOWNLOAD_STARTED = Key.create("org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader.DownloadStarted");
     private static final Object VALUE_DOWNLOAD_STARTED = new Object();
     private static final Gson GSON = new Gson();
-    private static final Map<VirtualFile, Consumer<? super VirtualFile>> DOWNLOAD_CALLBACKS = new WeakHashMap<>();
+    private static final Queue<Pair<VirtualFile, Consumer<? super VirtualFile>>> DOWNLOADING_QUEUE = new ConcurrentLinkedQueue<>();
 
     static
     {
@@ -48,12 +48,13 @@ public class TempFileDownloader
 
     private static void watchDog()
     {
-        Iterator<Map.Entry<VirtualFile, Consumer<? super VirtualFile>>> it = DOWNLOAD_CALLBACKS.entrySet().iterator();
+
+        Iterator<Pair<VirtualFile, Consumer<? super VirtualFile>>> it = DOWNLOADING_QUEUE.iterator();
         while (it.hasNext())
         {
-            Map.Entry<VirtualFile, Consumer<? super VirtualFile>> entry = it.next();
-            VirtualFile vf = entry.getKey();
-            Consumer<? super VirtualFile> callback = entry.getValue();
+            Pair<VirtualFile, Consumer<? super VirtualFile>> entry = it.next();
+            VirtualFile vf = entry.getFirst();
+            Consumer<? super VirtualFile> callback = entry.getSecond();
             if (vf.getUserData(KEY_DOWNLOAD_STARTED) == null)
             {
                 it.remove();
@@ -66,14 +67,12 @@ public class TempFileDownloader
 
             if (fi.getState() == RemoteFileState.DOWNLOADED)
             {
-                vf.putUserData(KEY_DOWNLOAD_STARTED, null);
                 it.remove();
                 if (callback != null)
                     callback.accept(vf);
             }
             else if (fi.getState() == RemoteFileState.ERROR_OCCURRED)
             {
-                vf.putUserData(KEY_DOWNLOAD_STARTED, null);
                 it.remove();
                 if (callback != null)
                     throw new IllegalStateException("Unable to download file from url: " + vf.getUrl() + ", error: " + fi.getErrorMessage());
@@ -91,7 +90,14 @@ public class TempFileDownloader
         else if (vf.getUserData(KEY_DOWNLOAD_STARTED) != null)
         {
             LOGGER.info("File already downloading: " + url);
-            return vf;
+            for (Pair<VirtualFile, Consumer<? super VirtualFile>> entry : DOWNLOADING_QUEUE)
+            {
+                if (entry.getFirst().getUrl().equals(url))
+                {
+                    DOWNLOADING_QUEUE.add(new Pair<>(vf, callback));
+                    return vf;
+                }
+            }
         }
         else
             vf.putUserData(KEY_DOWNLOAD_STARTED, VALUE_DOWNLOAD_STARTED);
@@ -102,19 +108,23 @@ public class TempFileDownloader
         if (fi.getLocalFile() != null)
         {
             LOGGER.info("File already downloaded: " + url);
-            callback.accept(vf);
+            if (callback != null)
+                callback.accept(vf);
+
+
             return vf;
         }
 
-        DOWNLOAD_CALLBACKS.put(vf, callback);
+        DOWNLOADING_QUEUE.add(new Pair<>(vf, callback));
 
         LOGGER.info("Start downloading file: " + url);
         vf.refresh(true, true, () -> {
             LOGGER.info("File downloaded: " + url);
-            Consumer<? super VirtualFile> cb = DOWNLOAD_CALLBACKS.get(vf);
+            if (vf.getUserData(KEY_DOWNLOAD_STARTED) == null)
+                return;
             vf.putUserData(KEY_DOWNLOAD_STARTED, null);
-            if (cb != null)
-                cb.accept(vf);
+            if (callback != null)
+                callback.accept(vf);
         });
 
         return vf;
@@ -136,28 +146,29 @@ public class TempFileDownloader
 
     public static JsonObject downloadJsonSync(String path)
     {
-        CyclicBarrier barrier = new CyclicBarrier(2);
+        Object lock = new Object();
         JsonObject[] result = new JsonObject[1];
+
 
         downloadJson(path, (json) -> {
             result[0] = json;
-            try
+            synchronized (lock)
             {
-                barrier.await();
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException(e);
+                lock.notifyAll();
             }
         });
 
-        try
+        synchronized (lock)
         {
-            barrier.await();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
+            try
+            {
+                if (result[0] == null)
+                    lock.wait();
+            }
+            catch (InterruptedException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
 
         return result[0];
@@ -165,28 +176,28 @@ public class TempFileDownloader
 
     public static VirtualFile downloadSync(String url)
     {
-        CyclicBarrier barrier = new CyclicBarrier(2);
+        Object lock = new Object();
         VirtualFile[] result = new VirtualFile[1];
 
         download(url, (file) -> {
             result[0] = file;
-            try
+            synchronized (lock)
             {
-                barrier.await();
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException(e);
+                lock.notifyAll();
             }
         });
 
-        try
+        synchronized (lock)
         {
-            barrier.await();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
+            try
+            {
+                if (result[0] == null)
+                    lock.wait();
+            }
+            catch (InterruptedException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
 
         return result[0];

@@ -27,7 +27,7 @@ import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProvider;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
@@ -44,7 +44,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     @Override
     public String getId()
     {
-        return "org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceCodeVisionProvider";
+        return this.getClass().getName();
     }
 
     @Nls
@@ -104,7 +104,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                 if (scenarioAction == null)
                     continue;
 
-                SchemaProvider.Action action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
+                SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
                 if (action == null)
                     continue;
 

@@ -1,37 +1,24 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import kotlin.Pair;
 import lombok.Getter;
-import org.jetbrains.annotations.Nullable;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.utils.JsonUtils;
 import org.kunlab.scenamatica.plugin.idea.utils.TempFileDownloader;
 import org.kunlab.scenamatica.plugin.idea.utils.URLUtils;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 public class SchemaProvider
 {
     public static final String PATH_FILE_META = "meta.json";
-    public static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(AvailableStatus.class, new AvailableStatus(false, null))
-            .create();
 
     @Getter
     private final SchemaResolver schemaResolver;
-    private final Map<String, Pair<JsonObject, Action>> actionsCache;
+    private final Map<String, Pair<JsonObject, SchemaAction>> actionsCache;
     private final Map<String, JsonObject> definitionCache;
 
     private String contentServerURL;
@@ -62,11 +49,11 @@ public class SchemaProvider
         this.initialized = false;
     }
 
-    public Action getAction(String action)
+    public SchemaAction getAction(String action)
     {
         checkMetaLoaded();
 
-        Pair<JsonObject, Action> pair = getActionJsonRecursive(action);
+        Pair<JsonObject, SchemaAction> pair = getActionJsonRecursive(action);
         return pair == null ? null: pair.getSecond();
     }
 
@@ -74,11 +61,11 @@ public class SchemaProvider
     {
         checkMetaLoaded();
 
-        Pair<JsonObject, Action> pair = getActionJsonRecursive(action);
+        Pair<JsonObject, SchemaAction> pair = getActionJsonRecursive(action);
         return pair == null ? null: pair.getFirst();
     }
 
-    private Pair<JsonObject, Action> getActionJsonRecursive(String action)
+    private Pair<JsonObject, SchemaAction> getActionJsonRecursive(String action)
     {
         if (this.actionsCache.containsKey(action))
             return this.actionsCache.get(action);
@@ -94,14 +81,14 @@ public class SchemaProvider
         {
             String baseAction = file.get("base").getAsString();
 
-            Pair<JsonObject, Action> basePair = getActionJsonRecursive(baseAction);
+            Pair<JsonObject, SchemaAction> basePair = getActionJsonRecursive(baseAction);
             if (basePair == null)
                 throw new IllegalStateException("Base action '" + baseAction + "' does not exist");
             file = JsonUtils.mergeRecursive(basePair.getFirst(), file);
         }
 
-        Action actionObj = GSON.fromJson(file, Action.class);
-        Pair<JsonObject, Action> pair = new Pair<>(file, actionObj);
+        SchemaAction actionObj = SchemaAction.fromJson(file);
+        Pair<JsonObject, SchemaAction> pair = new Pair<>(file, actionObj);
 
         this.actionsCache.put(action, pair);
         return pair;
@@ -180,76 +167,5 @@ public class SchemaProvider
     private static String getContentURL(String contentServerURL, String path)
     {
         return URLUtils.concat(contentServerURL, path);
-    }
-
-    public record Action(String name, String description, String base, String[] events, AvailableStatus executable,
-                         AvailableStatus watchable, AvailableStatus requireable, Map<String, Object> arguments,
-                         Map<String, Object> outputs)
-    {
-        public boolean isAvailableFor(@Nullable ScenarioType type)
-        {
-            if (type == null)
-                return this.executable.isAvailable()
-                        || this.watchable.isAvailable()
-                        || this.requireable.isAvailable();
-
-            switch (type)
-            {
-                case EXECUTE ->
-                {
-                    return this.executable.isAvailable();
-                }
-                case EXPECT ->
-                {
-                    return this.watchable.isAvailable();
-                }
-                case REQUIRE ->
-                {
-                    return this.requireable.isAvailable();
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + type);
-            }
-        }
-
-        public String getDescriptionFor(@Nullable ScenarioType type)
-        {
-            if (type == null)
-                return this.description();
-
-            switch (type)
-            {
-                case EXECUTE ->
-                {
-                    return this.executable.description() == null ? this.description(): this.executable.description();
-                }
-                case EXPECT ->
-                {
-                    return this.watchable.description() == null ? this.description(): this.watchable.description();
-                }
-                case REQUIRE ->
-                {
-                    return this.requireable.description() == null ? this.description(): this.requireable.description();
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + type);
-            }
-        }
-    }
-
-    public record AvailableStatus(boolean isAvailable, String description) implements JsonDeserializer<AvailableStatus>
-    {
-        @Override
-        public AvailableStatus deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
-        {
-            if (!jsonElement.isJsonPrimitive())
-                throw new JsonParseException("AvailableStatus must be a primitive type, got " + jsonElement.getClass().getSimpleName());
-
-            JsonPrimitive primitive = jsonElement.getAsJsonPrimitive();
-            if (primitive.isBoolean())
-                return new AvailableStatus(primitive.getAsBoolean(), null);
-            else if (primitive.isString())
-                return new AvailableStatus(true, primitive.getAsString());
-            else
-                throw new JsonParseException("AvailableStatus must be a primitive type, got " + primitive.getClass().getSimpleName());
-        }
     }
 }

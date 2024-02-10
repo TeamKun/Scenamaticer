@@ -1,21 +1,25 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.models;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 
 import java.util.Locale;
 
-@Getter
 @AllArgsConstructor
 public enum ScenarioType
 {
-    EXECUTE("execute"),
-    EXPECT("expect"),
-    REQUIRE("require");
+    EXECUTE("models.scenarioType.execute"),
+    EXPECT("models.scenarioType.expect"),
+    REQUIRE("models.scenarioType.require");
 
-    public final String name;
+    public final String displayName;
 
-    public static org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType of(String name)
+    public String getDisplayName()
+    {
+        return ScenamaticerBundle.of(this.displayName);
+    }
+
+    public static ScenarioType of(String name)
     {
         // これ以上は増えないことが確定しているため。
         return switch (name.toLowerCase(Locale.ROOT))

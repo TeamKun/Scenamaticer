@@ -10,6 +10,7 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
 import lombok.Data;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
@@ -102,8 +103,14 @@ public class SchemaResolver
         YAMLKeyValue type = actionElement.getKeyValueByKey("type");
 
         String actionName = action.getValueText();
-        ScenarioType typeEnum = type != null ? org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType.of(type.getValueText()): null;
-        return cacheActionDeeply(actionElement, actionName, typeEnum);
+        ScenarioType typeEnum = type != null ? ScenarioType.of(type.getValueText()): null;
+
+        YAMLKeyValue argumentsKV = actionElement.getKeyValueByKey("with");
+        YAMLMapping arguments = null;
+        if (argumentsKV != null && argumentsKV.getValue() instanceof YAMLMapping)
+            arguments = (YAMLMapping) argumentsKV.getValue();
+
+        return cacheActionDeeply(actionElement, actionName, typeEnum, arguments);
     }
 
     public boolean isActionSpecificElement(PsiElement element)
@@ -131,7 +138,12 @@ public class SchemaResolver
             String typeName = getTypeName(current);
             if (typeName != null)
                 if (typeName.equals("action"))
-                    return (YAMLMapping) current;
+                {
+                    if (element instanceof YAMLKeyValue && ((YAMLKeyValue) element).getKeyText().equals("action"))
+                        return (YAMLMapping) element.getParent();
+                    else if (element instanceof YAMLMapping)
+                        return (YAMLMapping) current;
+                }
                 else if (typeName.equals("scenario"))
                 {
                     YAMLMapping action = resolveActionObjectBy(current);
@@ -280,9 +292,9 @@ public class SchemaResolver
         return action.getValueText();
     }
 
-    private static ScenarioAction cacheActionDeeply(PsiElement element, String actionName, ScenarioType type)
+    private static ScenarioAction cacheActionDeeply(PsiElement element, String actionName, ScenarioType type, @Nullable YAMLMapping arguments)
     {
-        ScenarioAction cache = ScenarioAction.of(element, actionName, type);
+        ScenarioAction cache = ScenarioAction.of(element, actionName, type, arguments);
         element.putUserData(KEY_SCENARIO_ACTION, cache);
 
         Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
@@ -412,16 +424,19 @@ public class SchemaResolver
     public static class ScenarioAction extends TypeCache
     {
         private final ScenarioType type;
+        @Nullable
+        private final YAMLMapping arguments;
 
-        private ScenarioAction(int hash, String typeName, ScenarioType type)
+        private ScenarioAction(int hash, String typeName, ScenarioType type, @Nullable YAMLMapping arguments)
         {
             super(hash, typeName);
             this.type = type;
+            this.arguments = arguments;
         }
 
-        public static ScenarioAction of(PsiElement element, String typeName, ScenarioType type)
+        public static ScenarioAction of(PsiElement element, String typeName, ScenarioType type, @Nullable YAMLMapping arguments)
         {
-            return new ScenarioAction(TypeCache.calcHash(element), typeName, type);
+            return new ScenarioAction(TypeCache.calcHash(element), typeName, type, arguments);
         }
     }
 }
