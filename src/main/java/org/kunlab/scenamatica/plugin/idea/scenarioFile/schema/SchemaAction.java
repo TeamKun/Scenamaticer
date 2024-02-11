@@ -15,6 +15,7 @@ import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public record SchemaAction(String name, String description, String base, String[] events,
@@ -62,8 +63,8 @@ public record SchemaAction(String name, String description, String base, String[
     }
 
     public record ActionIO(@Nullable String description,
-                           @NotNull ScenarioType[] requiredOn,
-                           @NotNull ScenarioType[] availableFor) implements JsonDeserializer<ActionIO>
+                           @Nullable ScenarioType[] requiredOn,
+                           @Nullable ScenarioType[] availableFor) implements JsonDeserializer<ActionIO>
     {
         @Override
         public ActionIO deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
@@ -75,15 +76,20 @@ public record SchemaAction(String name, String description, String base, String[
             String description = obj.has("description") ? obj.get("description").getAsString(): null;
 
             ScenarioType[] requiredOn = parseEnumArray(obj.get("requiredOn"), ScenarioType.values(), ActionIO::mapScenarioType)
-                    .toArray(new ScenarioType[0]);
+                    .map(list -> list.toArray(new ScenarioType[0]))
+                    .orElse(null);
             ScenarioType[] availableFor = parseEnumArray(obj.get("availableFor"), ScenarioType.values(), ActionIO::mapScenarioType)
-                    .toArray(new ScenarioType[0]);
+                    .map(list -> list.toArray(new ScenarioType[0]))
+                    .orElse(null);
 
             return new ActionIO(description, requiredOn, availableFor);
         }
 
         public boolean isAvailableFor(ScenarioType type)
         {
+            if (this.availableFor == null)
+                return true;
+
             for (ScenarioType t : this.availableFor)
                 if (t == type)
                     return true;
@@ -92,6 +98,9 @@ public record SchemaAction(String name, String description, String base, String[
 
         public boolean isRequiredOn(ScenarioType type)
         {
+            if (this.requiredOn == null)
+                return false;
+
             for (ScenarioType t : this.requiredOn)
                 if (t == type)
                     return true;
@@ -107,16 +116,16 @@ public record SchemaAction(String name, String description, String base, String[
             return ScenarioType.of(str);
         }
 
-        private static <T extends Enum<T>> List<T> parseEnumArray(JsonElement element, T[] allValues, Function<? super String, T> mapper)
+        private static <T extends Enum<T>> Optional<? extends List<T>> parseEnumArray(JsonElement element, T[] allValues, Function<? super String, T> mapper)
         {
             if (element == null)
-                return List.of(allValues);
+                return Optional.empty();
             else if (element.isJsonArray())
             {
-                return element.getAsJsonArray().asList().stream()
+                return Optional.of(element.getAsJsonArray().asList().stream()
                         .map(JsonElement::getAsString)
                         .map(mapper)
-                        .toList();
+                        .toList());
             }
             else if (element.isJsonPrimitive())
             {
@@ -125,9 +134,9 @@ public record SchemaAction(String name, String description, String base, String[
                     throw new JsonParseException("Must be a boolean or an array of strings, got " + primitive.getClass().getSimpleName());
 
                 if (primitive.getAsBoolean())
-                    return List.of(allValues);
+                    return Optional.of(List.of(allValues));
                 else
-                    return List.of();
+                    return Optional.of(List.of());
             }
 
             throw new JsonParseException("Must be a boolean or an array of strings, got " + element.getClass().getSimpleName());
