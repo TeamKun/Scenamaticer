@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import com.intellij.util.concurrency.annotations.RequiresBackgroundThread;
@@ -69,11 +70,13 @@ public class SchemaResolver
         if (cache != null && cache.equalElement(element))
             return cache.getName();
 
-        String typeName = resolveTypeName(element);
-        if (typeName != null)
-            element.putUserData(KEY_TYPE_NAME, TypeCache.of(element, typeName));
+        Pair<String, JsonObject> resolved = resolveType(element);
+        if (resolved == null)
+            return null;
 
-        return typeName;
+        element.putUserData(KEY_TYPE_NAME, TypeCache.of(element, resolved.getFirst()));
+
+        return resolved.getFirst();
     }
 
     public ScenarioAction getAction(PsiElement element)
@@ -103,7 +106,19 @@ public class SchemaResolver
         YAMLKeyValue type = actionElement.getKeyValueByKey("type");
 
         String actionName = action.getValueText();
-        ScenarioType typeEnum = type != null ? ScenarioType.of(type.getValueText()): null;
+        ScenarioType typeEnum = null;
+        if (type == null)
+        {
+            Pair<String, JsonObject> actionObj = resolveType(actionElement);
+            if (actionObj != null)
+            {
+                JsonObject obj = actionObj.getSecond();
+                if (obj.has("$scenarioKindOf"))
+                    typeEnum = ScenarioType.of(obj.get("$scenarioKindOf").getAsString());
+            }
+        }
+        else
+            typeEnum = ScenarioType.of(type.getValueText());
 
         YAMLKeyValue argumentsKV = actionElement.getKeyValueByKey("with");
         YAMLMapping arguments = null;
@@ -139,7 +154,7 @@ public class SchemaResolver
             if (typeName != null)
                 if (typeName.equals("action"))
                 {
-                    if (element instanceof YAMLKeyValue && ((YAMLKeyValue) element).getKeyText().equals("action"))
+                    if (element instanceof YAMLKeyValue)
                         return (YAMLMapping) element.getParent();
                     else if (element instanceof YAMLMapping)
                         return (YAMLMapping) current;
@@ -157,7 +172,7 @@ public class SchemaResolver
         return null;
     }
 
-    private String resolveTypeName(PsiElement ownerElement)
+    private Pair<String, JsonObject> resolveType(PsiElement ownerElement)
     {
         String absolutePath = ScenarioTrees.getKeyFor(ownerElement);
         if (absolutePath == null)
@@ -166,41 +181,38 @@ public class SchemaResolver
         List<String> parts = new ArrayList<>(Arrays.asList(absolutePath.split("\\.")));
         JsonObject current = this.provider.getPrimeFile();
 
-        String lastType = "prime";
+        String lastTypeName = "prime";
         for (int i = 0; i < parts.size(); i++)
         {
             String part = parts.get(i);
             // Actions のための特殊処理
             JsonObject result = null;
-            if (lastType != null && lastType.equals("scenario"))
+            if (lastTypeName != null && lastTypeName.equals("action"))
             {
                 if (part.equals("with"))
+                {
+                    List<String> accessors = parts.subList(0, i);
+                    current = processScenarioInput(ownerElement, accessors);
+                    if (current == null)
+                        return null;
                     // JsonObject を偽装する。アクションの引数は、 properties に噛まされていないため。
                     result = createFakeActionInputJsonObject(current.getAsJsonObject("arguments"));
-                else if (part.equals("action"))
-                    return "action"; // Secnario 内の action は特別扱い
+                }
             }
 
             if (result == null)
                 result = processPart(current, part);
-
-            String typeName = getTypeName(result);
-            // Actions のための特殊処理
-            if (typeName != null && typeName.equals("scenario"))
-            {
-                List<String> accessors = parts.subList(0, i + 1);
-                result = processScenarioInput(ownerElement, accessors);
-            }
-
             if (result == null)
                 return null;
 
             current = result;
+
+            String typeName = getTypeName(result);
             if (!isPrimitiveType(typeName))
-                lastType = typeName;
+                lastTypeName = typeName;
         }
 
-        return lastType;
+        return Pair.create(lastTypeName, current);
     }
 
     private JsonObject createFakeActionInputJsonObject(JsonObject arguments)
@@ -223,15 +235,31 @@ public class SchemaResolver
             else if (typeName.equals("array"))
                 return descendArray(current);
         }
-        else if (current.has("properties"))
+        else if (this.provider.hasDefinition(typeName))
+        {
+            JsonObject def = this.provider.getDefinitionFile(typeName);
+            if (part == null && !current.has("properties")) // パートが指定されていなく、プロパティがない場合は、そのまま返す
+                return def;
+            else
+            {
+                JsonObject proceed = processPart(def, part);
+                if (proceed != null)
+                    return proceed;
+            }
+        }
+
+        if (current.has("properties"))
         {
             JsonObject properties = current.getAsJsonObject("properties");
             if (properties == null)
                 return null;
-            if (properties.has(part))
+            if (part == null)
+                return properties;
+            else if (properties.has(part))
                 return properties.getAsJsonObject(part);
         }
-        else if (current.has("anyOf"))
+
+        if (current.has("anyOf"))
         {
             for (JsonElement anyOf : current.getAsJsonArray("anyOf"))
             {
@@ -242,11 +270,6 @@ public class SchemaResolver
             }
         }
 
-        if (this.provider.hasDefinition(typeName))
-        {
-            JsonObject def = this.provider.getDefinitionFile(typeName);
-            return processPart(def, part);
-        }
 
         return null;
     }
@@ -262,7 +285,7 @@ public class SchemaResolver
     private JsonObject descendArray(JsonObject current)
     {
         if (current.has("items"))
-            return current.getAsJsonObject("items");
+            return processPart(current.getAsJsonObject("items"), null);
         else if (current.has("type") && !isPrimitiveType(current))
             return this.provider.getDefinitionFile(getTypeName(current));
         else

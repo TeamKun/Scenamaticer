@@ -51,10 +51,15 @@ public record SchemaAction(String name, String description, String base, String[
 
         return switch (type)
         {
-            case EXECUTE -> this.executable.description();
-            case EXPECT -> this.watchable.description();
-            case REQUIRE -> this.requireable.description();
+            case EXECUTE -> getOrDefault(this.executable.description(), this.description());
+            case EXPECT -> getOrDefault(this.watchable.description(), this.description());
+            case REQUIRE -> getOrDefault(this.requireable.description(), this.description());
         };
+    }
+
+    private static String getOrDefault(String str, String def)
+    {
+        return str == null || str.isBlank() ? def: str;
     }
 
     public static SchemaAction fromJson(@NotNull JsonObject obj)
