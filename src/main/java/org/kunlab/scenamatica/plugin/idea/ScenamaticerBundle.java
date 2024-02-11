@@ -1,6 +1,9 @@
 package org.kunlab.scenamatica.plugin.idea;
 
 import com.intellij.AbstractBundle;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.PropertyKey;
@@ -69,5 +72,20 @@ public class ScenamaticerBundle extends AbstractBundle
     public static Supplier<String> lazy(@PropertyKey(resourceBundle = "messages.ScenamaticerBundle") String key, Object... params)
     {
         return INSTANCE.getLazyMessage(key, params);
+    }
+
+    public static void embed(JLabel label, @PropertyKey(resourceBundle = "messages.ScenamaticerBundle") String key, Object... params)
+    {
+        label.setText(INSTANCE.getMessage(key, params));
+    }
+
+    public static void embed(JCheckBox checkBox, @PropertyKey(resourceBundle = "messages.ScenamaticerBundle") String key, Object... params)
+    {
+        checkBox.setText(INSTANCE.getMessage(key, params));
+    }
+
+    public static void embed(JButton button, @PropertyKey(resourceBundle = "messages.ScenamaticerBundle") String key, Object... params)
+    {
+        button.setText(INSTANCE.getMessage(key, params));
     }
 }

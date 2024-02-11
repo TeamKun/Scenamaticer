@@ -7,6 +7,7 @@ import com.intellij.psi.PsiDirectory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
@@ -28,7 +29,7 @@ public class CreateScenarioDialog extends DialogWrapper
     private JTextField fileName;
     private JTextField scenarioDescription;
     private JComboBox<String> scenamaticaVersion;
-    private JCheckBox useDedicatedStageCheckBox;
+    private JCheckBox ckbUseDedicatedStage;
     private JComboBox<StageEnvironment> stageEnvironment;
     private JComboBox<StageType> stageType;
     private JTextField stageSeed;
@@ -36,6 +37,19 @@ public class CreateScenarioDialog extends DialogWrapper
     private JCheckBox ckbTriggerManual;
     private JCheckBox ckbTriggerOnLoad;
     private JTextField originalWorld;
+    private JLabel lbName;
+    private JLabel lbFileName;
+    private JLabel lbDescription;
+    private JLabel lbStage;
+    private JLabel lbOr;
+    private JLabel lbCopyAnExistingStageFrom;
+    private JLabel lbStageType;
+    private JPanel lbEnvironment;
+    private JLabel lbStageSeed;
+    private JLabel lbExecution;
+    private JLabel lbTriggers;
+    private JLabel lbScenamaticaVersion;
+    private JLabel lbStageEnvironment;
 
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator, PsiDirectory directory)
     {
@@ -49,6 +63,25 @@ public class CreateScenarioDialog extends DialogWrapper
 
     }
 
+    private void localizeComponents()
+    {
+        ScenamaticerBundle.embed(this.lbName, "actions.scenarioFileTemplate.ui.scenarioName");
+        ScenamaticerBundle.embed(this.lbFileName, "actions.scenarioFileTemplate.ui.fileName");
+        ScenamaticerBundle.embed(this.lbDescription, "actions.scenarioFileTemplate.ui.description");
+        ScenamaticerBundle.embed(this.lbStage, "actions.scenarioFileTemplate.ui.stage");
+        ScenamaticerBundle.embed(this.ckbUseDedicatedStage, "actions.scenarioFileTemplate.ui.stage.options.createDedicated");
+        ScenamaticerBundle.embed(this.lbOr, "actions.scenarioFileTemplate.ui.stage.options.or");
+        ScenamaticerBundle.embed(this.lbCopyAnExistingStageFrom, "actions.scenarioFileTemplate.ui.stage.options.copyFrom");
+        ScenamaticerBundle.embed(this.lbStageType, "actions.scenarioFileTemplate.ui.stage.options.createDedicated.type");
+        ScenamaticerBundle.embed(this.lbStageEnvironment, "actions.scenarioFileTemplate.ui.stage.options.createDedicated.environment");
+        ScenamaticerBundle.embed(this.lbStageSeed, "actions.scenarioFileTemplate.ui.stage.options.createDedicated.seed");
+        ScenamaticerBundle.embed(this.lbExecution, "actions.scenarioFileTemplate.ui.execution");
+        ScenamaticerBundle.embed(this.lbTriggers, "actions.scenarioFileTemplate.ui.execution.triggers");
+        ScenamaticerBundle.embed(this.ckbTriggerManual, "actions.scenarioFileTemplate.ui.execution.onManuallyDispatch");
+        ScenamaticerBundle.embed(this.ckbTriggerOnLoad, "actions.scenarioFileTemplate.ui.execution.onLoad");
+        ScenamaticerBundle.embed(this.lbScenamaticaVersion, "actions.scenarioFileTemplate.ui.scenamaticaVersion");
+    }
+
     @Override
     protected void init()
     {
@@ -56,6 +89,7 @@ public class CreateScenarioDialog extends DialogWrapper
         this.setSize(700, 900);
         this.setOKActionEnabled(false);
         this.setOKButtonText(ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.create"));
+        this.localizeComponents();
 
         this.panelStage.setVisible(false);
         this.panelStage.setEnabled(false);
@@ -87,7 +121,28 @@ public class CreateScenarioDialog extends DialogWrapper
             }
         });
 
-        this.useDedicatedStageCheckBox.addActionListener(e ->
+        this.fileName.getDocument().addDocumentListener(new DocumentListener()
+        {
+            @Override
+            public void insertUpdate(DocumentEvent e)
+            {
+                checkValid();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e)
+            {
+                checkValid();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e)
+            {
+                checkValid();
+            }
+        });
+
+        this.ckbUseDedicatedStage.addActionListener(e ->
         {
             boolean isSelected = ((JCheckBox) e.getSource()).isSelected();
             this.panelStage.setVisible(isSelected);
@@ -137,7 +192,7 @@ public class CreateScenarioDialog extends DialogWrapper
 
         }
 
-        if (this.useDedicatedStageCheckBox.isSelected())
+        if (this.ckbUseDedicatedStage.isSelected())
         {
             errorComponent = this.stageSeed;
             {
@@ -213,7 +268,7 @@ public class CreateScenarioDialog extends DialogWrapper
 
     public boolean isUseDedicatedStage()
     {
-        return this.useDedicatedStageCheckBox.isSelected();
+        return this.ckbUseDedicatedStage.isSelected();
     }
 
     public boolean canTriggerManually()
