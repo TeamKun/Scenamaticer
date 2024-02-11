@@ -39,6 +39,7 @@ public class ScenamaticaSpellActivity implements ProjectActivity
             keywords.add("scenamatica");
             keywords.add("GameMode".toLowerCase());
             keywords.add("NamespacedKey".toLowerCase());
+            keywords.add("RunIF".toLowerCase());
 
             KEYWORDS = Collections.unmodifiableSet(keywords);
         }
