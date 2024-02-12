@@ -20,6 +20,7 @@ import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.jetbrains.yaml.psi.YAMLValue;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
+import org.kunlab.scenamatica.plugin.idea.editor.fixes.DeleteElementFix;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
@@ -74,9 +75,12 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
 
     private void visitYamlKV(@NotNull YAMLKeyValue kv, @NotNull ProblemsHolder holder)
     {
+        String keyName = kv.getKeyText();
+        if (!("action".equals(keyName) || "runif".equals(keyName)))
+            return;
 
-        String key = SchemaProviderService.getResolver().getTypeName(kv);
-        if (!"action".equals(key))
+        String typeName = SchemaProviderService.getResolver().getTypeName(kv);
+        if (!"actionKinds".equals(typeName))
             return;
 
         SchemaResolver.ScenarioAction action = SchemaProviderService.getResolver().getAction(kv);
@@ -107,12 +111,8 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
         }
     }
 
-    private static void checkActionArguments(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action,
-                                             @NotNull PsiElement element)
+    private static void checkActionArguments(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, @NotNull YAMLKeyValue actionKV)
     {
-        if (action.getArguments() == null)
-            return;
-
         SchemaAction actionDef = SchemaProviderService.getProvider().getAction(action.getName());
         if (actionDef == null)
             return;
@@ -121,17 +121,12 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
         List<YAMLKeyValue> unavailableKeys = new ArrayList<>();
         collectInvalidKeys(action, actionDef, action.getArguments(), missingKeys, unavailableKeys);
 
-        YAMLMapping args = action.getArguments();
-        YAMLKeyValue actionKV = (YAMLKeyValue) args.getParent();
-        PsiElement actionKey = actionKV.getKey();
         if (!missingKeys.isEmpty())
         {
-
             for (YAMLKeyValue argument : missingKeys)
             {
-                assert actionKey != null;
                 holder.registerProblem(
-                        actionKey,
+                        actionKV,
                         ScenamaticerBundle.of(
                                 "editor.inspections.unsupportedActionUsage.argument.missing.title",
                                 argument.getKeyText(),
@@ -141,7 +136,9 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
                 );
             }
         }
-        else if (!unavailableKeys.isEmpty())
+        if (!unavailableKeys.isEmpty())
+        {
+            DeleteElementFix fix = new DeleteElementFix(unavailableKeys.toArray(new YAMLKeyValue[0]));
             for (YAMLKeyValue argument : unavailableKeys)
             {
                 holder.registerProblem(
@@ -151,26 +148,36 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
                                 argument.getKeyText(),
                                 actionDef.name(),
                                 action.getType().getDisplayName()
-                        )
+                        ),
+                        fix
                 );
             }
+        }
     }
 
     private static void collectInvalidKeys(SchemaResolver.ScenarioAction action, SchemaAction actionDef, YAMLMapping args,
                                            List<? super YAMLKeyValue> missingKeys, List<? super YAMLKeyValue> unavailableKeys)
     {
-        if (args == null)
-            return;
-
         for (Map.Entry<String, SchemaAction.ActionIO> inputs : actionDef.arguments().entrySet())
         {
             String name = inputs.getKey();
             SchemaAction.ActionIO inputDef = inputs.getValue();
+            YAMLKeyValue input = null;
+            if (args != null)
+                input = args.getKeyValueByKey(name);
 
-            YAMLKeyValue input = args.getKeyValueByKey(name);
             if (input == null && inputDef.isRequiredOn(action.getType()))
                 missingKeys.add(new MissingKey(name));
-            else if (input != null && !inputDef.isAvailableFor(action.getType()))
+        }
+
+        if (args == null)
+            return;
+
+        for (YAMLKeyValue input : args.getKeyValues())
+        {
+            String name = input.getKeyText();
+            SchemaAction.ActionIO inputDef = actionDef.arguments().get(name);
+            if (inputDef == null)
                 unavailableKeys.add(input);
         }
     }

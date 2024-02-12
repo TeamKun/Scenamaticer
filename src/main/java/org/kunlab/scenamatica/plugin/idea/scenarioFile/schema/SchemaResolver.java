@@ -94,7 +94,7 @@ public class SchemaResolver
 
     private ScenarioAction getActionInternal(PsiElement element)
     {
-        YAMLMapping actionElement = findActionByParents(element);
+        YAMLMapping actionElement = this.findActionByChildren(element);
         if (actionElement == null)
             return null;
 
@@ -145,18 +145,19 @@ public class SchemaResolver
         return false;
     }
 
-    private YAMLMapping findActionByParents(PsiElement element)
+    private YAMLMapping findActionByChildren(PsiElement element)
     {
-        PsiElement current = element;
-        while (current != null)
+        Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
+        while (iterator.hasNext())
         {
+            PsiElement current = iterator.next();
             String typeName = getTypeName(current);
             if (typeName != null)
-                if (typeName.equals("action"))
+                if (typeName.equals("action") || typeName.equals("actionKinds"))
                 {
-                    if (element instanceof YAMLKeyValue)
-                        return (YAMLMapping) element.getParent();
-                    else if (element instanceof YAMLMapping)
+                    if (current instanceof YAMLKeyValue)
+                        return (YAMLMapping) current.getParent();
+                    else if (current instanceof YAMLMapping)
                         return (YAMLMapping) current;
                 }
                 else if (typeName.equals("scenario"))
@@ -165,8 +166,6 @@ public class SchemaResolver
                     if (action != null)
                         return action;
                 }
-
-            current = current.getParent();
         }
 
         return null;

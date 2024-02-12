@@ -65,7 +65,7 @@
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 language="yaml"
-                level="WARNING"
+                level="ERROR"
                 displayName="Invalid Action usage"/>
     </extensions>
 
