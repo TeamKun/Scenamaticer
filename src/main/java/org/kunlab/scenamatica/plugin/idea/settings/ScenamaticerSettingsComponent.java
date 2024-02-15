@@ -1,6 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
-import com.intellij.lang.LangBundle;
+import com.intellij.DynamicBundle;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -97,7 +97,7 @@ public class ScenamaticerSettingsComponent
         {
             case "English" -> Locale.ENGLISH;
             case "日本語" -> Locale.JAPANESE;
-            default -> LangBundle.getLocale();
+            default -> DynamicBundle.getLocale();
         };
     }
 
