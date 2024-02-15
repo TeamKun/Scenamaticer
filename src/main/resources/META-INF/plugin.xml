@@ -53,6 +53,8 @@
                 implementation="org.kunlab.scenamatica.plugin.idea.editor.ScenarioFileGotoDeclarationHandler"/>
         <codeInsight.daemonBoundCodeVisionProvider
                 implementation="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceCodeVisionProvider"/>
+        <config.codeVisionGroupSettingProvider
+                implementation="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceCodeVisionProvider"/>
         <localInspection
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.UnsupportedActionUsageInspector"
                 groupName="Scenamatica"

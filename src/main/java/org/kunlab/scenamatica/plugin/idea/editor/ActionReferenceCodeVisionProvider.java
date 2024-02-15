@@ -3,6 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.editor;
 import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind;
 import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering;
+import com.intellij.codeInsight.codeVision.settings.CodeVisionGroupSettingProvider;
 import com.intellij.codeInsight.codeVision.ui.model.CodeVisionPredefinedActionEntry;
 import com.intellij.codeInsight.codeVision.ui.model.TextCodeVisionEntry;
 import com.intellij.codeInsight.hint.HintManager;
@@ -37,7 +38,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionProvider
+public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionProvider, CodeVisionGroupSettingProvider
 {
 
     @NotNull
@@ -53,6 +54,29 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     public String getName()
     {
         return ScenamaticerBundle.of("editor.codeVision.actionReference.name");
+    }
+
+    @NotNull
+    @Override
+    public String getGroupId()
+    {
+        return "Scenamatica";
+    }
+
+    @Nls
+    @NotNull
+    @Override
+    public String getDescription()
+    {
+        return ScenamaticerBundle.of("editor.codeVision.actionReference.description");
+    }
+
+    @Nls
+    @NotNull
+    @Override
+    public String getGroupName()
+    {
+        return "Scenamatica: Action References";
     }
 
     @NotNull
@@ -77,7 +101,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                         if (proj.isDisposed() || editor.isDisposed())
                             return Collections.emptyList();
                         else
-                            return this.getActionReferencesCodeVision(proj, file);
+                            return this.getActionReferencesCodeVision(file);
                     }),
                     new EmptyProgressIndicator()
             );
@@ -88,7 +112,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         }
     }
 
-    private List<Pair<TextRange, CodeVisionEntry>> getActionReferencesCodeVision(@NotNull Project project, @NotNull PsiFile file)
+    private List<Pair<TextRange, CodeVisionEntry>> getActionReferencesCodeVision(@NotNull PsiFile file)
     {
         if (!acceptsFile(file))
             return Collections.emptyList();
@@ -140,7 +164,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         return ScenarioFiles.isScenarioFile(psiFile);
     }
 
-    private class ActionReferenceCodeVisionEntry extends TextCodeVisionEntry implements CodeVisionPredefinedActionEntry
+    private static class ActionReferenceCodeVisionEntry extends TextCodeVisionEntry implements CodeVisionPredefinedActionEntry
     {
         private final PsiElement element;
         private final String actionName;
