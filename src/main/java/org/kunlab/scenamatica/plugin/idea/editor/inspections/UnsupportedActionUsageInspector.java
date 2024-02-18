@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspection
 {
@@ -123,10 +124,12 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
 
         if (!missingKeys.isEmpty())
         {
+            PsiElement displayElement = getRequirementStateDisplayBlock(actionKV);
+
             for (YAMLKeyValue argument : missingKeys)
             {
                 holder.registerProblem(
-                        actionKV,
+                        displayElement,
                         ScenamaticerBundle.of(
                                 "editor.inspections.unsupportedActionUsage.argument.missing.title",
                                 argument.getKeyText(),
@@ -153,6 +156,20 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaInspecti
                 );
             }
         }
+    }
+
+    @NotNull
+    private static PsiElement getRequirementStateDisplayBlock(@NotNull YAMLKeyValue actionKV)
+    {
+        YAMLMapping actionParent = (YAMLMapping) actionKV.getParent();
+        YAMLKeyValue argumentsBlockKV;
+        if ((argumentsBlockKV = actionParent.getKeyValueByKey("with")) != null)
+        {
+            PsiElement key = argumentsBlockKV.getKey();
+            return Objects.requireNonNullElse(key, argumentsBlockKV);
+        }
+        else
+            return actionParent;
     }
 
     private static void collectInvalidKeys(SchemaResolver.ScenarioAction action, SchemaAction actionDef, YAMLMapping args,
