@@ -2,6 +2,7 @@ package org.kunlab.scenamatica.plugin.idea.scenarioFile.schema;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
@@ -390,7 +391,14 @@ public class SchemaResolver
     private static String getTypeName(JsonObject obj)
     {
         if (obj != null && obj.has("type"))
-            return obj.get("type").getAsString();
+        {
+            JsonElement type = obj.get("type");
+            if (!type.isJsonPrimitive())
+                return null;
+
+            JsonPrimitive primitive = type.getAsJsonPrimitive();
+            return primitive.isString() ? primitive.getAsString(): null;
+        }
         else
             return null;
     }
