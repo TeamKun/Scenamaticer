@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.refsBrowser;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -22,14 +23,16 @@ public class RefsBrowserWindowFactory implements ToolWindowFactory, DumbAware
             return;
         }
 
-        RefsBrowserWindow browserWindow = new RefsBrowserWindow(project, toolWindow);
-        Content content = toolWindow.getContentManager().getFactory().createContent(
-                browserWindow.getPanel(),
-                "",
-                false
-        );
+        ApplicationManager.getApplication().invokeLater(() -> {
+            RefsBrowserWindow browserWindow = new RefsBrowserWindow(project, toolWindow);
+            Content content = toolWindow.getContentManager().getFactory().createContent(
+                    browserWindow.getPanel(),
+                    "",
+                    false
+            );
 
-        toolWindow.getContentManager().addContent(content);
-        toolWindow.setStripeTitle(ScenamaticerBundle.of("windows.reference.title"));
+            toolWindow.getContentManager().addContent(content);
+            toolWindow.setStripeTitle(ScenamaticerBundle.of("windows.reference.title"));
+        });
     }
 }
