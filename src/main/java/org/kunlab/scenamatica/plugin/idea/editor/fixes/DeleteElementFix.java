@@ -3,6 +3,7 @@ package org.kunlab.scenamatica.plugin.idea.editor.fixes;
 import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement;
 import com.intellij.codeInspection.util.IntentionFamilyName;
 import com.intellij.codeInspection.util.IntentionName;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
@@ -38,7 +39,13 @@ public class DeleteElementFix extends LocalQuickFixAndIntentionActionOnPsiElemen
             {
                 PsiElement resolved = element.getElement();
                 if (resolved != null)
+                {
+                    assert editor != null;
+                    int line = editor.getDocument().getLineNumber(resolved.getTextOffset());
                     resolved.delete();
+                    if (resolved instanceof YAMLKeyValue)
+                        removeLine(line, editor);
+                }
             }
         }
     }
@@ -62,6 +69,14 @@ public class DeleteElementFix extends LocalQuickFixAndIntentionActionOnPsiElemen
     public @IntentionFamilyName @NotNull String getFamilyName()
     {
         return "Scenamatica";
+    }
+
+    private static void removeLine(int line, Editor editor)
+    {
+        Document document = editor.getDocument();
+        int startOffset = document.getLineStartOffset(line);
+        int endOffset = document.getLineEndOffset(line) + "\n".length();
+        document.deleteString(startOffset, endOffset);
     }
 
     private static String getPresentableText(PsiElement element)
