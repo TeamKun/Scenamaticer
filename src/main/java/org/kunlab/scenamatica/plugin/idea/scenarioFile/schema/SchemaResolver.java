@@ -17,6 +17,7 @@ import org.jetbrains.yaml.psi.YAMLDocument;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.psi.YAMLMapping;
+import org.jetbrains.yaml.psi.impl.YAMLPlainTextImpl;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.tree.ScenarioTrees;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
@@ -126,7 +127,11 @@ public class SchemaResolver
         if (argumentsKV != null && argumentsKV.getValue() instanceof YAMLMapping)
             arguments = (YAMLMapping) argumentsKV.getValue();
 
-        return cacheActionDeeply(actionElement, actionName, typeEnum, arguments);
+        YAMLPlainTextImpl actionNameElement = (YAMLPlainTextImpl) action.getValue();
+        assert actionNameElement != null;
+        LeafPsiElement leafActionName = (LeafPsiElement) actionNameElement.getFirstChild();
+
+        return cacheActionDeeply(actionElement, actionName, typeEnum, leafActionName, arguments);
     }
 
     public boolean isActionSpecificElement(PsiElement element)
@@ -315,9 +320,9 @@ public class SchemaResolver
         return action.getValueText();
     }
 
-    private static ScenarioAction cacheActionDeeply(PsiElement element, String actionName, ScenarioType type, @Nullable YAMLMapping arguments)
+    private static ScenarioAction cacheActionDeeply(PsiElement element, String actionName, ScenarioType type, @Nullable LeafPsiElement actionNameElement, @Nullable YAMLMapping arguments)
     {
-        ScenarioAction cache = ScenarioAction.of(element, actionName, type, arguments);
+        ScenarioAction cache = ScenarioAction.of(element, actionName, type, actionNameElement, arguments);
         element.putUserData(KEY_SCENARIO_ACTION, cache);
 
         Iterator<PsiElement> iterator = new YAMLUtils.DepthFirstIterator(element);
@@ -454,19 +459,21 @@ public class SchemaResolver
     public static class ScenarioAction extends TypeCache
     {
         private final ScenarioType type;
+        private final LeafPsiElement actionName;
         @Nullable
         private final YAMLMapping arguments;
 
-        private ScenarioAction(int hash, String typeName, ScenarioType type, @Nullable YAMLMapping arguments)
+        private ScenarioAction(int hash, String typeName, ScenarioType type, @Nullable LeafPsiElement actionName, @Nullable YAMLMapping arguments)
         {
             super(hash, typeName);
             this.type = type;
+            this.actionName = actionName;
             this.arguments = arguments;
         }
 
-        public static ScenarioAction of(PsiElement element, String typeName, ScenarioType type, @Nullable YAMLMapping arguments)
+        public static ScenarioAction of(PsiElement element, String typeName, ScenarioType type, @Nullable LeafPsiElement actionName, @Nullable YAMLMapping arguments)
         {
-            return new ScenarioAction(TypeCache.calcHash(element), typeName, type, arguments);
+            return new ScenarioAction(TypeCache.calcHash(element), typeName, type, actionName, arguments);
         }
     }
 }

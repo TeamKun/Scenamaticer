@@ -16,6 +16,7 @@ public class ScenarioFileIconProvider implements FileIconProvider
 {
     public static final Icon ICON = IconLoader.getIcon("/icons/scenario.png", ScenarioFileIconProvider.class);
     public static final Icon SCENAMATICA_ICON = IconLoader.getIcon("/icons/scenamatica.png", ScenarioFileIconProvider.class);
+    public static final Icon ACTION_ICON = IconLoader.getIcon("/icons/action.png", ScenarioFileIconProvider.class);
 
     @Override
     public @Nullable Icon getIcon(@NotNull VirtualFile virtualFile, int i, @Nullable Project project)

@@ -6,7 +6,6 @@ import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering;
 import com.intellij.codeInsight.codeVision.settings.CodeVisionGroupSettingProvider;
 import com.intellij.codeInsight.codeVision.ui.model.CodeVisionPredefinedActionEntry;
 import com.intellij.codeInsight.codeVision.ui.model.TextCodeVisionEntry;
-import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.hints.codeVision.DaemonBoundCodeVisionProvider;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
@@ -25,8 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
-import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
@@ -186,21 +183,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         @Override
         public void onClick(@NotNull Editor editor)
         {
-            String reference = WebReference.actionToWebReference(this.actionName);
-            if (reference == null)
-            {
-                showErrorMessage(editor, ScenamaticerBundle.of("editor.codeVision.actionReference.errors.unableToResolve"));
-                return;
-            }
-
-            RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(this.element.getProject());
-            if (window == null)
-            {
-                showErrorMessage(editor, ScenamaticerBundle.of("editor.codeVision.actionReference.errors.unableToFindWindow"));
-                return;
-            }
-
-            window.navigateTo(reference);
+            ActionReferences.navigate(editor.getProject(), editor, this.actionName);
         }
 
         private static String getHint(@NotNull String actionName, @Nullable String actionDesc)
@@ -210,16 +193,6 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                     actionName,
                     actionDesc == null ? ScenamaticerBundle.of("editor.codeVision.actionReference.hint.noDescription"): actionDesc
             );
-        }
-
-        private static void showErrorMessage(@NotNull Editor editor, @NotNull String message)
-        {
-            ApplicationManager.getApplication().invokeLater(() -> {
-                HintManager.getInstance().showErrorHint(
-                        editor,
-                        message
-                );
-            });
         }
     }
 }

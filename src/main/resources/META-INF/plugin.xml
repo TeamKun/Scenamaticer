@@ -76,6 +76,8 @@
                 language="yaml"
                 level="ERROR"
                 displayName="Missing arguments"/>
+        <codeInsight.lineMarkerProvider language="yaml"
+                                        implementationClass="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceLineMarkerProvider"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
