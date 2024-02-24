@@ -69,6 +69,8 @@ public class RefsBrowserWindow implements Disposable
         this.patchFreeScrollCursor();
 
         this.navigateTo("https://scenamatica.kunlab.org/references");
+        //noinspection ResultOfMethodCallIgnored
+        this.getPanel();
     }
 
     private void patchURLBar()
