@@ -38,14 +38,13 @@ public class DeleteElementFix extends LocalQuickFixAndIntentionActionOnPsiElemen
             for (SmartPsiElementPointer<PsiElement> element : this.elements)
             {
                 PsiElement resolved = element.getElement();
-                if (resolved != null)
-                {
-                    assert editor != null;
-                    int line = editor.getDocument().getLineNumber(resolved.getTextOffset());
-                    resolved.delete();
-                    if (resolved instanceof YAMLKeyValue)
-                        removeLine(line, editor);
-                }
+                if (resolved == null)
+                    continue;
+                assert editor != null;
+                int line = editor.getDocument().getLineNumber(resolved.getTextOffset());
+                resolved.delete();
+                if (resolved instanceof YAMLKeyValue)
+                    removeLine(line, editor);
             }
         }
     }
