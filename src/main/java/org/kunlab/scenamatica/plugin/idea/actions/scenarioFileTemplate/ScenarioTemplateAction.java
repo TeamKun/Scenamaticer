@@ -34,7 +34,7 @@ public class ScenarioTemplateAction extends CreateFileAction
         super(
                 ScenamaticerBundle.lazy("actions.scenarioFileTemplate.name"),
                 ScenamaticerBundle.lazy("actions.scenarioFileTemplate.description"),
-                ScenarioFileIconProvider.ICON
+                () -> ScenarioFileIconProvider.ICON
         );
     }
 
