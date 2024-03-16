@@ -27,20 +27,19 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaActionEl
     protected boolean checkAction(@NotNull ProblemsHolder holder, SchemaResolver.@NotNull ScenarioAction action, @NotNull YAMLKeyValue actionKV)
     {
         checkActionUsage(holder, action, actionKV);
-        checkActionArguments(holder, action, actionKV);
+        checkActionArguments(action);
 
         return true;
     }
 
-    private void checkActionArguments(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, @NotNull YAMLKeyValue actionKV)
+    private void checkActionArguments(@NotNull SchemaResolver.ScenarioAction action)
     {
         SchemaAction actionDef = SchemaProviderService.getProvider().getAction(action.getName());
         if (actionDef == null)
             return;
 
-        List<YAMLKeyValue> missingKeys = new ArrayList<>();
         List<YAMLKeyValue> unavailableKeys = new ArrayList<>();
-        collectInvalidKeys(action, actionDef, action.getArguments(), missingKeys, unavailableKeys);
+        collectInvalidKeys(actionDef, action.getArguments(), unavailableKeys);
 
     }
 
@@ -64,8 +63,7 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaActionEl
         }
     }
 
-    private static void collectInvalidKeys(SchemaResolver.ScenarioAction action, SchemaAction actionDef, YAMLMapping args,
-                                           List<? super YAMLKeyValue> missingKeys, List<? super YAMLKeyValue> unavailableKeys)
+    private static void collectInvalidKeys(SchemaAction actionDef, YAMLMapping args, List<? super YAMLKeyValue> unavailableKeys)
     {
         if (args == null)
             return;
