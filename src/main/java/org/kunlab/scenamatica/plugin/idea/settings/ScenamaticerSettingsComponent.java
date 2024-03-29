@@ -1,16 +1,22 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
 import com.intellij.DynamicBundle;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import lombok.Getter;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 
+import java.awt.event.ActionEvent;
 import java.util.Locale;
 
 public class ScenamaticerSettingsComponent
@@ -30,10 +36,26 @@ public class ScenamaticerSettingsComponent
     private JBLabel lbJsonSchemaURL;
     private JLabel lbScenamaticaContentServerURL;
     private JBLabel lbReferencesWindowSettings;
+    private JButton btnPurgeCache;
 
     public ScenamaticerSettingsComponent()
     {
         this.initComponents();
+
+        this.btnPurgeCache.addActionListener(this::onPurgeCache);
+    }
+
+    private void onPurgeCache(ActionEvent actionEvent)
+    {
+        SchemaProviderService.getProvider().clearCache();
+        Notifications.Bus.notify(
+                new Notification(
+                        "Scenamatica",
+                        "Scenamaticer",
+                        "Cache purged",
+                        NotificationType.INFORMATION
+                )
+        );
     }
 
     private void initComponents()
@@ -47,6 +69,7 @@ public class ScenamaticerSettingsComponent
         ScenamaticerBundle.embed(this.ckbRefsWindowAutoClose, "windows.settings.references.autoCloseOnFileClose");
         ScenamaticerBundle.embed(this.lbLanguageSettings, "windows.settings.language.title");
         ScenamaticerBundle.embed(this.lbChangesWillBeAppliedAfterIDERestart, "windows.settings.changesWillBeAppliedAfterRestart");
+        ScenamaticerBundle.embed(this.btnPurgeCache, "windows.settings.purgeCache");
     }
 
     public String getSchemaURL()

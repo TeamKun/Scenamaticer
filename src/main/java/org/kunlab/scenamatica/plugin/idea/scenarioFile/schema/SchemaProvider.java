@@ -151,6 +151,12 @@ public class SchemaProvider
         this.initialized = true;
     }
 
+    public void clearCache()
+    {
+        this.actionsCache.clear();
+        this.definitionCache.clear();
+    }
+
     private static boolean hasBaseActionInAction(JsonObject file)
     {
         return file.has("base");
