@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +28,7 @@ public record SchemaAction(String name, String description, String base, String[
 {
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(AvailableStatus.class, new AvailableStatus(false, null))
-            .registerTypeAdapter(ActionIO.class, new ActionIO(null, new ScenarioType[0], new ScenarioType[0]))
+            .registerTypeAdapter(ActionIO.class, new ActionIO("", null, new ScenarioType[0], new ScenarioType[0], Collections.emptyMap()))
             .create();
 
     public boolean isAvailableFor(@Nullable ScenarioType type)
@@ -67,9 +69,11 @@ public record SchemaAction(String name, String description, String base, String[
         return GSON.fromJson(obj, SchemaAction.class);
     }
 
-    public record ActionIO(@Nullable String description,
+    public record ActionIO(@NotNull String type,
+                           @Nullable String description,
                            @Nullable ScenarioType[] requiredOn,
-                           @Nullable ScenarioType[] availableFor) implements JsonDeserializer<ActionIO>
+                           @Nullable ScenarioType[] availableFor,
+                           @NotNull Map<String, Object> additionalData) implements JsonDeserializer<ActionIO>
     {
         @Override
         public ActionIO deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
@@ -78,6 +82,7 @@ public record SchemaAction(String name, String description, String base, String[
                 throw new JsonParseException("ActionArgument must be an object, got " + jsonElement.getClass().getSimpleName());
 
             JsonObject obj = jsonElement.getAsJsonObject();
+            String argumentType = obj.has("type") ? obj.get("type").getAsString(): "any";
             String description = obj.has("description") ? obj.get("description").getAsString(): null;
 
             ScenarioType[] requiredOn = parseEnumArray(obj.get("requiredOn"), ScenarioType.values(), ActionIO::mapScenarioType)
@@ -87,7 +92,15 @@ public record SchemaAction(String name, String description, String base, String[
                     .map(list -> list.toArray(new ScenarioType[0]))
                     .orElse(null);
 
-            return new ActionIO(description, requiredOn, availableFor);
+            Map<String, Object> additionalData = new HashMap<>();
+            for (Map.Entry<String, JsonElement> entry : obj.entrySet())
+            {
+                if (entry.getKey().equals("description") || entry.getKey().equals("requiredOn") || entry.getKey().equals("availableFor"))
+                    continue;
+                additionalData.put(entry.getKey(), entry.getValue());
+            }
+
+            return new ActionIO(argumentType, description, requiredOn, availableFor, additionalData);
         }
 
         public boolean isAvailableFor(ScenarioType type)
@@ -110,6 +123,22 @@ public record SchemaAction(String name, String description, String base, String[
                 if (t == type)
                     return true;
             return false;
+        }
+
+        public <T> Optional<T> getAdditionalData(String key, Class<? extends T> type)
+        {
+            Object value = this.additionalData.get(key);
+            if (value == null)
+                return Optional.empty();
+            else if (type.isInstance(value))
+                return Optional.of(type.cast(value));
+            else
+                throw new ClassCastException("Cannot cast " + value.getClass().getSimpleName() + " to " + type.getSimpleName());
+        }
+
+        public boolean hasAdditionalData(String key)
+        {
+            return this.additionalData.containsKey(key);
         }
 
         private static ScenarioType mapScenarioType(String str)
