@@ -117,7 +117,10 @@ public class WebReference
         else if (groupComponents.length > 1 && kebabAction.startsWith(groupComponents[1] + "-"))
             kebabAction = kebabAction.substring(groupComponents[1].length() + "-".length());
 
-        return processAnchor(URLUtils.concat(BASE_URL_ACTION, kebabGroup), kebabAction);
+        if (actionsGroup.equalsIgnoreCase("scenamatica")) // Scenamatica グループは root に配置される。
+            return processAnchor(BASE_URL_ACTION, kebabAction);
+        else
+            return processAnchor(URLUtils.concat(BASE_URL_ACTION, kebabGroup), kebabAction);
     }
 
     private static String processAnchor(String url, @Nullable String anchor)
