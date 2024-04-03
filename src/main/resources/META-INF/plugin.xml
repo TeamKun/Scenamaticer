@@ -78,16 +78,17 @@
                 displayName="Missing arguments"/>
         <codeInsight.lineMarkerProvider language="yaml"
                                         implementationClass="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceLineMarkerProvider"/>
+        <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE"
+                  name="Scenamatica Policy File"
+                  implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>
+        <lang.parserDefinition language="ScenamaticaPolicy"
+                               implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyParserDefinition"/>
+        <fileTypeUsageSchemaDescriptor
+                schema=""
+                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileTypeFactory"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
         <ProviderFactory implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.SchemaProvider"/>
     </extensions>
-    <actions>
-        <action id="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"
-                class="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"
-                text="Scenamatica Scenario File" description="Create a new Scenario file">
-            <add-to-group group-id="NewGroup" anchor="first"/>
-        </action>
-    </actions>
 </idea-plugin>

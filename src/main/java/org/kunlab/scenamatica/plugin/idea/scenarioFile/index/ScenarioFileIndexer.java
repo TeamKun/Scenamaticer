@@ -16,6 +16,8 @@ import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyRetriever;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -52,11 +54,20 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
 
             SchemaProviderService.getResolver().createCacheAll(file);
 
+            ScenamaticaPolicy policy = ScenamaticaPolicyRetriever.retrieveOrGuessPolicy(
+                    proposal -> {
+                        return proposal.getMinecraftVersion() != null;
+                    },
+                    file.getProject(),
+                    file.getVirtualFile()
+            );
+
             return Map.of(
                     name,
                     new ScenarioFileIndex(
                             name, description,
-                            file.getVirtualFile().getPath()
+                            file.getVirtualFile().getPath(),
+                            policy.getMinecraftVersion()
                     )
             );
         };
@@ -77,7 +88,7 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
     @Override
     public int getVersion()
     {
-        return 1;
+        return 2;
     }
 
     @NotNull
@@ -119,18 +130,27 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
         return scenarios;
     }
 
-    public static boolean isDuplicated(Project proj, String name)
+    public static boolean isDuplicated(@NotNull Project proj, @NotNull String name)
     {
-        return FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)).size() > 1;
+        return hasIndexFor(proj, name);
     }
 
-    public static boolean hasIndexFor(Project proj, String name)
+    public static boolean hasIndexFor(@NotNull Project proj, @NotNull String name)
     {
         return !FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)).isEmpty();
     }
 
-    public static List<ScenarioFileIndex> getIndicesFor(Project proj, String name)
+    public static List<ScenarioFileIndex> getIndicesFor(@NotNull Project proj, @NotNull String scenarioName)
     {
-        return new ArrayList<>(FileBasedIndex.getInstance().getValues(NAME, name, GlobalSearchScope.projectScope(proj)));
+        return new ArrayList<>(FileBasedIndex.getInstance().getValues(NAME, scenarioName, GlobalSearchScope.projectScope(proj)));
+    }
+
+    public static ScenarioFileIndex getIndexFor(@NotNull Project proj, @NotNull String scenarioName)
+    {
+        List<ScenarioFileIndex> indices = getIndicesFor(proj, scenarioName);
+        if (indices.isEmpty())
+            return null;
+        else
+            return indices.get(0);
     }
 }

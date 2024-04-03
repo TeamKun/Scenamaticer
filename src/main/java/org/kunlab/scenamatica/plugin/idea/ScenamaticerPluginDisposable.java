@@ -4,10 +4,16 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyUpdater;
 
 @Service(Service.Level.PROJECT)
 public final class ScenamaticerPluginDisposable implements Disposable
 {
+    public ScenamaticerPluginDisposable(Project project)
+    {
+        ScenamaticaPolicyUpdater.getInstance(project);
+    }
+
     @Override
     public void dispose()
     {
