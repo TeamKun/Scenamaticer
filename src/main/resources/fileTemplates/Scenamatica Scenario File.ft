@@ -1,7 +1,19 @@
+## @formatter:off
+
 scenamatica: "${SCENAMATICA_VERSION}"
 
 name: "${SCENARIO_NAME}"
 description: "${SCENARIO_DESCRIPTION}"
+
+#if(${MINECRAFT_VERSION_SINCE} != "" || ${MINECRAFT_VERSION_UNTIL} != "")
+minecraft:
+#if(${MINECRAFT_VERSION_SINCE} != "")
+  since: "${MINECRAFT_VERSION_SINCE}"
+#end
+#if(${MINECRAFT_VERSION_UNTIL} != "")
+  until: "${MINECRAFT_VERSION_UNTIL}"
+#end
+#end
 
 on:
 #if(${TRIGGER_MANUAL_DISPATCH} != "")

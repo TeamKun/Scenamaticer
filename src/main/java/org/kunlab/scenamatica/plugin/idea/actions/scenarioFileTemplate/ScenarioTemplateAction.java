@@ -19,6 +19,7 @@ import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaIcons;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageEnvironment;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
 import java.util.Properties;
 import java.util.function.Consumer;
@@ -80,6 +81,13 @@ public class ScenarioTemplateAction extends CreateFileAction
         props.setProperty("SCENARIO_NAME", wrapYAMLString(this.dialog.getScenarioName()));
         if (!this.dialog.getScenarioDescription().isEmpty())
             props.setProperty("SCENARIO_DESCRIPTION", wrapYAMLString(this.dialog.getScenarioDescription()));
+
+        MinecraftVersion mcSince = this.dialog.getMinecraftSince();
+        MinecraftVersion mcUntil = this.dialog.getMinecraftUntil();
+        if (mcSince != MinecraftVersion.ANY)
+            props.setProperty("MINECRAFT_VERSION_SINCE", wrapYAMLString(mcSince.getVersion()));
+        if (mcUntil != MinecraftVersion.ANY)
+            props.setProperty("MINECRAFT_VERSION_UNTIL", wrapYAMLString(mcUntil.getVersion()));
 
         // Trigger
         boolean hasTrigger = false;

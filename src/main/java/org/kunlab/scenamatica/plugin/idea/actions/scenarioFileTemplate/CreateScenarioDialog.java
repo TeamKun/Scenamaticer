@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.InputValidator;
 import com.intellij.psi.PsiDirectory;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -14,11 +15,13 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.jdesktop.swingx.combobox.EnumComboBoxModel;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageEnvironment;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
 public class CreateScenarioDialog extends DialogWrapper
 {
@@ -50,6 +53,11 @@ public class CreateScenarioDialog extends DialogWrapper
     private JLabel lbTriggers;
     private JLabel lbScenamaticaVersion;
     private JLabel lbStageEnvironment;
+    private JComboBox<String> cbMCSince;
+    private JComboBox<String> cbMCUntil;
+    private JBLabel lbMCSince;
+    private JBLabel lbMCVersion;
+    private JLabel lbMCUntil;
 
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator, PsiDirectory directory)
     {
@@ -80,6 +88,9 @@ public class CreateScenarioDialog extends DialogWrapper
         ScenamaticerBundle.embed(this.ckbTriggerManual, "actions.scenarioFileTemplate.ui.execution.onManuallyDispatch");
         ScenamaticerBundle.embed(this.ckbTriggerOnLoad, "actions.scenarioFileTemplate.ui.execution.onLoad");
         ScenamaticerBundle.embed(this.lbScenamaticaVersion, "actions.scenarioFileTemplate.ui.scenamaticaVersion");
+        ScenamaticerBundle.embed(this.lbMCVersion, "actions.scenarioFileTemplate.ui.minecraftVersion");
+        ScenamaticerBundle.embed(this.lbMCSince, "actions.scenarioFileTemplate.ui.minecraftVersion.since");
+        ScenamaticerBundle.embed(this.lbMCUntil, "actions.scenarioFileTemplate.ui.minecraftVersion.until");
     }
 
     @Override
@@ -95,6 +106,8 @@ public class CreateScenarioDialog extends DialogWrapper
         this.pnlCreateStage.setEnabled(false);
         this.cbStageEnvironment.setModel(new EnumComboBoxModel<>(StageEnvironment.class));
         this.cbStageType.setModel(new EnumComboBoxModel<>(StageType.class));
+
+        this.initMinecraftVersions();
 
         this.tbScenarioName.grabFocus();
         this.tbScenarioName.getDocument().addDocumentListener(new DocumentListener()
@@ -150,6 +163,31 @@ public class CreateScenarioDialog extends DialogWrapper
 
             this.tbOriginalWorld.setEnabled(!isSelected);
         });
+    }
+
+    private void initMinecraftVersions()
+    {
+        MinecraftVersion[] versions = MinecraftVersion.values();
+        for (MinecraftVersion version : versions)
+        {
+            if (!version.toString().contains("_X"))
+            {
+                this.cbMCSince.addItem(version.getVersion());
+                this.cbMCUntil.addItem(version.getVersion());
+            }
+        }
+
+        this.cbMCSince.setSelectedItem(MinecraftVersion.ANY.getVersion());
+        this.cbMCUntil.setSelectedItem(MinecraftVersion.ANY.getVersion());
+    }
+
+    private MinecraftVersion getSelectedMinecraftVersion(JComboBox<String> comboBox)
+    {
+        Object selectedItem = comboBox.getSelectedItem();
+        if (selectedItem == null)
+            return MinecraftVersion.ANY;
+
+        return MinecraftVersion.fromString(selectedItem.toString());
     }
 
     private void checkValid()
@@ -307,6 +345,18 @@ public class CreateScenarioDialog extends DialogWrapper
             return null;
         else
             return Long.parseLong(this.tbStageSeed.getText());
+    }
+
+    @NotNull
+    public MinecraftVersion getMinecraftSince()
+    {
+        return this.getSelectedMinecraftVersion(this.cbMCSince);
+    }
+
+    @NotNull
+    public MinecraftVersion getMinecraftUntil()
+    {
+        return this.getSelectedMinecraftVersion(this.cbMCUntil);
     }
 
     @Override
