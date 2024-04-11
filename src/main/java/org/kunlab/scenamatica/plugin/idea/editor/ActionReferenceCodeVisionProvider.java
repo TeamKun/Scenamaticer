@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
@@ -158,7 +158,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
 
     private static boolean acceptsFile(@NotNull PsiFile psiFile)
     {
-        return ScenarioFiles.isScenarioFile(psiFile);
+        return ScenarioFileType.isType(psiFile);
     }
 
     private static class ActionReferenceCodeVisionEntry extends TextCodeVisionEntry implements CodeVisionPredefinedActionEntry

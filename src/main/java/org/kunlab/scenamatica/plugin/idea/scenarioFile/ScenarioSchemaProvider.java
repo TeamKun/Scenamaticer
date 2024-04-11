@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
 
 public class ScenarioSchemaProvider implements JsonSchemaFileProvider
@@ -28,7 +29,7 @@ public class ScenarioSchemaProvider implements JsonSchemaFileProvider
     @Override
     public boolean isAvailable(@NotNull VirtualFile virtualFile)
     {
-        return ScenarioFiles.isScenarioFile(this.project, virtualFile);
+        return ScenarioFileType.isType(virtualFile);
     }
 
     @Override

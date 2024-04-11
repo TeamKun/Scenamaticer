@@ -4,7 +4,7 @@ import com.intellij.openapi.fileTypes.LanguageFileType;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaIcons;
 
 public class ScenamaticaPolicyFileType extends LanguageFileType
 {
@@ -39,6 +39,6 @@ public class ScenamaticaPolicyFileType extends LanguageFileType
     @Override
     public Icon getIcon()
     {
-        return ScenarioFileIconProvider.SCENAMATICA_ICON;
+        return ScenamaticaIcons.SCENAMATICA_ICON;
     }
 }

@@ -20,7 +20,6 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Scenamatica Scenario File"/>
-        <fileIconProvider implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider"/>
         <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaSpellActivity"/>
         <notificationGroup id="Scenamatica" displayType="NONE"/>
         <applicationService
@@ -52,33 +51,33 @@
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.ScenarioNameDuplicationInspector"
-                language="yaml"
+                language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Duplicated Scenario names"/>
         <localInspection
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.UnsupportedActionUsageInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
-                language="yaml"
+                language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Invalid Action usage"/>
         <localInspection
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.RedundantArgumentsInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
-                language="yaml"
+                language="ScenamaticaScenario"
                 level="WARNING"
                 displayName="Redundant arguments"/>
         <localInspection
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.MissingArgumentsInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
-                language="yaml"
+                language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Missing arguments"/>
-        <codeInsight.lineMarkerProvider language="yaml"
+        <codeInsight.lineMarkerProvider language="ScenamaticaScenario"
                                         implementationClass="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceLineMarkerProvider"/>
-        <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE"
+        <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE" fileNames=".scenamatica"
                   name="Scenamatica Policy File"
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>
         <lang.parserDefinition language="ScenamaticaPolicy"
@@ -86,6 +85,11 @@
         <fileTypeUsageSchemaDescriptor
                 schema=""
                 implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileTypeFactory"/>
+        <fileType language="ScenamaticaScenario" fieldName="INSTANCE"
+                  name="Scenamatica Scenario File"
+                  implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType"/>
+        <lang.parserDefinition language="ScenamaticaScenario"
+                               implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioParserDefinition"/>
     </extensions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

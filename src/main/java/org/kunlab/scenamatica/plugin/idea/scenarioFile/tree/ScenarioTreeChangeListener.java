@@ -7,7 +7,7 @@ import com.intellij.psi.PsiTreeChangeEvent;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import org.jetbrains.annotations.NotNull;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 
 public class ScenarioTreeChangeListener extends PsiTreeChangeAdapter
 {
@@ -36,6 +36,6 @@ public class ScenarioTreeChangeListener extends PsiTreeChangeAdapter
     private static boolean shouldProcess(PsiTreeChangeEvent evt)
     {
         PsiFile file = evt.getFile();
-        return file != null && file.isValid() && ScenarioFiles.isScenarioFile(file);
+        return file != null && file.isValid() && ScenarioFileType.isType(file);
     }
 }

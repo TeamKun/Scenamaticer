@@ -16,7 +16,7 @@ import com.intellij.psi.SmartPointerManager;
 import com.intellij.psi.SmartPsiElementPointer;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaIcons;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageEnvironment;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageType;
 
@@ -34,7 +34,7 @@ public class ScenarioTemplateAction extends CreateFileAction
         super(
                 ScenamaticerBundle.lazy("actions.scenarioFileTemplate.name"),
                 ScenamaticerBundle.lazy("actions.scenarioFileTemplate.description"),
-                () -> ScenarioFileIconProvider.ICON
+                () -> ScenamaticaIcons.ICON
         );
     }
 

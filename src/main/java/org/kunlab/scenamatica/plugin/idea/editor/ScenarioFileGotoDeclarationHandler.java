@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandler
@@ -22,7 +22,7 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
     @Override
     public PsiElement @Nullable [] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        if (psiElement == null || !ScenarioFiles.isScenarioFile(psiElement.getContainingFile()))
+        if (psiElement == null || ScenarioFileType.isType(psiElement.getContainingFile()))
             return null;
 
 

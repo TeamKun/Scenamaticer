@@ -14,8 +14,8 @@ import com.intellij.util.io.DataExternalizer;
 import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.yaml.YAMLFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyRetriever;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
@@ -67,7 +67,9 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
                     new ScenarioFileIndex(
                             name, description,
                             file.getVirtualFile().getPath(),
-                            policy.getMinecraftVersion()
+                            policy.getMinecraftVersion(),
+                            null,
+                            null
                     )
             );
         };
@@ -96,13 +98,13 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
     public FileBasedIndex.InputFilter getInputFilter()
     {
         //noinspection UnstableApiUsage
-        return new DefaultFileTypeSpecificWithProjectInputFilter(YAMLFileType.YML)
+        return new DefaultFileTypeSpecificWithProjectInputFilter(ScenarioFileType.INSTANCE)
         {
             @Override
             public boolean acceptInput(@NotNull IndexedFile file)
             {
                 PsiFile psiFile = YAMLUtils.toPSIFile(file.getProject(), file.getFile());
-                return ScenarioFiles.isScenarioFile(psiFile) && YAMLUtils.hasValidKey(psiFile, ScenarioFiles.KEY_NAME);
+                return ScenarioFileType.isType(psiFile) && YAMLUtils.hasValidKey(psiFile, ScenarioFiles.KEY_NAME);
             }
         };
     }

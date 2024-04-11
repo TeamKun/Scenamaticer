@@ -5,7 +5,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.NotNull;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
 
 public class ScenarioFileOpenListener implements FileEditorManagerListener
@@ -20,7 +20,7 @@ public class ScenarioFileOpenListener implements FileEditorManagerListener
         if (window == null || window.isOpen())
             return;
 
-        if (ScenarioFiles.isScenarioFile(source.getProject(), file))
+        if (ScenarioFileType.isType(file))
             window.show();
     }
 
@@ -36,7 +36,7 @@ public class ScenarioFileOpenListener implements FileEditorManagerListener
         if (newFile == null)
             return;
 
-        boolean isScenarioFile = ScenarioFiles.isScenarioFile(event.getManager().getProject(), newFile);
+        boolean isScenarioFile = ScenarioFileType.isType(newFile);
         if (!isScenarioFile && window.isOpen())
         {
             if (ScenamaticerSettingsState.getInstance().isRefsWindowAutoClose())

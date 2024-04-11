@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.java.JavaResourceRootType;
 import org.jetbrains.yaml.YAMLUtil;
 import org.jetbrains.yaml.psi.YAMLFile;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 
 import java.util.ArrayList;
@@ -70,7 +70,7 @@ public class ScenarioTreeScanTask extends Task.Backgroundable
                     root,
                     null,
                     (file) -> {
-                        if (ScenarioFiles.isScenarioFile(project, file))
+                        if (ScenarioFileType.isType(file))
                             files.add(file);
                         return true;
                     }

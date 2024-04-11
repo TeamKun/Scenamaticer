@@ -24,6 +24,7 @@ import org.jetbrains.yaml.psi.YAMLSequence;
 import org.jetbrains.yaml.psi.YAMLSequenceItem;
 import org.jetbrains.yaml.psi.YAMLValue;
 import org.jetbrains.yaml.psi.impl.YAMLBlockMappingImpl;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -249,7 +250,7 @@ public class YAMLUtils
 
     private static boolean isValidYAMLFile(PsiFile file)
     {
-        return file != null && file.isValid() && file.getFileType() == YAMLFileType.YML;
+        return file != null && file.isValid() && (file.getFileType() == YAMLFileType.YML || file.getFileType() == ScenarioFileType.INSTANCE);
     }
 
     public static PsiFile toPSIFile(Project proj, VirtualFile file)

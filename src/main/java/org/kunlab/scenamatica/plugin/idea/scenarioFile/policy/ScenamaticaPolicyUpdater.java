@@ -11,7 +11,7 @@ import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 
 import java.util.List;
 
@@ -52,10 +52,7 @@ public final class ScenamaticaPolicyUpdater implements BulkFileListener, Disposa
     {
         for (VFileEvent event : events)
         {
-            if (event.getFile() == null)
-                continue;
-
-            if (event.getFile().getFileType() == ScenamaticaPolicyFileType.INSTANCE)
+            if (ScenarioFileType.isType(event.getFile()))
                 return true;
         }
 

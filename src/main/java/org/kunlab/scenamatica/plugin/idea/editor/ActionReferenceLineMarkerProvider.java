@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFileIconProvider;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaIcons;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
@@ -36,7 +36,7 @@ public class ActionReferenceLineMarkerProvider implements LineMarkerProvider
         return new LineMarkerInfo<>(
                 scenarioAction.getActionName(),
                 psiElement.getTextRange(),
-                ScenarioFileIconProvider.ACTION_ICON,
+                ScenamaticaIcons.ACTION_ICON,
                 psiElement1 -> ScenamaticerBundle.of("editor.lineMarkers.action.tooltip", action.name()),
                 (e, s) -> {
                     ActionReferences.navigate(psiElement.getProject(), editor, action.name());

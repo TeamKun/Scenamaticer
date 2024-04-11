@@ -12,6 +12,7 @@ import org.kunlab.scenamatica.plugin.idea.editor.fixes.ValueIncrementalFix;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndex;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndexer;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenarioNameDuplicationInspector extends AbstractScenamaticaInspection
@@ -32,7 +33,7 @@ public class ScenarioNameDuplicationInspector extends AbstractScenamaticaInspect
             @Override
             public void visitFile(@NotNull PsiFile file)
             {
-                if (!(ScenarioFiles.isScenarioFile(file) && YAMLUtils.hasValidKey(file, ScenarioFiles.KEY_NAME)))
+                if (!(ScenarioFileType.isType(file) && YAMLUtils.hasValidKey(file, ScenarioFiles.KEY_NAME)))
                     return;
 
                 PsiElement scenarioNameElement = YAMLUtils.getValue(file, ScenarioFiles.KEY_NAME);

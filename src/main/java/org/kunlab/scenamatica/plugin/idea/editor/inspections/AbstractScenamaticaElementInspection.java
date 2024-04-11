@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.Iterator;
@@ -47,9 +46,6 @@ public abstract class AbstractScenamaticaElementInspection extends AbstractScena
 
     private void visitYamlFile(@NotNull YAMLFile file, @NotNull ProblemsHolder holder)
     {
-        if (!ScenarioFiles.isScenarioFile(file))
-            return;
-
         Iterator<PsiElement> it = YAMLUtils.getDepthFirstIterator(file);
         while (it.hasNext())
         {
