@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.InputValidator;
 import com.intellij.psi.PsiDirectory;
+import com.intellij.ui.components.JBTextField;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -25,18 +26,18 @@ public class CreateScenarioDialog extends DialogWrapper
     private final InputValidator validator;
     private final PsiDirectory directory;
     private JPanel centerPanel;
-    private JTextField scenarioName;
-    private JTextField fileName;
-    private JTextField scenarioDescription;
-    private JComboBox<String> scenamaticaVersion;
+    private JBTextField tbScenarioName;
+    private JBTextField tbFileName;
+    private JBTextField tbScenarioDescription;
+    private JComboBox<String> cbScenamaticaVersion;
     private JCheckBox ckbUseDedicatedStage;
-    private JComboBox<StageEnvironment> stageEnvironment;
-    private JComboBox<StageType> stageType;
-    private JTextField stageSeed;
-    private JPanel panelStage;
+    private JComboBox<StageEnvironment> cbStageEnvironment;
+    private JComboBox<StageType> cbStageType;
+    private JTextField tbStageSeed;
+    private JPanel pnlCreateStage;
     private JCheckBox ckbTriggerManual;
     private JCheckBox ckbTriggerOnLoad;
-    private JTextField originalWorld;
+    private JTextField tbOriginalWorld;
     private JLabel lbName;
     private JLabel lbFileName;
     private JLabel lbDescription;
@@ -44,7 +45,6 @@ public class CreateScenarioDialog extends DialogWrapper
     private JLabel lbOr;
     private JLabel lbCopyAnExistingStageFrom;
     private JLabel lbStageType;
-    private JPanel lbEnvironment;
     private JLabel lbStageSeed;
     private JLabel lbExecution;
     private JLabel lbTriggers;
@@ -91,13 +91,13 @@ public class CreateScenarioDialog extends DialogWrapper
         this.setOKButtonText(ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.create"));
         this.localizeComponents();
 
-        this.panelStage.setVisible(false);
-        this.panelStage.setEnabled(false);
-        this.stageEnvironment.setModel(new EnumComboBoxModel<>(StageEnvironment.class));
-        this.stageType.setModel(new EnumComboBoxModel<>(StageType.class));
+        this.pnlCreateStage.setVisible(false);
+        this.pnlCreateStage.setEnabled(false);
+        this.cbStageEnvironment.setModel(new EnumComboBoxModel<>(StageEnvironment.class));
+        this.cbStageType.setModel(new EnumComboBoxModel<>(StageType.class));
 
-        this.scenarioName.grabFocus();
-        this.scenarioName.getDocument().addDocumentListener(new DocumentListener()
+        this.tbScenarioName.grabFocus();
+        this.tbScenarioName.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
             public void insertUpdate(DocumentEvent e)
@@ -121,7 +121,7 @@ public class CreateScenarioDialog extends DialogWrapper
             }
         });
 
-        this.fileName.getDocument().addDocumentListener(new DocumentListener()
+        this.tbFileName.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
             public void insertUpdate(DocumentEvent e)
@@ -145,10 +145,10 @@ public class CreateScenarioDialog extends DialogWrapper
         this.ckbUseDedicatedStage.addActionListener(e ->
         {
             boolean isSelected = ((JCheckBox) e.getSource()).isSelected();
-            this.panelStage.setVisible(isSelected);
-            this.panelStage.setEnabled(isSelected);
+            this.pnlCreateStage.setVisible(isSelected);
+            this.pnlCreateStage.setEnabled(isSelected);
 
-            this.originalWorld.setEnabled(!isSelected);
+            this.tbOriginalWorld.setEnabled(!isSelected);
         });
     }
 
@@ -157,13 +157,13 @@ public class CreateScenarioDialog extends DialogWrapper
         boolean errors = false;
         JComponent errorComponent;
 
-        errorComponent = this.scenarioName;
+        errorComponent = this.tbScenarioName;
         {
             String errorMessage = null;
-            if (this.scenarioName.getText().isEmpty())
+            if (this.tbScenarioName.getText().isEmpty())
                 errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.scenarioName.errors.empty");
-            else if (ScenarioFileIndexer.hasIndexFor(this.project, this.scenarioName.getText()))
-                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.scenarioName.errors.duplicated", this.scenarioName.getText());
+            else if (ScenarioFileIndexer.hasIndexFor(this.project, this.tbScenarioName.getText()))
+                errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.scenarioName.errors.duplicated", this.tbScenarioName.getText());
 
             if (errorMessage != null)
             {
@@ -173,9 +173,9 @@ public class CreateScenarioDialog extends DialogWrapper
             }
         }
 
-        errorComponent = this.fileName;
+        errorComponent = this.tbFileName;
         {
-            String fileName = this.fileName.getText();
+            String fileName = this.tbFileName.getText();
             String errorMessage = null;
             if (fileName.isEmpty())
                 errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.fileName.errors.empty");
@@ -194,10 +194,10 @@ public class CreateScenarioDialog extends DialogWrapper
 
         if (this.ckbUseDedicatedStage.isSelected())
         {
-            errorComponent = this.stageSeed;
+            errorComponent = this.tbStageSeed;
             {
                 String errorMessage = null;
-                boolean isStageSeedValid = this.stageSeed.getText().isEmpty() || this.stageSeed.getText().matches("^-?[0-9]+$");
+                boolean isStageSeedValid = this.tbStageSeed.getText().isEmpty() || this.tbStageSeed.getText().matches("^-?[0-9]+$");
                 if (!isStageSeedValid)
                     errorMessage = ScenamaticerBundle.of("actions.scenarioFileTemplate.ui.stage.options.createDedicated.seed.errors.invalid");
 
@@ -222,7 +222,7 @@ public class CreateScenarioDialog extends DialogWrapper
     {
 
         StringBuilder sb = new StringBuilder();
-        String name = this.scenarioName.getText()
+        String name = this.tbScenarioName.getText()
                 .replaceAll("[^a-zA-Z0-9]", "-")
                 .replaceAll("-+", "-")
                 .replaceAll("^-", "")
@@ -235,16 +235,16 @@ public class CreateScenarioDialog extends DialogWrapper
                 sb.append(c);
         }
 
-        String currentFileName = this.fileName.getText();
+        String currentFileName = this.tbFileName.getText();
         String builtValue = sb.toString();
         boolean isEdited = !(currentFileName.isEmpty() || builtValue.startsWith(currentFileName));
         if (!isEdited)
-            this.fileName.setText(builtValue);
+            this.tbFileName.setText(builtValue);
     }
 
     public String getFileName()
     {
-        String name = this.fileName.getText();
+        String name = this.tbFileName.getText();
         if (name.endsWith(".yml") || name.endsWith(".yaml"))
             return name;
         else
@@ -253,17 +253,17 @@ public class CreateScenarioDialog extends DialogWrapper
 
     public String getScenamaticaVersion()
     {
-        return this.scenamaticaVersion.getSelectedItem().toString();
+        return this.cbScenamaticaVersion.getSelectedItem().toString();
     }
 
     public String getScenarioName()
     {
-        return this.scenarioName.getText();
+        return this.tbScenarioName.getText();
     }
 
     public String getScenarioDescription()
     {
-        return this.scenarioDescription.getText();
+        return this.tbScenarioDescription.getText();
     }
 
     public boolean isUseDedicatedStage()
@@ -283,30 +283,30 @@ public class CreateScenarioDialog extends DialogWrapper
 
     public StageEnvironment getStageEnvironment()
     {
-        return (StageEnvironment) this.stageEnvironment.getSelectedItem();
+        return (StageEnvironment) this.cbStageEnvironment.getSelectedItem();
     }
 
     public StageType getStageType()
     {
-        return (StageType) this.stageType.getSelectedItem();
+        return (StageType) this.cbStageType.getSelectedItem();
     }
 
     public boolean hasOriginalWorld()
     {
-        return !this.originalWorld.getText().isEmpty();
+        return !this.tbOriginalWorld.getText().isEmpty();
     }
 
     public String getOriginalWorld()
     {
-        return this.originalWorld.getText();
+        return this.tbOriginalWorld.getText();
     }
 
     public Long getStageSeed()
     {
-        if (this.stageSeed.getText().isEmpty())
+        if (this.tbStageSeed.getText().isEmpty())
             return null;
         else
-            return Long.parseLong(this.stageSeed.getText());
+            return Long.parseLong(this.tbStageSeed.getText());
     }
 
     @Override

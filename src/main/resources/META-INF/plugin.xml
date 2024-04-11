@@ -21,7 +21,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <internalFileTemplate name="Scenamatica Scenario File"/>
         <postStartupActivity implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaSpellActivity"/>
-        <notificationGroup id="Scenamatica" displayType="NONE"/>
+        <notificationGroup id="Scenamatica" displayType="BALLOON"/>
         <applicationService
                 serviceImplementation="org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState"/>
         <applicationConfigurable
@@ -91,6 +91,14 @@
         <lang.parserDefinition language="ScenamaticaScenario"
                                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioParserDefinition"/>
     </extensions>
+
+    <actions>
+        <action id="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"
+                class="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"
+                text="Scenamatica Scenario File" description="Create a new Scenario file">
+            <add-to-group group-id="NewGroup" anchor="first"/>
+        </action>
+    </actions>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
         <ProviderFactory implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.SchemaProvider"/>

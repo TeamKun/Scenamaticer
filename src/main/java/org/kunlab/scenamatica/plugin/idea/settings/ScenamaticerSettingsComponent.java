@@ -1,9 +1,8 @@
 package org.kunlab.scenamatica.plugin.idea.settings;
 
 import com.intellij.DynamicBundle;
-import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -48,14 +47,13 @@ public class ScenamaticerSettingsComponent
     private void onPurgeCache(ActionEvent actionEvent)
     {
         SchemaProviderService.getProvider().clearCache();
-        Notifications.Bus.notify(
-                new Notification(
-                        "Scenamatica",
-                        "Scenamaticer",
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup("Scenamatica")
+                .createNotification(
                         "Cache purged",
-                        NotificationType.INFORMATION
+                        NotificationType.WARNING
                 )
-        );
+                .notify(null);
     }
 
     private void initComponents()

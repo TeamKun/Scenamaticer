@@ -69,7 +69,16 @@ public class ScenamaticerSettingsConfigurable implements Configurable
 
         state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());
         state.setRefsWindowAutoClose(this.settings.isRefsWindowAutoClose());
-        state.setLanguage(this.settings.getScenamaticerLocale().getLanguage());
+
+        String oldLang = state.getLanguage();
+        String newLang = this.settings.getScenamaticerLocale().getLanguage();
+        if (!oldLang.equals(newLang))
+        {
+            state.setLanguage(this.settings.getScenamaticerLocale().getLanguage());
+            if (ApplicationManager.getApplication().isRestartCapable())
+                ApplicationManager.getApplication().restart();
+        }
+
 
         SchemaProviderService.getInstance().getSchemaProvider().setContentServerURL(state.getContentServerURL());
         this.reloadSchema();
