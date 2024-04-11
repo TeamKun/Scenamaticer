@@ -134,7 +134,7 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
 
     public static boolean isDuplicated(@NotNull Project proj, @NotNull String name)
     {
-        return hasIndexFor(proj, name);
+        return getIndicesFor(proj, name).size() > 1;
     }
 
     public static boolean hasIndexFor(@NotNull Project proj, @NotNull String name)
