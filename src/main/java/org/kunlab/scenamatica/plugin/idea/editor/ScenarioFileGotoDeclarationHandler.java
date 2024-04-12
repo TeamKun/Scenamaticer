@@ -22,7 +22,7 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
     @Override
     public PsiElement @Nullable [] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        if (psiElement == null || ScenarioFileType.isType(psiElement.getContainingFile()))
+        if (psiElement == null || !ScenarioFileType.isType(psiElement.getContainingFile()))
             return null;
 
 
