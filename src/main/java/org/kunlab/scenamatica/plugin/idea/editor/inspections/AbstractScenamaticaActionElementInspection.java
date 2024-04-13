@@ -4,10 +4,12 @@ import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.ProblemsHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
 
-public abstract class AbstractScenamaticaActionElementInspection extends AbstractScenamaticaElementInspection
+public abstract class AbstractScenamaticaActionElementInspection extends AbstractScenarioFileInspection
 {
     public AbstractScenamaticaActionElementInspection(String id, String displayName, HighlightDisplayLevel defaultLevel)
     {
@@ -15,7 +17,7 @@ public abstract class AbstractScenamaticaActionElementInspection extends Abstrac
     }
 
     @Override
-    protected boolean visitYamlKV(@NotNull YAMLKeyValue kv, @NotNull ProblemsHolder holder)
+    protected boolean visitYamlKV(@NotNull ScenarioFile file, @NotNull YAMLKeyValue kv, @NotNull ProblemsHolder holder)
     {
         String keyName = kv.getKeyText();
         if (!("action".equals(keyName) || "runif".equals(keyName)))
@@ -27,9 +29,13 @@ public abstract class AbstractScenamaticaActionElementInspection extends Abstrac
 
         SchemaResolver.ScenarioAction action = SchemaProviderService.getResolver().getAction(kv);
         if (action == null)
-            return onActionNotFound(holder, kv);
+            return this.onActionNotFound(holder, kv);
 
-        return checkAction(holder, action, kv);
+        SchemaAction actionDefinition = SchemaProviderService.getProvider().getAction(action.getName());
+        if (actionDefinition == null)
+            return this.onActionNotFound(holder, kv);
+
+        return this.checkAction(holder, action, actionDefinition, kv);
     }
 
     protected boolean onActionNotFound(@NotNull ProblemsHolder holder, @NotNull YAMLKeyValue actionKV)
@@ -37,5 +43,5 @@ public abstract class AbstractScenamaticaActionElementInspection extends Abstrac
         return true;
     }
 
-    protected abstract boolean checkAction(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, @NotNull YAMLKeyValue actionKV);
+    protected abstract boolean checkAction(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, @NotNull SchemaAction actionDefinition, @NotNull YAMLKeyValue actionKV);
 }

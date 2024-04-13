@@ -11,6 +11,7 @@ import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -22,13 +23,19 @@ import java.util.function.Function;
 
 public record SchemaAction(String name, String description, String base, String[] events,
                            AvailableStatus executable,
-                           AvailableStatus watchable, AvailableStatus requireable,
+                           AvailableStatus watchable,
+                           AvailableStatus requireable,
                            Map<String, ActionIO> arguments,
-                           Map<String, ActionIO> outputs)
+                           Map<String, ActionIO> outputs,
+                           @Nullable
+                           MinecraftVersion since,
+                           @Nullable
+                           MinecraftVersion until)
 {
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(AvailableStatus.class, new AvailableStatus(false, null))
-            .registerTypeAdapter(ActionIO.class, new ActionIO("", null, new ScenarioType[0], new ScenarioType[0], Collections.emptyMap()))
+            .registerTypeAdapter(ActionIO.class, new ActionIO("", null, new ScenarioType[0], new ScenarioType[0], null, null, Collections.emptyMap()))
+            .registerTypeAdapter(MinecraftVersion.class, new MinecraftVersion.Deserializer())
             .create();
 
     public boolean isAvailableFor(@Nullable ScenarioType type)
@@ -44,6 +51,11 @@ public record SchemaAction(String name, String description, String base, String[
             case EXPECT -> this.watchable.isAvailable();
             case REQUIRE -> this.requireable.isAvailable();
         };
+    }
+
+    public boolean isAvailableFor(@NotNull MinecraftVersion version)
+    {
+        return version.isInRange(this.since(), this.until());
     }
 
     public String getDescriptionFor(@Nullable ScenarioType type)
@@ -73,6 +85,10 @@ public record SchemaAction(String name, String description, String base, String[
                            @Nullable String description,
                            @Nullable ScenarioType[] requiredOn,
                            @Nullable ScenarioType[] availableFor,
+                           @Nullable
+                           MinecraftVersion since,
+                           @Nullable
+                           MinecraftVersion until,
                            @NotNull Map<String, Object> additionalData) implements JsonDeserializer<ActionIO>
     {
         @Override
@@ -92,15 +108,19 @@ public record SchemaAction(String name, String description, String base, String[
                     .map(list -> list.toArray(new ScenarioType[0]))
                     .orElse(null);
 
+            MinecraftVersion since = obj.has("since") ? MinecraftVersion.fromString(obj.get("since").getAsString()): null;
+            MinecraftVersion until = obj.has("until") ? MinecraftVersion.fromString(obj.get("until").getAsString()): null;
+
             Map<String, Object> additionalData = new HashMap<>();
             for (Map.Entry<String, JsonElement> entry : obj.entrySet())
             {
-                if (entry.getKey().equals("description") || entry.getKey().equals("requiredOn") || entry.getKey().equals("availableFor"))
+                if (entry.getKey().equals("description") || entry.getKey().equals("requiredOn") || entry.getKey().equals("availableFor")
+                        || entry.getKey().equals("since") || entry.getKey().equals("until") || entry.getKey().equals("type"))
                     continue;
                 additionalData.put(entry.getKey(), entry.getValue());
             }
 
-            return new ActionIO(argumentType, description, requiredOn, availableFor, additionalData);
+            return new ActionIO(argumentType, description, requiredOn, availableFor, since, until, additionalData);
         }
 
         public boolean isAvailableFor(ScenarioType type)

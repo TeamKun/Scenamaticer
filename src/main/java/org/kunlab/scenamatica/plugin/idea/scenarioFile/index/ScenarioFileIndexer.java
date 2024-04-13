@@ -15,6 +15,7 @@ import com.intellij.util.io.EnumeratorStringDescriptor;
 import com.intellij.util.io.KeyDescriptor;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenarioFiles;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyRetriever;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
@@ -43,13 +44,11 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
         return fileContent ->
         {
             PsiFile file = fileContent.getPsiFile();
+            ScenarioFile scenarioFile = (ScenarioFile) file;
 
-            String name = YAMLUtils.getValueText(file, ScenarioFiles.KEY_NAME);
-            assert name != null;
-            String description;
-            if (YAMLUtils.hasValidKey(file, ScenarioFiles.KEY_DESCRIPTION))
-                description = YAMLUtils.getValueText(file, ScenarioFiles.KEY_DESCRIPTION);
-            else
+            String name = scenarioFile.getScenarioName();
+            String description = scenarioFile.getDescription();
+            if (description == null)
                 description = "";
 
             SchemaProviderService.getResolver().createCacheAll(file);
@@ -68,8 +67,8 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
                             name, description,
                             file.getVirtualFile().getPath(),
                             policy.getMinecraftVersion(),
-                            null,
-                            null
+                            scenarioFile.getSince(),
+                            scenarioFile.getUntil()
                     )
             );
         };

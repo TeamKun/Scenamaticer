@@ -8,20 +8,21 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.yaml.psi.YAMLFile;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.Iterator;
 
-public abstract class AbstractScenamaticaElementInspection extends AbstractScenamaticaInspection
+public abstract class AbstractScenarioFileInspection extends AbstractScenamaticaInspection
 {
-    public AbstractScenamaticaElementInspection(String id, String displayName, HighlightDisplayLevel defaultLevel)
+    public AbstractScenarioFileInspection(String id, String displayName, HighlightDisplayLevel defaultLevel)
     {
         super(id, displayName, defaultLevel);
     }
@@ -29,6 +30,10 @@ public abstract class AbstractScenamaticaElementInspection extends AbstractScena
     @Override
     public ProblemDescriptor @Nullable [] checkFile(@NotNull PsiFile file, @NotNull InspectionManager manager, boolean isOnTheFly)
     {
+        if (!(file instanceof ScenarioFile))
+            return ProblemDescriptor.EMPTY_ARRAY;
+
+
         return ProgressManager.getInstance().runProcess(
                 () -> ApplicationManager.getApplication().runReadAction((ThrowableComputable<ProblemDescriptor[], ProcessCanceledException>) () -> {
                     if (file.getProject().isDisposed())
@@ -36,7 +41,15 @@ public abstract class AbstractScenamaticaElementInspection extends AbstractScena
                     else
                     {
                         ProblemsHolder holder = new ProblemsHolder(manager, file, isOnTheFly);
-                        visitYamlFile((YAMLFile) file, holder);
+                        visitScenarioFile((ScenarioFile) file, holder);
+
+                        Key<?>[] tempFileKeys = getTempFileKeys();
+                        if (tempFileKeys != null)
+                        {
+                            for (Key<?> key : tempFileKeys)
+                                file.putUserData(key, null);
+                        }
+
                         return holder.getResultsArray();
                     }
                 }),
@@ -44,7 +57,7 @@ public abstract class AbstractScenamaticaElementInspection extends AbstractScena
         );
     }
 
-    private void visitYamlFile(@NotNull YAMLFile file, @NotNull ProblemsHolder holder)
+    private void visitScenarioFile(@NotNull ScenarioFile file, @NotNull ProblemsHolder holder)
     {
         Iterator<PsiElement> it = YAMLUtils.getDepthFirstIterator(file);
         while (it.hasNext())
@@ -52,11 +65,17 @@ public abstract class AbstractScenamaticaElementInspection extends AbstractScena
             PsiElement el = it.next();
             if (!(el instanceof YAMLKeyValue))
                 continue;
-            boolean doContinue = visitYamlKV((YAMLKeyValue) el, holder);
+            boolean doContinue = visitYamlKV(file, (YAMLKeyValue) el, holder);
             if (!doContinue)
                 break;
         }
     }
 
-    protected abstract boolean visitYamlKV(@NotNull YAMLKeyValue kv, @NotNull ProblemsHolder holder);
+    protected abstract boolean visitYamlKV(@NotNull ScenarioFile file, @NotNull YAMLKeyValue kv, @NotNull ProblemsHolder holder);
+
+    @Nullable
+    protected Key<?>[] getTempFileKeys()
+    {
+        return null;
+    }
 }

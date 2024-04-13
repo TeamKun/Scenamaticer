@@ -1,7 +1,14 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.policy;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Type;
 
 @Getter
 public enum MinecraftVersion
@@ -71,10 +78,15 @@ public enum MinecraftVersion
         this.rangeEnd = rangeEnd;
     }
 
-    public boolean isInRange(MinecraftVersion min, MinecraftVersion max)
+    public boolean isInRange(@Nullable MinecraftVersion min, @Nullable MinecraftVersion max)
     {
         if (this == ANY)
             return true;
+
+        if (min == null)
+            min = ANY;
+        if (max == null)
+            max = ANY;
 
         MinecraftVersion minRangeEnd = min != ANY && min.rangeEnd != null ? MinecraftVersion.fromString(min.rangeEnd): null;
         MinecraftVersion endRangeEnd = this.rangeEnd != null ? MinecraftVersion.fromString(this.rangeEnd): null;
@@ -87,6 +99,12 @@ public enum MinecraftVersion
                 || (endRangeEnd != null && endRangeEnd.compareTo(this) <= 0));
     }
 
+    @Override
+    public String toString()
+    {
+        return this.version;
+    }
+
     @NotNull
     public static MinecraftVersion fromString(String version)
     {
@@ -96,5 +114,14 @@ public enum MinecraftVersion
                 return v;
         }
         return ANY;
+    }
+
+    public static class Deserializer implements JsonDeserializer<MinecraftVersion>
+    {
+        @Override
+        public MinecraftVersion deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+        {
+            return MinecraftVersion.fromString(json.getAsString());
+        }
     }
 }

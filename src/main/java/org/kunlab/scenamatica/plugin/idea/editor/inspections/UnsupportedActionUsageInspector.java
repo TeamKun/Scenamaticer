@@ -27,19 +27,15 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaActionEl
     }
 
     @Override
-    protected boolean checkAction(@NotNull ProblemsHolder holder, SchemaResolver.@NotNull ScenarioAction action, @NotNull YAMLKeyValue actionKV)
+    protected boolean checkAction(@NotNull ProblemsHolder holder, SchemaResolver.@NotNull ScenarioAction action, @NotNull SchemaAction actionDefinition, @NotNull YAMLKeyValue actionKV)
     {
-        SchemaAction actionDef = SchemaProviderService.getProvider().getAction(action.getName());
-        if (actionDef == null)
-            return true;
-
-        checkActionUsage(holder, action, actionDef, actionKV);
-        checkActionArguments(holder, actionDef, action);
+        checkActionUsage(holder, action, actionDefinition, actionKV);
+        checkActionArguments(holder, actionDefinition, action);
 
         return true;
     }
 
-    private void checkActionArguments(@NotNull ProblemsHolder holder, @NotNull SchemaAction actionDef, @NotNull SchemaResolver.ScenarioAction action)
+    private static void checkActionArguments(@NotNull ProblemsHolder holder, @NotNull SchemaAction actionDef, @NotNull SchemaResolver.ScenarioAction action)
     {
         if (action.getArguments() == null)
             return;
@@ -69,13 +65,13 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaActionEl
         }
     }
 
-    private String extractActionKindOf(SchemaAction.ActionIO argument)
+    private static String extractActionKindOf(SchemaAction.ActionIO argument)
     {
         return argument.getAdditionalData(KEY_ACTION_KIND_OF, String.class)
                 .orElse(null);
     }
 
-    private Optional<String> extractActionName(YAMLMapping argumentMapping)
+    private static Optional<String> extractActionName(YAMLMapping argumentMapping)
     {
         YAMLKeyValue actionName = argumentMapping.getKeyValueByKey("action");
         if (actionName == null)
@@ -86,7 +82,7 @@ public class UnsupportedActionUsageInspector extends AbstractScenamaticaActionEl
         return Optional.of(actionNameText);
     }
 
-    private void checkActionAvailability(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, String actionKindOf, YAMLMapping argumentMapping, String actionNameText)
+    private static void checkActionAvailability(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, String actionKindOf, YAMLMapping argumentMapping, String actionNameText)
     {
         SchemaAction argumentActionDef = SchemaProviderService.getProvider().getAction(actionNameText);
         if (argumentActionDef == null)

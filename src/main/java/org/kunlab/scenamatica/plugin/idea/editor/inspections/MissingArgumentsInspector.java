@@ -30,7 +30,7 @@ public class MissingArgumentsInspector extends AbstractScenamaticaActionElementI
     }
 
     @Override
-    protected boolean checkAction(@NotNull ProblemsHolder holder, SchemaResolver.@NotNull ScenarioAction action, @NotNull YAMLKeyValue actionKV)
+    protected boolean checkAction(@NotNull ProblemsHolder holder, SchemaResolver.@NotNull ScenarioAction action, @NotNull SchemaAction actionDefinition, @NotNull YAMLKeyValue actionKV)
     {
         SchemaAction actionDef = SchemaProviderService.getProvider().getAction(action.getName());
         if (actionDef == null)

@@ -75,6 +75,13 @@
                 language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Missing arguments"/>
+        <localInspection
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.UnsupportedMCVersionInspector"
+                groupName="Scenamatica"
+                enabledByDefault="true"
+                language="ScenamaticaScenario"
+                level="WARNING"
+                displayName="Unsupported Minecraft version"/>
         <codeInsight.lineMarkerProvider language="ScenamaticaScenario"
                                         implementationClass="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceLineMarkerProvider"/>
         <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE" fileNames=".scenamatica"
