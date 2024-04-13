@@ -22,7 +22,7 @@ public class ScenamaticaPolicyRetriever
     public static ScenamaticaPolicy retrieveOrGuessPolicy(ScenamaticaPolicyVisitor visitor, Project project, VirtualFile scenarioFile)
     {
         ScenamaticaPolicy explicitPolicy = ScenamaticaPolicyFile.tryGetPolicyOf(project, scenarioFile);
-        if (explicitPolicy != null && !visitor.visit(explicitPolicy))
+        if (explicitPolicy != null && visitor.visit(explicitPolicy))
             return explicitPolicy;
         // すべてのモジュールを処理する
         for (Module module : ModuleManager.getInstance(project).getModules())
@@ -35,7 +35,7 @@ public class ScenamaticaPolicyRetriever
                     ScenamaticaPolicy policy = guessByPluginYAML(project, module);
                     if (policy == null)
                         continue;
-                    if (!visitor.visit(policy))
+                    if (visitor.visit(policy))
                         return policy;
                     break;
                 }

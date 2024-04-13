@@ -62,7 +62,7 @@ public class UnsupportedMCVersionInspector extends AbstractScenamaticaActionElem
 
         boolean predicateByFileSince = isSpecified(fileSince) && !fileSince.isInRange(actionSince, actionUntil);
         boolean predicateByFileUntil = isSpecified(fileUntil) && !fileUntil.isInRange(actionSince, actionUntil);
-        boolean predicateByServerVersion = !(predicateByFileSince || predicateByFileUntil) // file を優先
+        boolean predicateByServerVersion = (isUnspecified(fileSince) && isUnspecified(fileUntil)) // file を優先
                 && isSpecified(serverVersion) && !serverVersion.isInRange(actionSince, actionUntil);
 
         MinecraftVersion exampleOfUnavailableVersion = null;
@@ -146,7 +146,7 @@ public class UnsupportedMCVersionInspector extends AbstractScenamaticaActionElem
             );
             file.putUserData(KEY_POLICY, policy);
         }
-        
+
         return policy;
     }
 }

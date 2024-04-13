@@ -28,7 +28,7 @@ public class PluginDescriptionUtils
 
     public static VirtualFile findPluginDescription(VirtualFile root)
     {
-        if (root.isDirectory())
+        if (!root.isDirectory())
             return null;
 
         for (VirtualFile child : root.getChildren())
