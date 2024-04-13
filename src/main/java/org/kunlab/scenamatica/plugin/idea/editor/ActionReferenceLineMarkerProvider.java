@@ -48,6 +48,9 @@ public class ActionReferenceLineMarkerProvider implements LineMarkerProvider
 
     private static boolean acceptsElement(@NotNull PsiElement psiElement)
     {
+        if (!psiElement.isValid())
+            return false;
+
         String type = SchemaProviderService.getResolver().getTypeName(psiElement);
         return psiElement instanceof YAMLMapping && ("scenario".equals(type) || "action".equals(type));
     }

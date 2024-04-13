@@ -36,6 +36,12 @@ public class UnsupportedMCVersionInspector extends AbstractScenamaticaActionElem
         return true;
     }
 
+    @Override
+    protected @Nullable Key<?>[] getTempFileKeys()
+    {
+        return new Key<?>[]{KEY_VERSION_SINCE, KEY_VERSION_UNTIL, KEY_POLICY};
+    }
+
     private static void checkActionVersionCompatibility(@NotNull ProblemsHolder holder, @NotNull SchemaResolver.ScenarioAction action, @NotNull SchemaAction actionDef)
     {
         Pair<MinecraftVersion, MinecraftVersion> fileSpecifiedVersionRange = retrieveVersionRange((ScenarioFile) action.getActionName().getContainingFile());
@@ -140,7 +146,7 @@ public class UnsupportedMCVersionInspector extends AbstractScenamaticaActionElem
             );
             file.putUserData(KEY_POLICY, policy);
         }
+        
         return policy;
     }
-
 }
