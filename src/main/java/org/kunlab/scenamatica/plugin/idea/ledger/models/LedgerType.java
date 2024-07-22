@@ -18,7 +18,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonDeserialize(using = LedgerType.Deserializer.class)
-public class LedgerType extends AbstractLedgerContent
+public class LedgerType extends AbstractLedgerContent implements IDetailedPropertiesHolder
 {
     protected static final String KEY_TYPE = "type";
     protected static final String KEY_ID = "id";
@@ -55,6 +55,12 @@ public class LedgerType extends AbstractLedgerContent
         this.mappingOf = mappingOf;
         this.properties = properties;
         this.admonitions = admonitions;
+    }
+
+    @Override
+    public Map<String, ? extends DetailedValue> getDetailedProperties()
+    {
+        return this.properties;
     }
 
     public static class Deserializer extends JsonDeserializer<LedgerType>
@@ -123,7 +129,7 @@ public class LedgerType extends AbstractLedgerContent
 
     @Value
     @AllArgsConstructor
-    public static class Property
+    public static class Property implements DetailedValue
     {
         public static final String KEY_PATTERN = "pattern";
         public static final String KEY_MIN = "min";

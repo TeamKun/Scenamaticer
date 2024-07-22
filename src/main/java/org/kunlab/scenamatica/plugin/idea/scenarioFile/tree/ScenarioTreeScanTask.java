@@ -18,7 +18,6 @@ import org.jetbrains.jps.model.java.JavaResourceRootType;
 import org.jetbrains.yaml.YAMLUtil;
 import org.jetbrains.yaml.psi.YAMLFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 
 import java.util.ArrayList;
 import java.util.List;

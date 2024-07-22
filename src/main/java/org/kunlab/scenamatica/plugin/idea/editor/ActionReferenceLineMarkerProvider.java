@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
+import org.kunlab.scenamatica.plugin.idea.ledger.ScenarioLedgerLinker;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.ScenamaticaIcons;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
 
 public class ActionReferenceLineMarkerProvider implements LineMarkerProvider
 {
@@ -24,11 +24,11 @@ public class ActionReferenceLineMarkerProvider implements LineMarkerProvider
             return null;
 
 
-        SchemaResolver.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(psiElement);
+        ScenarioLedgerLinker.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(psiElement);
         if (scenarioAction == null)
             return null;
 
-        SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
+        SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getType());
         if (action == null)
             return null;
 

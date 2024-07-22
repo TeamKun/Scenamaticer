@@ -51,16 +51,17 @@ public class ScenarioFileType extends LanguageFileType implements FileTypeIdenti
     @Override
     public boolean isMyFileType(@NotNull VirtualFile virtualFile)
     {
+        // 拡張子が違うものを弾く
         String ext = virtualFile.getExtension();
         if (!ArrayUtils.contains(EXTS, ext))
             return false;
 
-
+        // scenamatica: がトップにあるかどうか判定する
         try (InputStream stream = virtualFile.getInputStream())
         {
             byte[] buffer = new byte[256];
             boolean isAfterNewLine = true;
-            int currentMarkerIndex = 0;
+            int currentMarkerIndex = 0;  // 現在のマーカー文字列のn文字目
             while (stream.read(buffer) != -1)
             {
                 for (byte b : buffer)
@@ -68,7 +69,7 @@ public class ScenarioFileType extends LanguageFileType implements FileTypeIdenti
                     char c = (char) b;
                     if (c == '\r' || c == '\n')
                     {
-                        isAfterNewLine = true;
+                        isAfterNewLine = true;  // 改行文字が来たら次の文字はマーカーの先頭文字である。
                         continue;
                     }
 

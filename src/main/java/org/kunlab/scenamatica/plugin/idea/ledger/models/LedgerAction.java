@@ -6,15 +6,19 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 @Value
-public class LedgerAction extends AbstractLedgerContent
+@EqualsAndHashCode(callSuper = true)
+public class LedgerAction extends AbstractLedgerContent implements IDetailedPropertiesHolder
 {
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -70,6 +74,22 @@ public class LedgerAction extends AbstractLedgerContent
         this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
+    @Override
+    public Map<String, ? extends DetailedValue> getDetailedProperties()
+    {
+        return this.inputs;
+    }
+
+    public boolean isApplicable(@NotNull ScenarioType usage)
+    {
+        return switch (usage)
+        {
+            case EXECUTE -> this.executable.isAvailable();
+            case EXPECT -> this.expectable.isAvailable();
+            case REQUIRE -> this.requireable.isAvailable();
+        };
+    }
+
     @Value
     @AllArgsConstructor
     public static class ActionOutput
@@ -120,7 +140,7 @@ public class LedgerAction extends AbstractLedgerContent
 
     @Value
     @AllArgsConstructor
-    public static class ActionInput
+    public static class ActionInput implements DetailedValue
     {
         private static final String KEY_NAME = "name";
         private static final String KEY_TYPE = "type";
@@ -129,6 +149,7 @@ public class LedgerAction extends AbstractLedgerContent
         private static final String KEY_AVAILABLE_FOR = "availableFor";
         private static final String KEY_SUPPORTS_SINCE = "supportsSince";
         private static final String KEY_SUPPORTS_UNTIL = "supportsUntil";
+        private static final String KEY_ARRAY = "array";
         private static final String KEY_MIN = "min";
         private static final String KEY_MAX = "max";
         private static final String KEY_CONST_VALUE = "const";
@@ -139,10 +160,11 @@ public class LedgerAction extends AbstractLedgerContent
         String name;
         LedgerReference type;
         String description;
-        LedgerReference[] requiredOn;
-        LedgerReference[] availableFor;
+        ScenarioType[] requiredOn;
+        ScenarioType[] availableFor;
         MinecraftVersion supportsSince;
         MinecraftVersion supportsUntil;
+        boolean array;
         Double min;
         Double max;
         Object constValue;
@@ -152,7 +174,17 @@ public class LedgerAction extends AbstractLedgerContent
 
         public ActionInput()
         {
-            this(null, null, null, null, null, null, null, null, null, null, false, null, null);
+            this(null, null, null, null, null, null, null, false, null, null, null, false, null, null);
+        }
+
+        public boolean isRequiredOn(ScenarioType type)
+        {
+            return this.requiredOn != null && Arrays.stream(this.requiredOn).anyMatch(t -> t == type);
+        }
+
+        public boolean isAvailableFor(ScenarioType type)
+        {
+            return this.availableFor == null || Arrays.stream(this.availableFor).anyMatch(t -> t == type);
         }
 
         public static ActionInput inherit(@NotNull ActionInput parent, @NotNull LedgerReference ref)
@@ -165,6 +197,7 @@ public class LedgerAction extends AbstractLedgerContent
                     parent.availableFor,
                     parent.supportsSince,
                     parent.supportsUntil,
+                    parent.array,
                     parent.min,
                     parent.max,
                     parent.constValue,

@@ -24,10 +24,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
+import org.kunlab.scenamatica.plugin.idea.ledger.ScenarioLedgerLinker;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaResolver;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
@@ -121,11 +121,11 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
             PsiElement element = elements.next();
             if (acceptsElement(element))
             {
-                SchemaResolver.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(element);
+                ScenarioLedgerLinker.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(element);
                 if (scenarioAction == null)
                     continue;
 
-                SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getName());
+                SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getType());
                 if (action == null)
                     continue;
 
@@ -133,7 +133,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                         element.getTextRange(),
                         new ActionReferenceCodeVisionEntry(
                                 element,
-                                scenarioAction.getName(),
+                                scenarioAction.getType(),
                                 action.getDescriptionFor(scenarioAction.getType())
                         )
                 ));

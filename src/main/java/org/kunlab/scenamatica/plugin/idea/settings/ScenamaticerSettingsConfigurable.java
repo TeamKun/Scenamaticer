@@ -10,7 +10,7 @@ import com.jetbrains.jsonSchema.ide.JsonSchemaService;
 import javax.swing.JComponent;
 import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
 
 import java.net.URL;
 import java.util.Locale;
@@ -31,8 +31,7 @@ public class ScenamaticerSettingsConfigurable implements Configurable
         this.settings = new ScenamaticerSettingsComponent();
 
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
-        this.settings.setSchemaURL(state.getSchemaURL());
-        this.settings.setContentServerURL(state.getContentServerURL());
+        this.settings.setOfficialLedgerURL(state.getOfficialLedgerURL());
 
         this.settings.setRefsWindowAutoOpen(state.isRefsWindowAutoOpen());
         this.settings.setRefsWindowAutoClose(state.isRefsWindowAutoClose());
@@ -46,8 +45,7 @@ public class ScenamaticerSettingsConfigurable implements Configurable
     public boolean isModified()
     {
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
-        boolean isNotModified = this.settings.getSchemaURL().equals(state.getSchemaURL())
-                && this.settings.getContentServerURL().equals(state.getContentServerURL())
+        boolean isNotModified = this.settings.getOfficialLedgerURL().equals(state.getOfficialLedgerURL())
                 && this.settings.isRefsWindowAutoOpen() == state.isRefsWindowAutoOpen()
                 && this.settings.isRefsWindowAutoClose() == state.isRefsWindowAutoClose()
                 && this.settings.getScenamaticerLocale().getLanguage().equals(state.getLanguage());
@@ -60,12 +58,9 @@ public class ScenamaticerSettingsConfigurable implements Configurable
     {
         ScenamaticerSettingsState state = ScenamaticerSettingsState.getInstance();
 
-        if (!isValidUrl(this.settings.getSchemaURL()))
-            throw new ConfigurationException(ScenamaticerBundle.of("windows.settings.schema.jsonSchemaURL.invalid"));
-        state.setSchemaURL(this.settings.getSchemaURL());
-        if (!isValidUrl(state.getSchemaURL()))
-            throw new ConfigurationException(String.format(ScenamaticerBundle.of("windows.settings.schema.contentServerURL.invalid")));
-        state.setContentServerURL(this.settings.getContentServerURL());
+        if (!isValidUrl(this.settings.getOfficialLedgerURL()))
+            throw new ConfigurationException(String.format(ScenamaticerBundle.of("windows.settings.schema.officialLedgerURL.invalid")));
+        state.setOfficialLedgerURL(this.settings.getOfficialLedgerURL());
 
         state.setRefsWindowAutoOpen(this.settings.isRefsWindowAutoOpen());
         state.setRefsWindowAutoClose(this.settings.isRefsWindowAutoClose());
@@ -80,7 +75,7 @@ public class ScenamaticerSettingsConfigurable implements Configurable
         }
 
 
-        SchemaProviderService.getInstance().getSchemaProvider().setContentServerURL(state.getContentServerURL());
+        LedgerManagerService.getInstance().getProvider().setOfficialLedgerURL(state.getOfficialLedgerURL());
         this.reloadSchema();
     }
 

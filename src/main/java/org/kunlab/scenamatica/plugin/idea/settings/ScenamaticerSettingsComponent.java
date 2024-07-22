@@ -5,7 +5,6 @@ import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBTextField;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -13,7 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import lombok.Getter;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
 
 import java.awt.event.ActionEvent;
 import java.util.Locale;
@@ -22,8 +21,7 @@ public class ScenamaticerSettingsComponent
 {
     @Getter
     private JPanel mainPanel;
-    private JBTextField schemaURL;
-    private JTextField contentServerURL;
+    private JTextField officialLedgerURL;
 
     private JBCheckBox ckbRefsWindowAutoOpen;
     private JBCheckBox ckbRefsWindowAutoClose;
@@ -32,7 +30,6 @@ public class ScenamaticerSettingsComponent
     private JBLabel lbChangesWillBeAppliedAfterIDERestart;
     private JBLabel lbScenarioSchemaSettings;
     private JBLabel lbScenamaticaSettings;
-    private JBLabel lbJsonSchemaURL;
     private JLabel lbScenamaticaContentServerURL;
     private JBLabel lbReferencesWindowSettings;
     private JButton btnPurgeCache;
@@ -46,7 +43,7 @@ public class ScenamaticerSettingsComponent
 
     private void onPurgeCache(ActionEvent actionEvent)
     {
-        SchemaProviderService.getProvider().clearCache();
+        LedgerManagerService.getInstance().getProvider().cleanCacheAll();
         NotificationGroupManager.getInstance()
                 .getNotificationGroup("Scenamatica")
                 .createNotification(
@@ -60,8 +57,7 @@ public class ScenamaticerSettingsComponent
     {
         ScenamaticerBundle.embed(this.lbScenamaticaSettings, "windows.settings.title");
         ScenamaticerBundle.embed(this.lbScenarioSchemaSettings, "windows.settings.schema.title");
-        ScenamaticerBundle.embed(this.lbJsonSchemaURL, "windows.settings.schema.jsonSchemaURL");
-        ScenamaticerBundle.embed(this.lbScenamaticaContentServerURL, "windows.settings.schema.contentServerURL");
+        ScenamaticerBundle.embed(this.lbScenamaticaContentServerURL, "windows.settings.schema.officialLedgerURL");
         ScenamaticerBundle.embed(this.lbReferencesWindowSettings, "windows.settings.references.title");
         ScenamaticerBundle.embed(this.ckbRefsWindowAutoOpen, "windows.settings.references.autoOpenOnFileOpen");
         ScenamaticerBundle.embed(this.ckbRefsWindowAutoClose, "windows.settings.references.autoCloseOnFileClose");
@@ -70,24 +66,14 @@ public class ScenamaticerSettingsComponent
         ScenamaticerBundle.embed(this.btnPurgeCache, "windows.settings.purgeCache");
     }
 
-    public String getSchemaURL()
+    public String getOfficialLedgerURL()
     {
-        return this.schemaURL.getText();
+        return this.officialLedgerURL.getText();
     }
 
-    public void setSchemaURL(String schemaURL)
+    public void setOfficialLedgerURL(String officialLedgerURL)
     {
-        this.schemaURL.setText(schemaURL);
-    }
-
-    public String getContentServerURL()
-    {
-        return this.contentServerURL.getText();
-    }
-
-    public void setContentServerURL(String contentServerURL)
-    {
-        this.contentServerURL.setText(contentServerURL);
+        this.officialLedgerURL.setText(officialLedgerURL);
     }
 
     public boolean isRefsWindowAutoOpen()

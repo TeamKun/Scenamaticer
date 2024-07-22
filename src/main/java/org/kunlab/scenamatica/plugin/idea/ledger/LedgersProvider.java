@@ -11,15 +11,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public final class LedgerProvider
+public final class LedgersProvider
 {
     private static final Path LEDGER_PATH = PathManager.getSystemDir().resolve("scenamaticer-ledgers");
 
     private final List<Ledger> ledgers;
+    private List<Ledger> unmodifiableLedgers;
 
-    public LedgerProvider()
+    public LedgersProvider()
     {
         this.ledgers = new ArrayList<>();
 
@@ -33,16 +35,17 @@ public final class LedgerProvider
     {
         Ledger ledger = new Ledger(ledgerName, LEDGER_PATH, ledgerURL);
         this.ledgers.add(ledger);
+        this.unmodifiableLedgers = Collections.unmodifiableList(this.ledgers);
         return ledger.getLedgerName();
     }
 
-    public void buildCache()
+    public void buildCacheAll()
     {
         for (Ledger ledger : this.ledgers)
             ledger.buildCache();
     }
 
-    public void clearCache()
+    public void cleanCacheAll()
     {
         for (Ledger ledger : this.ledgers)
             ledger.cleanCache();
@@ -50,10 +53,19 @@ public final class LedgerProvider
 
     public void setOfficialLedgerURL(String setOfficialLedgerURL)
     {
-        this.clearCache();
-        Ledger officialLedger = this.getLedgerByName(Ledger.OFFICIAL_LEDGER_NAME);
-        assert officialLedger != null;
+        this.cleanCacheAll();
+        Ledger officialLedger = this.getOfficialLedger();
         officialLedger.setLedgerURL(toURL(setOfficialLedgerURL));
+    }
+
+    @NotNull
+    public Ledger getOfficialLedger()
+    {
+        Ledger officialLedger = this.getLedgerByName(Ledger.OFFICIAL_LEDGER_NAME);
+        if (officialLedger == null)
+            throw new IllegalStateException("Official ledger not found: " + Ledger.OFFICIAL_LEDGER_NAME + ", broken installation?");
+
+        return officialLedger;
     }
 
     @Nullable
@@ -66,6 +78,12 @@ public final class LedgerProvider
         }
 
         return null;
+    }
+
+    @NotNull
+    public List<Ledger> getLedgers()
+    {
+        return this.unmodifiableLedgers;
     }
 
     private static URL toURL(String urlString)

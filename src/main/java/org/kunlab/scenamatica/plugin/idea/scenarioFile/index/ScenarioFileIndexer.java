@@ -19,7 +19,6 @@ import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyRetriever;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.ArrayList;
@@ -51,11 +50,9 @@ public class ScenarioFileIndexer extends FileBasedIndexExtension<String, Scenari
             if (description == null)
                 description = "";
 
-            SchemaProviderService.getResolver().createCacheAll(file);
-
             ScenamaticaPolicy policy = ScenamaticaPolicyRetriever.retrieveOrGuessPolicy(
-                    proposal -> {
-                        return proposal.getMinecraftVersion() != null;
+                    candidate -> {
+                        return candidate.getMinecraftVersion() != null;
                     },
                     file.getProject(),
                     file.getVirtualFile()

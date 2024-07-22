@@ -3,9 +3,12 @@ package org.kunlab.scenamatica.plugin.idea.editor.inspections;
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInsight.daemon.HighlightDisplayKey;
 import com.intellij.codeInspection.LocalInspectionTool;
+import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import lombok.Getter;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.yaml.psi.YAMLKeyValue;
 
 public abstract class AbstractScenamaticaInspection extends LocalInspectionTool
 {
@@ -33,5 +36,14 @@ public abstract class AbstractScenamaticaInspection extends LocalInspectionTool
     public boolean isEnabledByDefault()
     {
         return true;
+    }
+
+    protected static TextRange keyTextRangeOf(@NotNull YAMLKeyValue kv)
+    {
+        PsiElement key = kv.getKey();
+        if (key == null)
+            return TextRange.EMPTY_RANGE;
+
+        return key.getTextRange();
     }
 }
