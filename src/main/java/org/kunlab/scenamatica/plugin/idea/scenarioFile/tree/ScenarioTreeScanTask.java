@@ -86,10 +86,7 @@ public class ScenarioTreeScanTask extends Task.Backgroundable
         assert psiFile instanceof YAMLFile;
 
         YAMLUtil.getTopLevelKeys((YAMLFile) psiFile).forEach(
-                (e) -> {
-                    ScenarioTrees.embedKeyAll(e);
-                    SchemaProviderService.getResolver().createCacheAll(e);
-                }
+                ScenarioTrees::embedKeyAll
         );
 
 
