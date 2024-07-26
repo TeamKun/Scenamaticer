@@ -16,7 +16,7 @@ import java.util.List;
 
 public final class LedgersProvider
 {
-    private static final Path LEDGER_PATH = PathManager.getSystemDir().resolve("scenamaticer-ledgers");
+    public static final Path LEDGER_PATH = PathManager.getSystemDir().resolve("scenamaticer-ledgers");
 
     private final List<Ledger> ledgers;
     private List<Ledger> unmodifiableLedgers;

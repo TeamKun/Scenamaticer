@@ -100,6 +100,9 @@
         <lang.parserDefinition language="ScenamaticaScenario"
                                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioParserDefinition"/>
     </extensions>
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory implementation="org.kunlab.scenamatica.plugin.idea.scenarioFile.SchemaProvider"/>
+    </extensions>
 
     <actions>
         <action id="org.kunlab.scenamatica.plugin.idea.actions.scenarioFileTemplate.ScenarioTemplateAction"

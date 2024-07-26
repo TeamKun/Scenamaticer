@@ -319,12 +319,12 @@ public class LedgerScenarioResolver
 
         // 引数の型が正しいか？
         boolean result = this.resolveMapping(mapping, action, currentType, type, true);
-        result &= this.checkActionInputUsageValiD(action, type, mapping);
+        result &= this.checkActionInputUsageValid(action, type, mapping);
 
         return result;
     }
 
-    private boolean checkActionInputUsageValiD(@NotNull LedgerAction action, @NotNull ScenarioType usage, @NotNull YAMLMapping inputs)
+    private boolean checkActionInputUsageValid(@NotNull LedgerAction action, @NotNull ScenarioType usage, @NotNull YAMLMapping inputs)
     {
         boolean result = true;
         Map<String, LedgerAction.ActionInput> availableInputs = action.getInputs();
@@ -531,8 +531,9 @@ public class LedgerScenarioResolver
             }
 
             assert targetValue instanceof YAMLValue;
-            YAMLValue value = (YAMLValue) targetValue;
 
+            /*
+            YAMLValue value = (YAMLValue) targetValue;
             // プリミティブ型の場合は特別に対応
             String typeID = propertyType.getId();
             if (!checkPrimitiveTypeMatch(typeID, value, property))
@@ -544,7 +545,7 @@ public class LedgerScenarioResolver
                         lastAction
                 );
                 continue;
-            }
+            }*/
 
             this.registerValidResult(targetValue, propertyType, lastAction);
         }

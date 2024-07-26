@@ -88,22 +88,31 @@ public class Ledger
 
     public boolean buildCache()
     {
+        boolean buildNeeded = true;
+        if (Files.exists(this.cachePath))
+        {
+            LOG.info("Using cached ledger: " + this.ledgerName);
+            buildNeeded = false;
+        }
+
         LOG.info("Building cache for ledger: " + this.ledgerName);
         if (!createDirectory(this.ledgerPath))
             return false;
-
-        if (downloadLedger(this.ledgerURL, this.zipPath) == null)
+        if (buildNeeded)
         {
-            LOG.error("Failed to build cache for ledger: " + this.ledgerName);
-            return false;
-        }
+            if (downloadLedger(this.ledgerURL, this.zipPath) == null)
+            {
+                LOG.error("Failed to build cache for ledger: " + this.ledgerName);
+                return false;
+            }
 
-        LOG.info("Scanning ledger: " + this.ledgerName);
-        // 中のファイルを解凍する
-        if (unzipTo(this.zipPath, this.cachePath) == null)
-        {
-            LOG.error("Failed to build cache for ledger: " + this.ledgerName);
-            return false;
+            LOG.info("Scanning ledger: " + this.ledgerName);
+            // 中のファイルを解凍する
+            if (unzipTo(this.zipPath, this.cachePath) == null)
+            {
+                LOG.error("Failed to build cache for ledger: " + this.ledgerName);
+                return false;
+            }
         }
 
         readLedgerContents(this.cachePath.resolve(PATH_ACTIONS), this.actions, LedgerAction.class);
