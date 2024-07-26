@@ -23,14 +23,17 @@ import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerStringType;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyRetriever;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
+import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class LedgerScenarioResolver
@@ -48,7 +51,7 @@ public class LedgerScenarioResolver
         this.ledgerManager = ledgerManager;
         this.file = file;
         this.policy = retrievePolicy(file);
-        
+
         if (session == null)
         {
             this.results = List.of();
@@ -61,22 +64,26 @@ public class LedgerScenarioResolver
             this.results = session.getUserData(KEY);
     }
 
+    private YAMLMapping getDocumentRoot()
+    {
+        List<YAMLDocument> docs = this.file.getDocuments();
+        if (docs.isEmpty())
+            return null;
+
+        return (YAMLMapping) docs.get(0).getTopLevelValue();
+    }
+
     @Contract(" -> this")
     public LedgerScenarioResolver detailedResolve()
     {
         if (!this.results.isEmpty())
             return this;
 
-        List<YAMLDocument> docs = this.file.getDocuments();
-        if (docs.isEmpty())
+        YAMLMapping root = this.getDocumentRoot();
+        if (root == null)
             return this;
 
-        // 最初のドキュメントのみ処理
-        YAMLDocument targetDoc = docs.get(0);
-        YAMLMapping root = (YAMLMapping) targetDoc.getTopLevelValue();
-        if (docs.isEmpty())
-            return this;
-
+        this.checkScenarioFileMinecraftVersion(root);
         this.resolveMapping(root);
 
         return this;
@@ -97,12 +104,139 @@ public class LedgerScenarioResolver
         return this.results.stream().filter(result -> !result.isValid()).toList();
     }
 
-    public List<ResolveResult> getErrors(@NotNull ResolveResult.InvalidCause cause)
+    public List<ResolveResult> getErrors(@NotNull ResolveResult.InvalidCause... causes)
     {
+        // causes の中身の数で処理を分岐して最適化を図る
+        Predicate<? super ResolveResult> causeFilter;
+        if (causes.length == 0)
+            return Collections.emptyList();
+        else if (causes.length == 1)
+        {
+            ResolveResult.InvalidCause cause = causes[0];
+            causeFilter = c -> c.invalidCause == cause;
+        }
+        else
+            causeFilter = cause -> {
+                for (ResolveResult.InvalidCause c : causes)
+                {
+                    if (cause.invalidCause == c)
+                        return true;
+                }
+
+                return false;
+            };
+
         return this.results.stream()
                 .filter(result -> !result.isValid())
-                .filter(result -> result.getInvalidCause() == cause)
+                .filter(causeFilter)
                 .toList();
+    }
+
+    private boolean checkScenarioFileMinecraftVersion(@NotNull YAMLMapping root)
+    {
+        YAMLKeyValue mcVersionPolicy = root.getKeyValueByKey("minecraft");
+        if (mcVersionPolicy == null)
+            return true;
+
+        return this.checkMinecraftVersionRange(mcVersionPolicy.getValue(), null);
+    }
+
+    private boolean checkActionMinecraftVersionRange(@NotNull YAMLMapping scenarioMapping, @NotNull LedgerAction action)
+    {
+        YAMLKeyValue mcVersionPolicy = scenarioMapping.getKeyValueByKey("minecraft");
+        if (mcVersionPolicy == null)
+            return true;
+
+        return this.checkMinecraftVersionRange(mcVersionPolicy.getValue(), action);
+    }
+
+    private boolean checkMinecraftVersionRange(@Nullable YAMLValue versionPolicy, @Nullable LedgerAction action)
+    {
+        if (versionPolicy == null)
+            return true;
+
+        if (!(versionPolicy instanceof YAMLMapping policyMapping))
+            return true;  // 特に指定するのがめんどいので。
+
+        YAMLKeyValue sinceValue = policyMapping.getKeyValueByKey("since");
+        YAMLKeyValue untilValue = policyMapping.getKeyValueByKey("until");
+
+        MinecraftVersion sinceParsed = sinceValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getValueText(sinceValue.getValue()));
+        MinecraftVersion untilParsed = untilValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getValueText(untilValue.getValue()));
+
+        // バージョン文字列が正しいものであるか？
+        if (sinceValue != null && sinceParsed == MinecraftVersion.ANY)
+        {
+            this.registerInvalidVersionFormat(sinceValue, action);
+            return false;
+        }
+        else if (untilValue != null && untilParsed == MinecraftVersion.ANY)
+        {
+            this.registerInvalidVersionFormat(untilValue, action);
+            return false;
+        }
+
+        MinecraftVersion actualVersion = this.policy.getMinecraftVersion();
+        if (actualVersion == null || actualVersion == MinecraftVersion.ANY)
+            return true;
+
+        if (!actualVersion.isInRange(sinceParsed, untilParsed))
+        {
+            YAMLMapping parent = (YAMLMapping) versionPolicy.getParent();
+            this.registerInvalidVersionRange(parent, actualVersion, sinceParsed, untilParsed);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void registerInvalidVersionFormat(@NotNull YAMLKeyValue keyValue, @Nullable LedgerAction action)
+    {
+        this.registerInvalidResult(
+                keyValue.getValue() == null ? keyValue: keyValue.getValue(),
+                null,
+                action,
+                ResolveResult.InvalidCause.VALUE_CONSTRAINT_VIOLATION,
+                ScenamaticerBundle.of(
+                        "editor.inspections.invalidVersionFormat.title",
+                        YAMLUtils.getValueText(keyValue.getValue())
+                )
+        );
+    }
+
+    private void registerInvalidVersionRange(@NotNull YAMLMapping versionSpecifingMapping, @NotNull MinecraftVersion unavailableVersion, @Nullable MinecraftVersion versionSince, @Nullable MinecraftVersion versionUntil)
+    {
+        String description;
+        if (versionSince == null)
+        {
+            assert versionUntil != null;
+            description = ScenamaticerBundle.of(
+                    "editor.inspections.unsupportedActionUsage.version.description.until",
+                    versionUntil.toString(),
+                    unavailableVersion
+            );
+        }
+        else if (versionUntil == null)
+            description = ScenamaticerBundle.of(
+                    "editor.inspections.unsupportedActionUsage.version.description.since",
+                    versionSince.toString(),
+                    unavailableVersion
+            );
+        else
+            description = ScenamaticerBundle.of(
+                    "editor.inspections.unsupportedActionUsage.version.description.ranged",
+                    versionSince.toString(),
+                    versionUntil.toString(),
+                    unavailableVersion
+            );
+
+        this.registerInvalidResult(
+                versionSpecifingMapping,
+                null,
+                null,
+                ResolveResult.InvalidCause.UNSUPPORTED_SERVER_VERSION,
+                description
+        );
     }
 
     private boolean processAction(@NotNull YAMLMapping current, @Nullable LedgerAction lastAction, @NotNull LedgerType currentType)
@@ -110,11 +244,12 @@ public class LedgerScenarioResolver
         YAMLKeyValue actionID = current.getKeyValueByKey("action");
         YAMLKeyValue inputs = current.getKeyValueByKey("with");
         YAMLKeyValue usage = current.getKeyValueByKey("type");
+        YAMLKeyValue mcVersionPolicy = current.getKeyValueByKey("minecraft");
 
         if (usage == null)
             return true;
 
-        String usageString = usage.getValueText();
+        String usageString = YAMLUtils.getValueText(usage.getValue());
         ScenarioType type = ScenarioType.of(usageString);
         if (type == null)
         {
@@ -140,7 +275,7 @@ public class LedgerScenarioResolver
             return false;
         }
 
-        Optional<LedgerAction> actionOpt = this.ledgerManager.getActionByID(actionID.getValueText());
+        Optional<LedgerAction> actionOpt = this.ledgerManager.getActionByID(YAMLUtils.getValueText(actionID.getValue()));
         if (actionOpt.isEmpty())
         {
             this.registerInvalidResult(
@@ -150,7 +285,7 @@ public class LedgerScenarioResolver
                     ResolveResult.InvalidCause.UNKNOWN_ACTION,
                     ScenamaticerBundle.of(
                             "editor.inspections.unknownAction.title",
-                            actionID.getValueText()
+                            YAMLUtils.getValueText(actionID.getValue())
                     )
             );
 
@@ -173,6 +308,8 @@ public class LedgerScenarioResolver
             );
             return false;
         }
+        else if (!(mcVersionPolicy == null || this.checkActionMinecraftVersionRange(current, action)))
+            return false;
 
         if (inputs == null || inputs.getValue() == null)
             return true;
@@ -547,15 +684,16 @@ public class LedgerScenarioResolver
         {
             TYPE_MISMATCH,
             VALUE_CONSTRAINT_VIOLATION,
+            UNSUPPORTED_SERVER_VERSION,  // UnsupportedMinecraftVersionInspector
 
             UNKNOWN_PROPERTY,
             UNKNOWN_ACTION,
             UNKNOWN_SCENARIO_TYPE,
 
-            ACTION_USAGE_VIOLATION,
+            ACTION_USAGE_VIOLATION,  // UnsupportedActionUsageInspector
             ACTION_UNKNOWN_INPUT,
 
-            ACTION_INPUT_MISSING_REQUIRED,
+            ACTION_INPUT_MISSING_REQUIRED,  // MissingArgumentsInspector
             ACTION_INPUT_UNAVAILABLE_USAGE,
             ACTION_INPUT_REDUNDANT
         }

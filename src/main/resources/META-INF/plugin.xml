@@ -56,7 +56,7 @@
                 displayName="Duplicated Scenario names"/>
         <!--
         <localInspection
-                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.UnsupportedActionUsageInspector"
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.UnsupportedActionUsageInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 language="ScenamaticaScenario"
@@ -70,7 +70,7 @@
                 level="WARNING"
                 displayName="Redundant arguments"/>
         <localInspection
-                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.MissingArgumentsInspector"
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.MissingArgumentsInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 language="ScenamaticaScenario"

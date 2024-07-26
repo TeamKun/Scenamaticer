@@ -5,13 +5,9 @@ import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.kunlab.scenamatica.plugin.idea.editor.fixes.DeleteElementFix;
-import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
 import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
-
-import java.util.List;
 
 public class RedundantArgumentsInspector extends AbstractScenarioFileInspection
 {
@@ -25,31 +21,13 @@ public class RedundantArgumentsInspector extends AbstractScenarioFileInspection
     @Override
     protected void visitScenarioFile(@NotNull ScenarioFile file, @NotNull ProblemsHolder holder, @NotNull LocalInspectionToolSession session)
     {
-        LedgerScenarioResolver resolveResults = LedgerScenarioResolver.create(
-                LedgerManagerService.getInstance(),
-                file,
-                session
-        ).detailedResolve();
-
-        List<LedgerScenarioResolver.ResolveResult> redundantArguments =
-                resolveResults.getErrors(LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_REDUNDANT);
-
-        DeleteElementFix fix = new DeleteElementFix(
-                redundantArguments.stream()
-                        .map(LedgerScenarioResolver.ResolveResult::getElement)
-                        .toArray(PsiElement[]::new)
+        this.reportDetailedResolveErrorTypeOf(file, holder, session,
+                (unsupportedActions) -> new DeleteElementFix(
+                        unsupportedActions.stream()
+                                .map(LedgerScenarioResolver.ResolveResult::getElement)
+                                .toArray(PsiElement[]::new)
+                ),
+                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_REDUNDANT
         );
-
-        for (LedgerScenarioResolver.ResolveResult resolve : redundantArguments)
-        {
-            YAMLKeyValue element = (YAMLKeyValue) resolve.getElement();
-
-            holder.registerProblem(
-                    element,
-                    keyTextRangeOf((YAMLKeyValue) resolve.getElement()),
-                    resolve.getInvalidMessage(),
-                    fix
-            );
-        }
     }
 }

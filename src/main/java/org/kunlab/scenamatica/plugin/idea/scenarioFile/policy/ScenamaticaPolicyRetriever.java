@@ -15,6 +15,7 @@ import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFile;
 import org.kunlab.scenamatica.plugin.idea.utils.PluginDescriptionUtils;
+import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 public class ScenamaticaPolicyRetriever
 {
@@ -96,7 +97,7 @@ public class ScenamaticaPolicyRetriever
         YAMLKeyValue apiVersionKV;
         if ((apiVersionKV = mapping.getKeyValueByKey("api-version")) != null)
         {
-            String apiVersionStr = apiVersionKV.getValueText();
+            String apiVersionStr = YAMLUtils.getValueText(apiVersionKV.getValue());
             if (apiVersionStr.matches("^\\d+\\.\\d+$"))
                 apiVersion = MinecraftVersion.fromString(apiVersionStr + ".x");
         }

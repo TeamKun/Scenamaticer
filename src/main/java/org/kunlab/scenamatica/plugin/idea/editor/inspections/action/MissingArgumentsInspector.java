@@ -1,26 +1,23 @@
-package org.kunlab.scenamatica.plugin.idea.editor.inspections;
+package org.kunlab.scenamatica.plugin.idea.editor.inspections.action;
 
 import com.intellij.codeHighlighting.HighlightDisplayLevel;
 import com.intellij.codeInspection.LocalInspectionToolSession;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementVisitor;
-import com.intellij.psi.PsiFile;
 import com.jetbrains.jsonSchema.impl.JsonSchemaType;
 import com.jetbrains.jsonSchema.impl.JsonValidationError;
 import com.jetbrains.jsonSchema.impl.fixes.AddMissingPropertyFix;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
 import org.jetbrains.yaml.schema.YamlJsonPsiWalker;
-import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
+import org.kunlab.scenamatica.plugin.idea.editor.inspections.AbstractScenarioFileInspection;
 import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class MissingArgumentsInspector extends AbstractScenamaticaInspection
+public class MissingArgumentsInspector extends AbstractScenarioFileInspection
 {
     public static final String ID = "MissingArguments";
 
@@ -30,26 +27,10 @@ public class MissingArgumentsInspector extends AbstractScenamaticaInspection
     }
 
     @Override
-    public @NotNull PsiElementVisitor buildVisitor(@NotNull ProblemsHolder holder, boolean isOnTheFly, @NotNull LocalInspectionToolSession session)
+    protected void visitScenarioFile(@NotNull ScenarioFile file, @NotNull ProblemsHolder holder, @NotNull LocalInspectionToolSession session)
     {
-        return new PsiElementVisitor()
-        {
-            @Override
-            public void visitFile(@NotNull PsiFile file)
-            {
-                if (!(file instanceof ScenarioFile scenarioFile))
-                    return;
-
-                LedgerScenarioResolver resolveResults = LedgerScenarioResolver.create(
-                        LedgerManagerService.getInstance(),
-                        scenarioFile,
-                        session
-                ).detailedResolve();
-
-                List<LedgerScenarioResolver.ResolveResult> missingArguments =
-                        resolveResults.getErrors(LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_MISSING_REQUIRED);
-
-                AddMissingPropertyFix fix = new AddMissingPropertyFix(
+        this.reportDetailedResolveErrorTypeOf(file, holder, session,
+                (missingArguments) -> new AddMissingPropertyFix(
                         new JsonValidationError.MissingMultiplePropsIssueData(
                                 missingArguments.stream()
                                         .map((resolve) -> {
@@ -71,18 +52,8 @@ public class MissingArgumentsInspector extends AbstractScenamaticaInspection
                                         .collect(Collectors.toList())
                         ),
                         YamlJsonPsiWalker.INSTANCE.getSyntaxAdapter(holder.getProject())
-                );
-
-                for (LedgerScenarioResolver.ResolveResult missingArgument : missingArguments)
-                {
-                    holder.registerProblem(
-                            missingArgument.getElement(),
-                            keyTextRangeOf((YAMLKeyValue) missingArgument.getElement()),
-                            missingArgument.getInvalidMessage(),
-                            fix
-                    );
-                }
-            }
-        };
+                ),
+                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_MISSING_REQUIRED
+        );
     }
 }

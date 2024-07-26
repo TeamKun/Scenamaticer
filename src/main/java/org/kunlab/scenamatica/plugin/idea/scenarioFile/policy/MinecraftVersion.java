@@ -105,11 +105,19 @@ public enum MinecraftVersion
         return this.version;
     }
 
+    public static boolean isVersion(String version)
+    {
+        return fromString(version) != ANY;
+    }
+
     @NotNull
-    public static MinecraftVersion fromString(String version)
+    public static MinecraftVersion fromString(@Nullable String version)
     {
         for (MinecraftVersion v : values())
         {
+            if (version == null)
+                break;
+
             if (v.getVersion().equals(version))
                 return v;
         }

@@ -132,6 +132,8 @@ public class YAMLUtils
 
     public static String getValueText(PsiElement value)
     {
+        if (value == null)
+            return "";
         String text = value.getText();
         if (value instanceof YAMLQuotedText)
             return text.substring(1, text.length() - 1);
