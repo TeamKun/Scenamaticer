@@ -19,6 +19,7 @@ import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.DetailedValue;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.IDetailedPropertiesHolder;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerAction;
+import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerReference;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerStringType;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
@@ -28,6 +29,7 @@ import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.ScenamaticaPolicyR
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicy;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -54,12 +56,12 @@ public class LedgerScenarioResolver
 
         if (session == null)
         {
-            this.results = List.of();
+            this.results = new ArrayList<>();
             return;
         }
 
         if (session.getUserData(KEY) == null)
-            session.putUserData(KEY, this.results = List.of());
+            session.putUserData(KEY, this.results = new ArrayList<>());
         else
             this.results = session.getUserData(KEY);
     }
@@ -132,6 +134,13 @@ public class LedgerScenarioResolver
                 .toList();
     }
 
+    public List<ResolveResult> getActions()
+    {
+        return this.results.stream()
+                .filter(ResolveResult::isActionBlockStart)
+                .toList();
+    }
+
     private boolean checkScenarioFileMinecraftVersion(@NotNull YAMLMapping root)
     {
         YAMLKeyValue mcVersionPolicy = root.getKeyValueByKey("minecraft");
@@ -161,8 +170,8 @@ public class LedgerScenarioResolver
         YAMLKeyValue sinceValue = policyMapping.getKeyValueByKey("since");
         YAMLKeyValue untilValue = policyMapping.getKeyValueByKey("until");
 
-        MinecraftVersion sinceParsed = sinceValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getValueText(sinceValue.getValue()));
-        MinecraftVersion untilParsed = untilValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getValueText(untilValue.getValue()));
+        MinecraftVersion sinceParsed = sinceValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getUnquotedValueText(sinceValue.getValue()));
+        MinecraftVersion untilParsed = untilValue == null ? null: MinecraftVersion.fromString(YAMLUtils.getUnquotedValueText(untilValue.getValue()));
 
         // バージョン文字列が正しいものであるか？
         if (sinceValue != null && sinceParsed == MinecraftVersion.ANY)
@@ -199,7 +208,7 @@ public class LedgerScenarioResolver
                 ResolveResult.InvalidCause.VALUE_CONSTRAINT_VIOLATION,
                 ScenamaticerBundle.of(
                         "editor.inspections.invalidVersionFormat.title",
-                        YAMLUtils.getValueText(keyValue.getValue())
+                        YAMLUtils.getUnquotedValueText(keyValue.getValue())
                 )
         );
     }
@@ -249,11 +258,11 @@ public class LedgerScenarioResolver
         if (usage == null)
             return true;
 
-        String usageString = YAMLUtils.getValueText(usage.getValue());
-        ScenarioType type = ScenarioType.of(usageString);
-        if (type == null)
+        String usageString = YAMLUtils.getUnquotedValueText(usage.getValue());
+        ScenarioType actionUsage = ScenarioType.of(usageString);
+        if (actionUsage == null)
         {
-            this.registerInvalidResult(
+            this.registerInvalidResultActionStart(
                     usage,
                     currentType,
                     lastAction,
@@ -265,7 +274,7 @@ public class LedgerScenarioResolver
 
         if (actionID == null)
         {
-            this.registerInvalidResult(
+            this.registerInvalidResultActionStart(
                     current,
                     currentType,
                     lastAction,
@@ -275,27 +284,28 @@ public class LedgerScenarioResolver
             return false;
         }
 
-        Optional<LedgerAction> actionOpt = this.ledgerManager.getActionByID(YAMLUtils.getValueText(actionID.getValue()));
+        Optional<LedgerAction> actionOpt = this.ledgerManager.getActionByID(YAMLUtils.getUnquotedValueText(actionID.getValue()));
         if (actionOpt.isEmpty())
         {
-            this.registerInvalidResult(
+            this.registerInvalidResultActionStart(
                     actionID,
                     currentType,
                     lastAction,
                     ResolveResult.InvalidCause.UNKNOWN_ACTION,
                     ScenamaticerBundle.of(
                             "editor.inspections.unknownAction.title",
-                            YAMLUtils.getValueText(actionID.getValue())
-                    )
+                            YAMLUtils.getUnquotedValueText(actionID.getValue())
+                    ),
+                    actionUsage
             );
 
             return false;
         }
 
         LedgerAction action = actionOpt.get();
-        if (!action.isApplicable(type))
+        if (!action.isApplicable(actionUsage))
         {
-            this.registerInvalidResult(
+            this.registerInvalidResultActionStart(
                     current,
                     currentType,
                     lastAction,
@@ -303,13 +313,23 @@ public class LedgerScenarioResolver
                     ScenamaticerBundle.of(
                             "editor.inspections.unsupportedActionUsage.action.description.title",
                             action.getName(),
-                            type.getDisplayName()
-                    )
+                            actionUsage.getDisplayName()
+                    ),
+                    actionUsage
             );
             return false;
         }
-        else if (!(mcVersionPolicy == null || this.checkActionMinecraftVersionRange(current, action)))
+
+        this.registerAnchorResultActionStart(
+                actionID,
+                currentType,
+                actionOpt.get(),
+                actionUsage
+        );
+
+        if (!(mcVersionPolicy == null || this.checkActionMinecraftVersionRange(current, action)))
             return false;
+
 
         if (inputs == null || inputs.getValue() == null)
             return true;
@@ -318,8 +338,8 @@ public class LedgerScenarioResolver
             return true;
 
         // 引数の型が正しいか？
-        boolean result = this.resolveMapping(mapping, action, currentType, type, true);
-        result &= this.checkActionInputUsageValid(action, type, mapping);
+        boolean result = this.resolveMapping(mapping, action, currentType, actionUsage, true);
+        result &= this.checkActionInputUsageValid(action, actionUsage, mapping);
 
         return result;
     }
@@ -351,7 +371,8 @@ public class LedgerScenarioResolver
                                 key,
                                 action.getName(),
                                 usage.getDisplayName()
-                        )
+                        ),
+                        usage
                 );
                 result = false;
             }
@@ -369,7 +390,8 @@ public class LedgerScenarioResolver
                                 key,
                                 action.getName(),
                                 usage.getDisplayName()
-                        )
+                        ),
+                        usage
                 );
                 result = false;
             }
@@ -390,7 +412,8 @@ public class LedgerScenarioResolver
                                 keyValue.getKeyText(),
                                 action.getName(),
                                 usage.getDisplayName()
-                        )
+                        ),
+                        usage
                 );
             }
 
@@ -424,7 +447,7 @@ public class LedgerScenarioResolver
                 DetailedValue property = view.getDetailedProperties().get(key);
                 boolean propertyResult = this.checkPropertyTypeMatch(property, value, lastAction, usage);
                 if (propertyResult)
-                    this.registerValidResult(keyValue, currentType, lastAction);
+                    this.registerValidResult(keyValue, currentType, lastAction, usage);
 
                 result &= propertyResult;
             }
@@ -438,7 +461,8 @@ public class LedgerScenarioResolver
                             currentType,
                             lastAction,
                             ResolveResult.InvalidCause.UNKNOWN_PROPERTY,
-                            "The property is not defined in the type."
+                            "The property is not defined in the type.",
+                            usage
                     );
             }
         }
@@ -446,17 +470,37 @@ public class LedgerScenarioResolver
         return result;
     }
 
-    private void registerValidResult(@NotNull PsiElement element, @Nullable LedgerType type, @Nullable LedgerAction action)
+    private void registerValidResult(@NotNull PsiElement element,
+                                     @Nullable LedgerType type,
+                                     @Nullable LedgerAction action,
+                                     @Nullable ScenarioType usage)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), true, null, null, type, action));
+        this.results.add(new ResolveResult(element, element.getTextRange(), true, null, null, type, action, usage, false));
     }
 
-    private void registerInvalidResult(@NotNull PsiElement element, @Nullable LedgerType type, @Nullable LedgerAction action, @NotNull ResolveResult.InvalidCause cause, @Nullable String message)
+    private void registerInvalidResult(@NotNull PsiElement element,
+                                       @Nullable LedgerType type,
+                                       @Nullable LedgerAction action,
+                                       @NotNull ResolveResult.InvalidCause cause,
+                                       @Nullable String message)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action));
+        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, null, false));
     }
 
-    private void registerTypeMismatchResult(@NotNull PsiElement element, @Nullable LedgerType type, @Nullable LedgerAction action)
+    private void registerInvalidResultActionStart(@NotNull PsiElement element,
+                                                  @Nullable LedgerType type,
+                                                  @Nullable LedgerAction action,
+                                                  @NotNull ResolveResult.InvalidCause cause,
+                                                  @Nullable String message
+    )
+    {
+        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, null, true));
+    }
+
+    private void registerTypeMismatchResult(@NotNull PsiElement element,
+                                            @Nullable LedgerType type,
+                                            @Nullable LedgerAction action,
+                                            @Nullable ScenarioType usage)
     {
         this.results.add(new ResolveResult(
                 element,
@@ -465,16 +509,53 @@ public class LedgerScenarioResolver
                 ResolveResult.InvalidCause.TYPE_MISMATCH,
                 "The value does not match the type constraint.",
                 type,
-                action
+                action,
+                usage,
+                false
         ));
+    }
+
+    private void registerAnchorResultActionStart(@NotNull PsiElement element,
+                                                 @Nullable LedgerType type,
+                                                 @Nullable LedgerAction action,
+                                                 @Nullable ScenarioType usage)
+    {
+        this.results.add(new ResolveResult(element, element.getTextRange(), true, null, null, type, action, usage, true));
+    }
+
+    private void registerInvalidResult(@NotNull PsiElement element,
+                                       @Nullable LedgerType type,
+                                       @Nullable LedgerAction action,
+                                       @NotNull ResolveResult.InvalidCause cause,
+                                       @Nullable String message,
+                                       @Nullable ScenarioType usage)
+    {
+        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, usage, false));
+    }
+
+    private void registerInvalidResultActionStart(@NotNull PsiElement element,
+                                                  @Nullable LedgerType type,
+                                                  @Nullable LedgerAction action,
+                                                  @NotNull ResolveResult.InvalidCause cause,
+                                                  @Nullable String message,
+                                                  @Nullable ScenarioType usage)
+    {
+        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, usage, true));
     }
 
     private boolean checkPropertyTypeMatch(DetailedValue property, YAMLValue actualValue, @Nullable LedgerAction lastAction, @Nullable ScenarioType usage)
     {
         boolean isValid = true;
 
-        LedgerType propertyType = this.ledgerManager.resolveReference(property.getType(), LedgerType.class)
-                .orElseThrow(() -> new IllegalStateException("Failed to resolve the property type, ledger broken?"));
+        Optional<LedgerType> optPropertyType = this.ledgerManager.resolveReference(property.getType(), LedgerType.class);
+        LedgerType propertyType;
+        if (optPropertyType.isPresent())
+            propertyType = optPropertyType.get();
+        else if (optPropertyType.isEmpty() && PrimitiveType.isPrimitiveType(property.getType().getReferenceBody()))
+            propertyType = PrimitiveType.fromString(property.getType().getReferenceBody());
+        else
+            throw new IllegalStateException("Property type not found");
+
 
         List<? extends YAMLPsiElement> targetValues = null;
         if (actualValue instanceof YAMLSequence sequence)
@@ -487,7 +568,8 @@ public class LedgerScenarioResolver
                 this.registerTypeMismatchResult(
                         actualValue,
                         propertyType,
-                        lastAction
+                        lastAction,
+                        usage
                 );
             }
         }
@@ -499,7 +581,8 @@ public class LedgerScenarioResolver
                 this.registerTypeMismatchResult(
                         actualValue,
                         propertyType,
-                        lastAction
+                        lastAction,
+                        usage
                 );
             }
             else
@@ -524,7 +607,8 @@ public class LedgerScenarioResolver
                     this.registerTypeMismatchResult(
                             actualValue,
                             propertyType,
-                            lastAction
+                            lastAction,
+                            usage
                     );
                 }
                 continue;
@@ -547,7 +631,7 @@ public class LedgerScenarioResolver
                 continue;
             }*/
 
-            this.registerValidResult(targetValue, propertyType, lastAction);
+            this.registerValidResult(targetValue, propertyType, lastAction, usage);
         }
 
         return isValid;
@@ -678,8 +762,12 @@ public class LedgerScenarioResolver
 
         @Nullable
         LedgerType type;
+
         @Nullable
         LedgerAction action;
+        @Nullable
+        ScenarioType usage;
+        boolean isActionBlockStart;
 
         public enum InvalidCause
         {
@@ -697,6 +785,51 @@ public class LedgerScenarioResolver
             ACTION_INPUT_MISSING_REQUIRED,  // MissingArgumentsInspector
             ACTION_INPUT_UNAVAILABLE_USAGE,
             ACTION_INPUT_REDUNDANT
+        }
+    }
+
+    public static class PrimitiveType extends LedgerType
+    {
+        public static final PrimitiveType INTEGER = new PrimitiveType("integer", "Integer");
+        public static final PrimitiveType LONG = new PrimitiveType("long", "Long");
+        public static final PrimitiveType SHORT = new PrimitiveType("short", "Short");
+        public static final PrimitiveType BYTE = new PrimitiveType("byte", "Byte");
+        public static final PrimitiveType FLOAT = new PrimitiveType("float", "Float");
+        public static final PrimitiveType DOUBLE = new PrimitiveType("double", "Double");
+        public static final PrimitiveType BOOLEAN = new PrimitiveType("boolean", "Boolean");
+        public static final PrimitiveType CHAR = new PrimitiveType("char", "Character");
+        public static final PrimitiveType OBJECT = new PrimitiveType("object", "Object");
+
+        private PrimitiveType(String id, String name)
+        {
+            super(LedgerReference.of("$ref:type:" + id), id, name, null, null, null, null, null, null);
+        }
+
+        public static boolean isPrimitiveType(String mayPrimitiveName)
+        {
+            return switch (mayPrimitiveName)
+            {
+                case "string", "integer", "long", "short", "byte", "float", "double", "boolean", "char", "object" ->
+                        true;
+                default -> false;
+            };
+        }
+
+        public static PrimitiveType fromString(String primitiveName)
+        {
+            return switch (primitiveName)
+            {
+                case "integer" -> INTEGER;
+                case "long" -> LONG;
+                case "short" -> SHORT;
+                case "byte" -> BYTE;
+                case "float" -> FLOAT;
+                case "double" -> DOUBLE;
+                case "boolean" -> BOOLEAN;
+                case "char" -> CHAR;
+                case "object" -> OBJECT;
+                default -> null;
+            };
         }
     }
 }

@@ -18,7 +18,7 @@ import java.util.function.BiFunction;
 public class LedgerManager
 {
     public static final String ID_PRIME_TYPE = "ScenarioFileStructure";
-    public static final String REF_PRIME_TYPE = "$reference:type:" + ID_PRIME_TYPE;
+    public static final LedgerReference REF_PRIME_TYPE = LedgerReference.of("$reference:type:" + ID_PRIME_TYPE);
 
     private final LedgersProvider provider;
 
@@ -40,7 +40,7 @@ public class LedgerManager
     public LedgerType getPrimeType() // シナリオファイルの基底を取得
     {
         Ledger officialLedger = this.provider.getOfficialLedger();
-        return officialLedger.getTypeByID(REF_PRIME_TYPE)
+        return officialLedger.resolveReference(REF_PRIME_TYPE, LedgerType.class)
                 .orElseThrow(() -> new IllegalStateException("Prime type not found"));
     }
 

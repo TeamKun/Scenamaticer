@@ -22,17 +22,15 @@ import kotlin.Pair;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.yaml.psi.YAMLMapping;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
-import org.kunlab.scenamatica.plugin.idea.ledger.ScenarioLedgerLinker;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaAction;
-import org.kunlab.scenamatica.plugin.idea.scenarioFile.schema.SchemaProviderService;
-import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
+import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerAction;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionProvider, CodeVisionGroupSettingProvider
@@ -111,33 +109,32 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
 
     private List<Pair<TextRange, CodeVisionEntry>> getActionReferencesCodeVision(@NotNull PsiFile file)
     {
-        if (!acceptsFile(file))
+        if (!(file instanceof ScenarioFile scenarioFile))
             return Collections.emptyList();
-        Iterator<PsiElement> elements = YAMLUtils.getDepthFirstIterator(file);
+
+        LedgerScenarioResolver resolver = LedgerScenarioResolver.create(
+                LedgerManagerService.getInstance(),
+                scenarioFile
+        ).detailedResolve();
 
         List<Pair<TextRange, CodeVisionEntry>> entries = new ArrayList<>();
-        while (elements.hasNext())
+        for (LedgerScenarioResolver.ResolveResult resolveResult : resolver.getActions())
         {
-            PsiElement element = elements.next();
-            if (acceptsElement(element))
-            {
-                ScenarioLedgerLinker.ScenarioAction scenarioAction = SchemaProviderService.getResolver().getAction(element);
-                if (scenarioAction == null)
-                    continue;
+            LedgerAction action = resolveResult.getAction();
+            if (action == null)
+                continue;
 
-                SchemaAction action = SchemaProviderService.getProvider().getAction(scenarioAction.getType());
-                if (action == null)
-                    continue;
+            PsiElement element = resolveResult.getElement();
+            ScenarioType usage = resolveResult.getUsage();
 
-                entries.add(new Pair<>(
-                        element.getTextRange(),
-                        new ActionReferenceCodeVisionEntry(
-                                element,
-                                scenarioAction.getType(),
-                                action.getDescriptionFor(scenarioAction.getType())
-                        )
-                ));
-            }
+            entries.add(new Pair<>(
+                    element.getTextRange(),
+                    new ActionReferenceCodeVisionEntry(
+                            element,
+                            action.getName(),
+                            action.getDescription(usage)
+                    )
+            ));
         }
 
         return entries;
@@ -148,17 +145,6 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     public CodeVisionAnchorKind getDefaultAnchor()
     {
         return CodeVisionAnchorKind.Top;
-    }
-
-    private static boolean acceptsElement(@NotNull PsiElement psiElement)
-    {
-        String type = SchemaProviderService.getResolver().getTypeName(psiElement);
-        return psiElement instanceof YAMLMapping && ("scenario".equals(type) || "action".equals(type));
-    }
-
-    private static boolean acceptsFile(@NotNull PsiFile psiFile)
-    {
-        return ScenarioFileType.isType(psiFile);
     }
 
     private static class ActionReferenceCodeVisionEntry extends TextCodeVisionEntry implements CodeVisionPredefinedActionEntry
@@ -183,7 +169,10 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
         @Override
         public void onClick(@NotNull Editor editor)
         {
-            ActionReferences.navigate(editor.getProject(), editor, this.actionName);
+            Project proj = editor.getProject();
+            if (proj == null)
+                return;
+            ReferenceNavigator.navigate(proj, editor, ReferenceNavigator.NavigateType.ACTION, this.actionName);
         }
 
         private static String getHint(@NotNull String actionName, @Nullable String actionDesc)

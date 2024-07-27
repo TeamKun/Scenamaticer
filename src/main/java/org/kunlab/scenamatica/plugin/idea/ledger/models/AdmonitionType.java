@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.ledger.models;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -31,5 +32,15 @@ public enum AdmonitionType
      */
     DANGER("danger");
 
+    @JsonValue
     private final String name;
+
+    public static AdmonitionType of(String name)
+    {
+        for (AdmonitionType type : values())
+            if (type.getName().equals(name))
+                return type;
+
+        return null;
+    }
 }

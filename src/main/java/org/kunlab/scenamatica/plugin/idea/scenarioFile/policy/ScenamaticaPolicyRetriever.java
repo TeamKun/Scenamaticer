@@ -97,7 +97,7 @@ public class ScenamaticaPolicyRetriever
         YAMLKeyValue apiVersionKV;
         if ((apiVersionKV = mapping.getKeyValueByKey("api-version")) != null)
         {
-            String apiVersionStr = YAMLUtils.getValueText(apiVersionKV.getValue());
+            String apiVersionStr = YAMLUtils.getUnquotedValueText(apiVersionKV.getValue());
             if (apiVersionStr.matches("^\\d+\\.\\d+$"))
                 apiVersion = MinecraftVersion.fromString(apiVersionStr + ".x");
         }

@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.scenarioFile.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 
@@ -19,6 +20,7 @@ public enum ScenarioType
         return ScenamaticerBundle.of(this.displayName);
     }
 
+    @JsonCreator
     public static ScenarioType of(String name)
     {
         // これ以上は増えないことが確定しているため。

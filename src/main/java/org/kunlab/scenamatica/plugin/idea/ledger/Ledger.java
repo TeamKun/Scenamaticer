@@ -4,8 +4,12 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 import com.intellij.openapi.diagnostic.Logger;
 import lombok.Getter;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -56,7 +60,7 @@ public class Ledger
     private static final Logger LOG = Logger.getInstance(Ledger.class);
     private static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final String ledgerName;
     private final Path ledgerPath;
@@ -103,6 +107,12 @@ public class Ledger
             if (downloadLedger(this.ledgerURL, this.zipPath) == null)
             {
                 LOG.error("Failed to build cache for ledger: " + this.ledgerName);
+                Notifications.Bus.notify(new Notification(
+                        "Scenamatica",
+                        "Failed to build cache for ledger: " + this.ledgerName,
+                        "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
+                        NotificationType.ERROR
+                ));
                 return false;
             }
 
@@ -111,6 +121,12 @@ public class Ledger
             if (unzipTo(this.zipPath, this.cachePath) == null)
             {
                 LOG.error("Failed to build cache for ledger: " + this.ledgerName);
+                Notifications.Bus.notify(new Notification(
+                        "Scenamatica",
+                        "Failed to build cache for ledger: " + this.ledgerName,
+                        "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
+                        NotificationType.ERROR
+                ));
                 return false;
             }
         }
@@ -120,7 +136,6 @@ public class Ledger
         readLedgerContents(this.cachePath.resolve(PATH_CATEGORIES), this.categories, LedgerCategory.class);
         readLedgerContents(this.cachePath.resolve(PATH_EVENTS), this.events, LedgerEvent.class);
 
-
         LOG.info("Loaded " + this.actions.size() + " actions, " + this.types.size() + " types, " + this.categories.size() + " categories for ledger: " + this.ledgerName);
 
         return true;
@@ -128,16 +143,16 @@ public class Ledger
 
     private void deleteLedgerCacheFiles()
     {
-        try (Stream<Path> paths = Files.walk(this.cachePath))
+        if (!Files.exists(this.cachePath))
+            return;
+
+        try
         {
-            paths.map(Path::toFile).forEach(file -> {
-                if (!file.delete())
-                    LOG.error("Failed to delete file: " + file);
-            });
+            FileUtils.forceDelete(this.cachePath.toFile());
         }
         catch (IOException e)
         {
-            LOG.error("Failed to clean cache for ledger: " + this.ledgerName, e);
+            LOG.error("Failed to delete cache files: " + this.cachePath, e);
         }
     }
 
@@ -272,6 +287,9 @@ public class Ledger
                                                                       @NotNull Map<? super LedgerReference, ? super T> field,
                                                                       @NotNull Class<? extends T> type)
     {
+        if (!Files.exists(directory))
+            return;
+
         try (Stream<Path> paths = Files.walk(directory))
         {
             paths.filter(Files::isRegularFile)
@@ -282,9 +300,9 @@ public class Ledger
                             T content = MAPPER.readValue(file, type);
                             field.put(content.getReference(), content);
                         }
-                        catch (IOException e)
+                        catch (Exception e)
                         {
-                            LOG.error("Failed to read ledger content: " + file, e);
+                            LOG.error("Failed to read ledger content, skipping...: " + file, e);
                         }
                     });
         }

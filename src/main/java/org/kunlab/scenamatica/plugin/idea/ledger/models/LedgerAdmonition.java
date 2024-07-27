@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.ledger.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Value;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 
@@ -19,6 +20,7 @@ public class LedgerAdmonition
     AdmonitionType type;
     String title;
     String content;
+    @JsonDeserialize(using = ScenarioTypesDeserializer.class)
     ScenarioType[] on;
 
     public LedgerAdmonition()

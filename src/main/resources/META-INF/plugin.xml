@@ -54,7 +54,6 @@
                 language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Duplicated Scenario names"/>
-        <!--
         <localInspection
                 implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.UnsupportedActionUsageInspector"
                 groupName="Scenamatica"
@@ -83,9 +82,6 @@
                 language="ScenamaticaScenario"
                 level="WARNING"
                 displayName="Unsupported Minecraft version"/>
-        -->
-        <codeInsight.lineMarkerProvider language="ScenamaticaScenario"
-                                        implementationClass="org.kunlab.scenamatica.plugin.idea.editor.ActionReferenceLineMarkerProvider"/>
         <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE" fileNames=".scenamatica"
                   name="Scenamatica Policy File"
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>

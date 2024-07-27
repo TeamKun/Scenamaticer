@@ -127,10 +127,10 @@ public class YAMLUtils
 
     public static String getValueTextByKey(PsiElement psiElement)
     {
-        return getValueText(getValue(psiElement));
+        return getUnquotedValueText(getValue(psiElement));
     }
 
-    public static String getValueText(PsiElement value)
+    public static String getUnquotedValueText(PsiElement value)
     {
         if (value == null)
             return "";
@@ -239,7 +239,7 @@ public class YAMLUtils
         return current;
     }
 
-    public static String getValueText(PsiFile file, String key)
+    public static String getUnquotedValueText(PsiFile file, String key)
     {
         return getValueTextByKey(getValue(file, key));
     }

@@ -37,7 +37,7 @@ public class ScenarioNameDuplicationInspector extends AbstractScenamaticaInspect
                     return;
 
                 PsiElement scenarioNameElement = YAMLUtils.getValue(file, ScenarioFiles.KEY_NAME);
-                String scenarioName = YAMLUtils.getValueText(scenarioNameElement);
+                String scenarioName = YAMLUtils.getUnquotedValueText(scenarioNameElement);
                 if (scenarioName == null)
                     return;
 

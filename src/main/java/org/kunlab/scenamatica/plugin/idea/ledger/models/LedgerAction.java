@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
@@ -90,6 +91,19 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
         };
     }
 
+    public String getDescription(@Nullable ScenarioType usage)
+    {
+        if (usage == null)
+            return this.description;
+
+        return switch (usage)
+        {
+            case EXECUTE -> this.executable.getDescription();
+            case EXPECT -> this.expectable.getDescription();
+            case REQUIRE -> this.requireable.getDescription();
+        };
+    }
+
     @Value
     @AllArgsConstructor
     public static class ActionOutput
@@ -107,7 +121,8 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
 
         String name;
         String description;
-        LedgerReference[] targets;
+        @JsonDeserialize(using = ScenarioTypesDeserializer.class)
+        ScenarioType[] targets;
         LedgerReference type;
         MinecraftVersion supportsSince;
         MinecraftVersion supportsUntil;
@@ -160,7 +175,9 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
         String name;
         LedgerReference type;
         String description;
+        @JsonDeserialize(using = ScenarioTypesDeserializer.class)
         ScenarioType[] requiredOn;
+        @JsonDeserialize(using = ScenarioTypesDeserializer.class)
         ScenarioType[] availableFor;
         MinecraftVersion supportsSince;
         MinecraftVersion supportsUntil;
@@ -249,8 +266,8 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
                 if (parser.currentToken().isBoolean())
                 {
                     boolean value = parser.getBooleanValue();
-                    if (!value)
-                        throw new InvalidFormatException(parser, "Unavailable contract must not have a description.", null, Contract.class);
+                    if (value)
+                        throw new InvalidFormatException(parser, "Available must have a description", value, Contract.class);
                     return Contract.ofUnavailable();
                 }
 

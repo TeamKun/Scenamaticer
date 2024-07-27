@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Value;
 import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
 
 import java.util.Arrays;
 
@@ -23,11 +24,25 @@ public class LedgerReference
         this.referenceBody = referenceBody;
     }
 
+    public boolean canResolve()
+    {
+        // 1. referenceType が null でないこと
+        // 2. referenceBody が null でないこと
+        // 3. referenceBody が空文字でないこと
+        // 4. referenceBody が ? で始まっていないこと
+        // => $ref:type:?category のような形式は解決できない
+        return !(this.referenceType == null || this.referenceBody == null ||
+                this.referenceBody.isEmpty() || this.referenceBody.startsWith("?"));
+    }
+
     @JsonCreator
     public static LedgerReference of(String reference)
     {
         // $ref:ledgerType:(category):1234567890 となる。すなはち, :つ以降は全てreferenceBodyとなる(:かどうかは関係なく)
+        // また, プリミティブ型はその名前のみなので, type リファレンスに飛ばす。
         String[] parts = reference.split(DELIMITER, 3);
+        if (parts.length == 1 && LedgerScenarioResolver.PrimitiveType.isPrimitiveType(parts[0]))
+            return new LedgerReference(Type.TYPES, parts[0]);
         if (parts.length < 3)
             throw new IllegalArgumentException("Broken reference format: " + reference);
 
@@ -44,10 +59,10 @@ public class LedgerReference
     @AllArgsConstructor
     public enum Type
     {
-        ACTION("actions", LedgerAction.class),
-        TYPES("types", LedgerType.class),
-        CATEGORIES("categories", LedgerCategory.class),
-        EVENTS("events", LedgerEvent.class);
+        ACTION("action", LedgerAction.class),
+        TYPES("type", LedgerType.class),
+        CATEGORIES("category", LedgerCategory.class),
+        EVENTS("event", LedgerEvent.class);
 
         @NotNull
         private final String name;

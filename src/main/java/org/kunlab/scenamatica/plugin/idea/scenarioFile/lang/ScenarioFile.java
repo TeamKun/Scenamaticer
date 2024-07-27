@@ -35,7 +35,7 @@ public class ScenarioFile extends PsiFileBase implements YAMLFile
     {
         try
         {
-            return MinecraftVersion.fromString(YAMLUtils.getValueText(this, KEY_MINECRAFT_SINCE));
+            return MinecraftVersion.fromString(YAMLUtils.getUnquotedValueText(this, KEY_MINECRAFT_SINCE));
         }
         catch (IllegalArgumentException e)
         {
@@ -48,7 +48,7 @@ public class ScenarioFile extends PsiFileBase implements YAMLFile
     {
         try
         {
-            return MinecraftVersion.fromString(YAMLUtils.getValueText(this, KEY_MINECRAFT_UNTIL));
+            return MinecraftVersion.fromString(YAMLUtils.getUnquotedValueText(this, KEY_MINECRAFT_UNTIL));
         }
         catch (IllegalArgumentException e)
         {
@@ -59,14 +59,14 @@ public class ScenarioFile extends PsiFileBase implements YAMLFile
     @NotNull
     public String getScenarioName()
     {
-        return YAMLUtils.getValueText(this, KEY_NAME);
+        return YAMLUtils.getUnquotedValueText(this, KEY_NAME);
     }
 
     @Nullable
     public String getDescription()
     {
         if (YAMLUtils.hasValidKey(this, KEY_DESCRIPTION))
-            return YAMLUtils.getValueText(this, KEY_DESCRIPTION);
+            return YAMLUtils.getUnquotedValueText(this, KEY_DESCRIPTION);
         else
             return null;
     }

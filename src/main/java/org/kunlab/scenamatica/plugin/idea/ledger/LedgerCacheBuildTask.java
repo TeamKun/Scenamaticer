@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.ledger;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import org.jetbrains.annotations.NotNull;
@@ -18,8 +19,10 @@ public class LedgerCacheBuildTask extends Task.Backgroundable
     public void run(@NotNull ProgressIndicator progressIndicator)
     {
         progressIndicator.setIndeterminate(true);
-        if (this.dropBefore)
-            LedgerManagerService.getInstance().getProvider().cleanCacheAll();
-        LedgerManagerService.getInstance().getProvider().buildCacheAll();
+        ApplicationManager.getApplication().invokeLater(() -> {
+            if (this.dropBefore)
+                LedgerManagerService.getInstance().getProvider().cleanCacheAll();
+            LedgerManagerService.getInstance().getProvider().buildCacheAll();
+        });
     }
 }

@@ -74,12 +74,12 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
 
             String type = node.get(KEY_TYPE).asText();
             if ("string".equals(type))
-                return ctxt.readValue(node.traverse(), LedgerStringType.class);
+                return ctxt.readTreeAsValue(node, LedgerStringType.class);
 
             return deserializeCompileType(node, ctxt);
         }
 
-        public static LedgerType deserializeCompileType(JsonNode node, DeserializationContext ctxt) throws IOException
+        public static LedgerType deserializeCompileType(JsonNode node, DeserializationContext ctxt)
         {
             return new LedgerType(
                     getAs(node, KEY_REFERENCE, n -> ctxt.readTreeAsValue(n, LedgerReference.class)),
@@ -94,7 +94,7 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
                         n.fields().forEachRemaining(e -> {
                             try
                             {
-                                map.put(e.getKey(), ctxt.readValue(e.getValue().traverse(), Property.class));
+                                map.put(e.getKey(), ctxt.readTreeAsValue(e.getValue(), Property.class));
                             }
                             catch (IOException ex)
                             {
@@ -112,11 +112,13 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
             JsonNode child = node.get(key);
             try
             {
+                if (child == null)
+                    return null;
                 return mapper.apply(child);
             }
             catch (IOException e)
             {
-                throw new UncheckedIOException(e);
+                throw new UncheckedIOException("Failed to read property: " + key, e);
             }
         }
 

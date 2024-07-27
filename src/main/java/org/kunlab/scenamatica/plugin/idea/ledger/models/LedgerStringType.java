@@ -110,6 +110,9 @@ public class LedgerStringType extends LedgerType implements IPrimitiveType
         @JsonDeserialize
         public static Format fromString(String value)
         {
+            if (value == null)
+                return null;
+
             for (Format format : Format.values())
             {
                 if (format.value.equals(value))
@@ -125,7 +128,7 @@ public class LedgerStringType extends LedgerType implements IPrimitiveType
         @Override
         public LedgerStringType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException
         {
-            JsonNode node = jsonParser.readValueAsTree();
+            JsonNode node = jsonParser.readValueAs(JsonNode.class);
             if (node == null)
                 return null;
 
@@ -152,7 +155,7 @@ public class LedgerStringType extends LedgerType implements IPrimitiveType
                 }
             }
 
-            return new LedgerStringType(action, Format.valueOf(format), pattern, enums);
+            return new LedgerStringType(action, Format.fromString(format), pattern, enums);
         }
     }
 }

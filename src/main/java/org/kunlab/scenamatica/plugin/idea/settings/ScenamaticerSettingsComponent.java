@@ -44,6 +44,7 @@ public class ScenamaticerSettingsComponent
     private void onPurgeCache(ActionEvent actionEvent)
     {
         LedgerManagerService.getInstance().getProvider().cleanCacheAll();
+        LedgerManagerService.getInstance().getProvider().buildCacheAll();
         NotificationGroupManager.getInstance()
                 .getNotificationGroup("Scenamatica")
                 .createNotification(

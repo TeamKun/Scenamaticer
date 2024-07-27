@@ -1,6 +1,5 @@
 package org.kunlab.scenamatica.plugin.idea.editor;
 
-import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.openapi.application.ApplicationManager;
@@ -12,8 +11,6 @@ import com.intellij.psi.impl.FakePsiElement;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
-import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
-import org.kunlab.scenamatica.plugin.idea.refsBrowser.WebReference;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -25,14 +22,14 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
         if (psiElement == null || !ScenarioFileType.isType(psiElement.getContainingFile()))
             return null;
 
-
-        if (YAMLUtils.isKey(psiElement) || WebReference.isActionSpecifier(psiElement))
-            return new PsiElement[]{new FakeElement(psiElement, editor)};
+        String actionName = ReferenceNavigator.tryGetActionNameByActionSpecifier(psiElement);
+        if (YAMLUtils.isKey(psiElement) && actionName != null)
+            return new PsiElement[]{new ActionNavigatoFakeElement(psiElement, editor, actionName)};
         else
             return null;
     }
 
-    private static class FakeElement extends FakePsiElement implements SyntheticElement
+    private static class ActionNavigatoFakeElement extends FakePsiElement implements SyntheticElement
     {
         private static final ItemPresentation PRESENTATION = new ItemPresentation()
         {
@@ -57,11 +54,13 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
 
         private final PsiElement element;
         private final Editor editor;
+        private final String actionName;
 
-        public FakeElement(PsiElement element, Editor editor)
+        public ActionNavigatoFakeElement(PsiElement element, Editor editor, String actionName)
         {
             this.element = element;
             this.editor = editor;
+            this.actionName = actionName;
         }
 
         @Override
@@ -97,7 +96,7 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
             progressWindow.start();
             try
             {
-                ApplicationManager.getApplication().executeOnPooledThread(() -> actualNavigate(this.element, this.editor));
+                ApplicationManager.getApplication().executeOnPooledThread(() -> this.actualNavigate(this.element, this.editor));
             }
             finally
             {
@@ -111,32 +110,9 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
             return this.element;
         }
 
-        private static void actualNavigate(PsiElement element, Editor editor)
+        private void actualNavigate(PsiElement element, Editor editor)
         {
-            String reference = WebReference.findElementReferenceURL(element);
-            RefsBrowserWindow window = RefsBrowserWindow.getCurrentWindow(element.getProject());
-            if (reference == null || window == null)
-            {
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    if (reference == null)
-                    {
-                        HintManager.getInstance().showErrorHint(
-                                editor,
-                                "Cannot find the reference of this element."
-                        );
-                    }
-                    else /* assert window == null */
-                    {
-                        HintManager.getInstance().showErrorHint(
-                                editor,
-                                "Unable to find the reference window."
-                        );
-                    }
-                });
-                return;
-            }
-
-            window.navigateTo(reference);
+            ReferenceNavigator.navigateToActionReference(element.getProject(), editor, this.actionName);
         }
     }
 }
