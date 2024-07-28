@@ -55,7 +55,7 @@
                 level="ERROR"
                 displayName="Duplicated Scenario names"/>
         <localInspection
-                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.UnsupportedActionUsageInspector"
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.UnsupportedUsageInspector"
                 groupName="Scenamatica"
                 enabledByDefault="true"
                 language="ScenamaticaScenario"
@@ -82,6 +82,21 @@
                 language="ScenamaticaScenario"
                 level="WARNING"
                 displayName="Unsupported Minecraft version"/>
+        <localInspection
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.UnknownScenarioTypeInspector"
+                groupName="Scenamatica"
+                enabledByDefault="true"
+                language="ScenamaticaScenario"
+                level="ERROR"
+                displayName="Unsupported scenario type"/>
+        <localInspection
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.action.UnknownActionInspector"
+                groupName="Scenamatica"
+                enabledByDefault="true"
+                language="ScenamaticaScenario"
+                level="ERROR"
+                displayName="Unknown action"/>
+
         <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE" fileNames=".scenamatica"
                   name="Scenamatica Policy File"
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>

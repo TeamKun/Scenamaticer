@@ -27,7 +27,8 @@ public class RedundantArgumentsInspector extends AbstractScenarioFileInspection
                                 .map(LedgerScenarioResolver.ResolveResult::getElement)
                                 .toArray(PsiElement[]::new)
                 ),
-                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_REDUNDANT
+                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_REDUNDANT,
+                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_UNAVAILABLE_USAGE
         );
     }
 }

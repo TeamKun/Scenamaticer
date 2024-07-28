@@ -8,11 +8,11 @@ import org.kunlab.scenamatica.plugin.idea.editor.inspections.AbstractScenarioFil
 import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 
-public class UnsupportedActionUsageInspector extends AbstractScenarioFileInspection
+public class UnsupportedUsageInspector extends AbstractScenarioFileInspection
 {
     public static final String ID = "UnsupportedActionUsage";
 
-    public UnsupportedActionUsageInspector()
+    public UnsupportedUsageInspector()
     {
         super(ID, "UnsupportedActionUsage", HighlightDisplayLevel.ERROR);
     }
@@ -20,6 +20,12 @@ public class UnsupportedActionUsageInspector extends AbstractScenarioFileInspect
     @Override
     protected void visitScenarioFile(@NotNull ScenarioFile file, @NotNull ProblemsHolder holder, @NotNull LocalInspectionToolSession session)
     {
-        this.reportDetailedResolveErrorTypeOf(file, holder, session, null, LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_USAGE_VIOLATION);
+        this.reportDetailedResolveErrorTypeOf(
+                file,
+                holder,
+                session,
+                null,
+                LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_USAGE_VIOLATION
+        );
     }
 }

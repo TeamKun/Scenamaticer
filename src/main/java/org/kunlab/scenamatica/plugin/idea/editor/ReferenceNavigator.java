@@ -4,106 +4,59 @@ import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Computable;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.impl.source.tree.LeafPsiElement;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.yaml.psi.YAMLKeyValue;
-import org.jetbrains.yaml.psi.YAMLMapping;
-import org.jetbrains.yaml.psi.YAMLPsiElement;
-import org.jetbrains.yaml.psi.YAMLValue;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerAction;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerCategory;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerReference;
+import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerType;
 import org.kunlab.scenamatica.plugin.idea.refsBrowser.RefsBrowserWindow;
-import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
 import java.util.Optional;
 
+@SuppressWarnings("OptionalAssignedToNull")
 public class ReferenceNavigator
 {
 
-    @Nullable
-    public static String tryGetActionNameByActionSpecifier(PsiElement element)
+    public static void navigateToActionReference(@NotNull Project project, @NotNull Editor editor, LedgerAction actionDefinition)
     {
-        return ApplicationManager.getApplication().runReadAction((Computable<String>) () -> tryGetActionNameByActionSpecifier$0(element));
-    }
-
-    @Nullable
-    private static String tryGetActionNameByActionSpecifier$0(PsiElement element)
-    {
-        YAMLValue yamlValue;
-        if (element instanceof YAMLValue)
-            yamlValue = (YAMLValue) element;
-        else if (element instanceof LeafPsiElement)
-        {
-            PsiElement parent = element.getParent();
-            if (parent instanceof YAMLValue)
-                yamlValue = (YAMLValue) parent;/*
-            else if (parent instanceof YAMLKeyValue)
-                return element.textMatches("action");*/
-            else
-                return null;
-        }
-        else
-            return null;
-
-        YAMLPsiElement parentContainer = (YAMLPsiElement) yamlValue.getParent();
-        if (!(parentContainer instanceof YAMLMapping))
-            return null;
-
-        YAMLMapping blockMapping = (YAMLMapping) parentContainer.getParent();
-        if (blockMapping == null)
-            return null;
-
-        YAMLKeyValue actionKV = blockMapping.getKeyValueByKey("action");
-        if (actionKV == null)
-            return null;
-
-        if (actionKV.getValue() == null)
-            return null;
-
-        return YAMLUtils.getUnquotedValueText(actionKV.getValue());
-    }
-
-    public static void navigateToActionReference(@NotNull Project project, @NotNull Editor editor, String actionName)
-    {
-        Optional<LedgerAction> optActionDefinition = LedgerManagerService.getInstance().getActionByID(actionName);
-        if (optActionDefinition.isEmpty())
-        {
-            showUnableToResolveErrorMessage(editor);
-            return;
-        }
-        LedgerAction actionDefinition = optActionDefinition.get();
-
         String reference = "";
 
-        LedgerReference categoryReference = actionDefinition.getCategory();
-        if (categoryReference != null)
-        {
-            if (!categoryReference.canResolve())
-            {
-                showUnableToResolveErrorMessage(editor);
-                return;
-            }
-
-            Optional<LedgerCategory> category = LedgerManagerService.getInstance().resolveReference(categoryReference, LedgerCategory.class);
-            if (category.isEmpty())
-            {
-                showUnableToResolveErrorMessage(editor);
-                return;
-            }
-            LedgerCategory resolvedCategory = category.get();
-            reference /* + */ = resolvedCategory.getId() + "/";
-        }
+        Optional<LedgerCategory> category = getCategory(editor, actionDefinition.getCategory());
+        if (category == null)
+            return;
+        else if (category.isPresent())
+            reference += category.get().getId() + "/";
 
         reference += actionDefinition.getId();
+        reference += "#action";
 
         navigate(project, editor, NavigateType.ACTION, reference);
+    }
+
+    @Nullable
+    private static Optional<LedgerCategory> getCategory(@NotNull Editor editor, @Nullable LedgerReference ref)
+    {
+        if (ref == null)
+            return Optional.empty();
+        else if (!ref.canResolve())
+        {
+            showUnableToResolveErrorMessage(editor);
+            return null;
+        }
+
+
+        Optional<LedgerCategory> category = LedgerManagerService.getInstance().resolveReference(ref, LedgerCategory.class);
+        if (category.isEmpty())
+        {
+            showUnableToResolveErrorMessage(editor);
+            return null;
+        }
+
+        return category;
     }
 
     private static void showUnableToResolveErrorMessage(@NotNull Editor editor)
@@ -111,7 +64,7 @@ public class ReferenceNavigator
         showErrorMessage(editor, ScenamaticerBundle.of("editor.codeVision.actionReference.errors.unableToResolve"));
     }
 
-    public static void navigate(@NotNull Project project, @NotNull Editor editor, @NotNull ReferenceNavigator.NavigateType navigateType, String componentName)
+    private static void navigate(@NotNull Project project, @NotNull Editor editor, @NotNull ReferenceNavigator.NavigateType navigateType, String componentName)
     {
         if (componentName == null)
         {
@@ -138,6 +91,21 @@ public class ReferenceNavigator
                     message
             );
         });
+    }
+
+    public static void navigateToTypeReference(Project project, Editor editor, LedgerType typeDefinition)
+    {
+        String reference = "";
+        Optional<LedgerCategory> category = getCategory(editor, typeDefinition.getCategory());
+        if (category == null)
+            return;
+        else if (category.isPresent())
+            reference += category.get().getId() + "/";
+
+        reference += typeDefinition.getId();
+        reference += "#type";
+
+        navigate(project, editor, NavigateType.TYPE, reference);
     }
 
     @Getter

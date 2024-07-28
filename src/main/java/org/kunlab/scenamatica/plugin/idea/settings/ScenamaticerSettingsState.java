@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 @State(name = "org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState", storages = @Storage("scenamaticer.xml"))
 public class ScenamaticerSettingsState implements PersistentStateComponent<ScenamaticerSettingsState>
 {
-    public static final String DEFAULT_OFFICIAL_LEDGER_URL = "https://498e-240b-11-3041-1d00-a0eb-f1d2-ef58-1119.ngrok-free.app/schema/ledger.zip";
+    public static final String DEFAULT_OFFICIAL_LEDGER_URL = "https://scenamatica.kunlab.org/schema/ledger.zip";
 
     private String officialLedgerURL = DEFAULT_OFFICIAL_LEDGER_URL;
     private String language = DynamicBundle.getLocale().getLanguage();

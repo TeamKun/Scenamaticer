@@ -63,6 +63,6 @@ public class ScenarioSchemaProvider implements JsonSchemaFileProvider
     @Override
     public @NotNull SchemaType getSchemaType()
     {
-        return SchemaType.embeddedSchema;
+        return SchemaType.schema;
     }
 }

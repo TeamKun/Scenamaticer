@@ -11,6 +11,12 @@ import com.intellij.psi.impl.FakePsiElement;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
+import org.kunlab.scenamatica.plugin.idea.ledger.LedgerScenarioResolver;
+import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerAction;
+import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerType;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType;
 import org.kunlab.scenamatica.plugin.idea.utils.YAMLUtils;
 
@@ -19,17 +25,29 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
     @Override
     public PsiElement @Nullable [] getGotoDeclarationTargets(@Nullable PsiElement psiElement, int i, Editor editor)
     {
-        if (psiElement == null || !ScenarioFileType.isType(psiElement.getContainingFile()))
+        if (psiElement == null || !ScenarioFileType.isType(psiElement.getContainingFile()) || !YAMLUtils.isKey(psiElement))
+            return null;
+        ScenarioFile file = (ScenarioFile) psiElement.getContainingFile();
+        YAMLKeyValue kv = (YAMLKeyValue) psiElement.getParent();
+
+        LedgerScenarioResolver resolver = LedgerScenarioResolver.create(
+                LedgerManagerService.getInstance(),
+                file
+        ).detailedResolve();
+
+        LedgerScenarioResolver.ResolveResult result = resolver.getResultForElement(kv);
+        if (result == null)
             return null;
 
-        String actionName = ReferenceNavigator.tryGetActionNameByActionSpecifier(psiElement);
-        if (YAMLUtils.isKey(psiElement) && actionName != null)
-            return new PsiElement[]{new ActionNavigatoFakeElement(psiElement, editor, actionName)};
+        if (result.getType() != null)
+            return new PsiElement[]{new NavigatonFakeElement(psiElement, editor, result.getType())};
+        else if (result.getAction() != null)
+            return new PsiElement[]{new NavigatonFakeElement(psiElement, editor, result.getAction())};
         else
             return null;
     }
 
-    private static class ActionNavigatoFakeElement extends FakePsiElement implements SyntheticElement
+    private static class NavigatonFakeElement extends FakePsiElement implements SyntheticElement
     {
         private static final ItemPresentation PRESENTATION = new ItemPresentation()
         {
@@ -54,13 +72,23 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
 
         private final PsiElement element;
         private final Editor editor;
-        private final String actionName;
+        private final LedgerAction action;
+        private final LedgerType type;
 
-        public ActionNavigatoFakeElement(PsiElement element, Editor editor, String actionName)
+        public NavigatonFakeElement(PsiElement element, Editor editor, LedgerAction action)
         {
             this.element = element;
             this.editor = editor;
-            this.actionName = actionName;
+            this.action = action;
+            this.type = null;
+        }
+
+        public NavigatonFakeElement(PsiElement element, Editor editor, LedgerType type)
+        {
+            this.element = element;
+            this.editor = editor;
+            this.action = null;
+            this.type = type;
         }
 
         @Override
@@ -112,7 +140,10 @@ public class ScenarioFileGotoDeclarationHandler implements GotoDeclarationHandle
 
         private void actualNavigate(PsiElement element, Editor editor)
         {
-            ReferenceNavigator.navigateToActionReference(element.getProject(), editor, this.actionName);
+            if (this.action != null)
+                ReferenceNavigator.navigateToActionReference(element.getProject(), editor, this.action);
+            else if (this.type != null)
+                ReferenceNavigator.navigateToTypeReference(element.getProject(), editor, this.type);
         }
     }
 }

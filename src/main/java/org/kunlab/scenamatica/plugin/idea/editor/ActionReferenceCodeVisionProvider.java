@@ -131,8 +131,8 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
                     element.getTextRange(),
                     new ActionReferenceCodeVisionEntry(
                             element,
-                            action.getName(),
-                            action.getDescription(usage)
+                            action,
+                            usage
                     )
             ));
         }
@@ -150,20 +150,20 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
     private static class ActionReferenceCodeVisionEntry extends TextCodeVisionEntry implements CodeVisionPredefinedActionEntry
     {
         private final PsiElement element;
-        private final String actionName;
+        private final LedgerAction action;
 
-        public ActionReferenceCodeVisionEntry(@NotNull PsiElement element, @NotNull String actionName, @Nullable String actionDesc)
+        public ActionReferenceCodeVisionEntry(@NotNull PsiElement element, @NotNull LedgerAction action, @Nullable ScenarioType usage)
         {
             super(
-                    getHint(actionName, actionDesc),
+                    getHint(action.getId(), action.getDescription(usage)),
                     ActionReferenceCodeVisionProvider.class.getName(),
                     null,
-                    "('・ω・')",
+                    getHint(action.getId(), action.getDescription(usage)),
                     ScenamaticerBundle.of("editor.codeVision.actionReference.tooltip"),
                     Collections.emptyList()
             );
             this.element = element;
-            this.actionName = actionName;
+            this.action = action;
         }
 
         @Override
@@ -172,7 +172,7 @@ public class ActionReferenceCodeVisionProvider implements DaemonBoundCodeVisionP
             Project proj = editor.getProject();
             if (proj == null)
                 return;
-            ReferenceNavigator.navigate(proj, editor, ReferenceNavigator.NavigateType.ACTION, this.actionName);
+            ReferenceNavigator.navigateToActionReference(proj, editor, this.action);
         }
 
         private static String getHint(@NotNull String actionName, @Nullable String actionDesc)

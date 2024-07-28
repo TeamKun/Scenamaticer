@@ -141,6 +141,14 @@ public class LedgerScenarioResolver
                 .toList();
     }
 
+    public ResolveResult getResultForElement(@NotNull PsiElement element)
+    {
+        return this.results.stream()
+                .filter(result -> result.getElement() == element)
+                .findFirst()
+                .orElse(null);
+    }
+
     private boolean checkScenarioFileMinecraftVersion(@NotNull YAMLMapping root)
     {
         YAMLKeyValue mcVersionPolicy = root.getKeyValueByKey("minecraft");
@@ -381,12 +389,12 @@ public class LedgerScenarioResolver
             if (!input.isAvailableFor(usage) && hasKey)
             {
                 this.registerInvalidResult(
-                        findWarnTargetBy(keyValue),
+                        keyValue,
                         null,
                         action,
                         ResolveResult.InvalidCause.ACTION_INPUT_UNAVAILABLE_USAGE,
                         ScenamaticerBundle.of(
-                                "editor.inspections.redundantArgumentUsage.title",
+                                "editor.inspections.unsupportedArgumentUsage.title",
                                 key,
                                 action.getId(),
                                 usage.getDisplayName()
@@ -403,12 +411,12 @@ public class LedgerScenarioResolver
             for (YAMLKeyValue keyValue : keyValues)
             {
                 this.registerInvalidResult(
-                        findWarnTargetBy(keyValue),
+                        keyValue,
                         null,
                         action,
-                        ResolveResult.InvalidCause.ACTION_INPUT_UNAVAILABLE_USAGE,
+                        ResolveResult.InvalidCause.ACTION_INPUT_REDUNDANT,
                         ScenamaticerBundle.of(
-                                "editor.inspections.redundantArgumentUsage.title",
+                                "editor.inspections.redundantArgument.title",
                                 keyValue.getKeyText(),
                                 action.getId(),
                                 usage.getDisplayName()
@@ -440,16 +448,11 @@ public class LedgerScenarioResolver
         for (YAMLKeyValue keyValue : keyValues)
         {
             String key = keyValue.getKeyText();
-            YAMLValue value = keyValue.getValue();
 
             if (view.getDetailedProperties().containsKey(key))
             {
                 DetailedValue property = view.getDetailedProperties().get(key);
-                boolean propertyResult = this.checkPropertyTypeMatch(property, value, lastAction, usage);
-                if (propertyResult)
-                    this.registerValidResult(keyValue, currentType, lastAction, usage);
-
-                result &= propertyResult;
+                result &= this.checkPropertyTypeMatch(property, keyValue, lastAction, usage);
             }
             else
             {
@@ -457,7 +460,7 @@ public class LedgerScenarioResolver
                 result = false;
                 if (!isActionProp)
                     this.registerInvalidResult(
-                            findWarnTargetBy(keyValue),
+                            keyValue,
                             currentType,
                             lastAction,
                             ResolveResult.InvalidCause.UNKNOWN_PROPERTY,
@@ -475,7 +478,7 @@ public class LedgerScenarioResolver
                                      @Nullable LedgerAction action,
                                      @Nullable ScenarioType usage)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), true, null, null, type, action, usage, false));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), true, null, null, type, action, usage, false));
     }
 
     private void registerInvalidResult(@NotNull PsiElement element,
@@ -484,7 +487,7 @@ public class LedgerScenarioResolver
                                        @NotNull ResolveResult.InvalidCause cause,
                                        @Nullable String message)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, null, false));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), false, cause, message, type, action, null, false));
     }
 
     private void registerInvalidResultActionStart(@NotNull PsiElement element,
@@ -494,7 +497,7 @@ public class LedgerScenarioResolver
                                                   @Nullable String message
     )
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, null, true));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), false, cause, message, type, action, null, true));
     }
 
     private void registerTypeMismatchResult(@NotNull PsiElement element,
@@ -520,7 +523,7 @@ public class LedgerScenarioResolver
                                                  @Nullable LedgerAction action,
                                                  @Nullable ScenarioType usage)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), true, null, null, type, action, usage, true));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), true, null, null, type, action, usage, true));
     }
 
     private void registerInvalidResult(@NotNull PsiElement element,
@@ -530,7 +533,7 @@ public class LedgerScenarioResolver
                                        @Nullable String message,
                                        @Nullable ScenarioType usage)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, usage, false));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), false, cause, message, type, action, usage, false));
     }
 
     private void registerInvalidResultActionStart(@NotNull PsiElement element,
@@ -540,10 +543,10 @@ public class LedgerScenarioResolver
                                                   @Nullable String message,
                                                   @Nullable ScenarioType usage)
     {
-        this.results.add(new ResolveResult(element, element.getTextRange(), false, cause, message, type, action, usage, true));
+        this.results.add(new ResolveResult(element, getKeyTextRangeIfElementIsKV(element), false, cause, message, type, action, usage, true));
     }
 
-    private boolean checkPropertyTypeMatch(DetailedValue property, YAMLValue actualValue, @Nullable LedgerAction lastAction, @Nullable ScenarioType usage)
+    private boolean checkPropertyTypeMatch(DetailedValue property, YAMLKeyValue keyValue, @Nullable LedgerAction lastAction, @Nullable ScenarioType usage)
     {
         boolean isValid = true;
 
@@ -555,6 +558,8 @@ public class LedgerScenarioResolver
             propertyType = PrimitiveType.fromString(property.getType().getReferenceBody());
         else
             throw new IllegalStateException("Property type not found");
+
+        YAMLValue actualValue = keyValue.getValue();
 
         if (actualValue == null)
         {
@@ -625,25 +630,28 @@ public class LedgerScenarioResolver
                 continue;
             }
 
-            /*
-            YAMLValue value = (YAMLValue) targetValue;
-            // プリミティブ型の場合は特別に対応
-            String typeID = propertyType.getId();
-            if (!checkPrimitiveTypeMatch(typeID, value, property))
+            if (targetValue instanceof YAMLValue value)
             {
-                isValid = false;
-                this.registerTypeMismatchResult(
-                        actualValue,
-                        propertyType,
-                        lastAction
-                );
-                continue;
-            }*/
+                // プリミティブ型の場合は特別に対応
+                String typeID = property.getType().getReferenceBody();
+                if (!checkPrimitiveTypeMatch(typeID, value, property))
+                {
+                    isValid = false;
+                    this.registerTypeMismatchResult(
+                            value,
+                            propertyType,
+                            lastAction,
+                            usage
+                    );
+                    continue;
+                }
+            }
 
             this.registerValidResult(targetValue, propertyType, lastAction, usage);
         }
 
-        return isValid;
+        this.registerValidResult(keyValue, propertyType, lastAction, usage);
+        return true;
     }
 
     private boolean checkPrimitiveTypeMatch(String primitiveName, YAMLValue actualValue, @Nullable DetailedValue detailed)
@@ -703,6 +711,13 @@ public class LedgerScenarioResolver
         };
     }
 
+    private static TextRange getKeyTextRangeIfElementIsKV(@NotNull PsiElement element)
+    {
+        if (element instanceof YAMLKeyValue kv && kv.getKey() != null)
+            return kv.getKey().getTextRange();
+        return element.getTextRange();
+    }
+
     private static ScenamaticaPolicy retrievePolicy(@NotNull ScenarioFile file)
     {
         return ScenamaticaPolicyRetriever.retrieveOrGuessPolicy(
@@ -710,13 +725,6 @@ public class LedgerScenarioResolver
                 file.getProject(),
                 file.getVirtualFile()
         );
-    }
-
-    @NotNull
-    private static PsiElement findWarnTargetBy(@NotNull YAMLKeyValue kv)
-    {
-        PsiElement key = kv.getKey();
-        return key == null ? kv: key;
     }
 
     @Nullable
@@ -789,8 +797,6 @@ public class LedgerScenarioResolver
             UNKNOWN_SCENARIO_TYPE,
 
             ACTION_USAGE_VIOLATION,  // UnsupportedActionUsageInspector
-            ACTION_UNKNOWN_INPUT,
-
             ACTION_INPUT_MISSING_REQUIRED,  // MissingArgumentsInspector
             ACTION_INPUT_UNAVAILABLE_USAGE,
             ACTION_INPUT_REDUNDANT

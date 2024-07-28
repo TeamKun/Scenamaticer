@@ -44,6 +44,7 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
                                                     @NotNull ProblemsHolder holder,
                                                     @NotNull LocalInspectionToolSession session,
                                                     @Nullable Function<? super List<LedgerScenarioResolver.ResolveResult>, ? extends LocalQuickFix> fixSupply,
+                                                    @Nullable Function<? super LedgerScenarioResolver.ResolveResult, ? extends PsiElement> targetElementTraverser,
                                                     @NotNull LedgerScenarioResolver.ResolveResult.InvalidCause... causesOf)
     {
         LedgerScenarioResolver resolveResults = LedgerScenarioResolver.create(
@@ -63,10 +64,11 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
         for (LedgerScenarioResolver.ResolveResult unsupportedAction : unsupportedActions)
         {
             PsiElement targetElement = unsupportedAction.getElement();
-            if (targetElement instanceof YAMLKeyValue kv)
+            if (targetElementTraverser != null)
+                targetElement = targetElementTraverser.apply(unsupportedAction);
+            else if (targetElement instanceof YAMLKeyValue kv && kv.getKey() != null)
                 targetElement = kv.getKey();
 
-            assert targetElement != null;
             if (fix != null)
                 holder.registerProblem(
                         targetElement,
@@ -79,5 +81,32 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
                         unsupportedAction.getInvalidMessage()
                 );
         }
+    }
+
+    protected void reportDetailedResolveErrorTypeOf(@NotNull ScenarioFile file,
+                                                    @NotNull ProblemsHolder holder,
+                                                    @NotNull LocalInspectionToolSession session,
+                                                    @Nullable Function<? super List<LedgerScenarioResolver.ResolveResult>, ? extends LocalQuickFix> fixSupply,
+                                                    @NotNull LedgerScenarioResolver.ResolveResult.InvalidCause... causesOf)
+    {
+        this.reportDetailedResolveErrorTypeOf(file, holder, session, fixSupply, null, causesOf);
+    }
+
+    protected PsiElement traverseKVValue(@NotNull LedgerScenarioResolver.ResolveResult mayKVHolder)
+    {
+        PsiElement mayKV = mayKVHolder.getElement();
+        if (!(mayKV instanceof YAMLKeyValue kv))
+            return null;
+
+        return kv.getValue() == null ? kv: kv.getValue();
+    }
+
+    protected PsiElement traverseKVKey(@NotNull LedgerScenarioResolver.ResolveResult mayKVHolder)
+    {
+        PsiElement mayKV = mayKVHolder.getElement();
+        if (!(mayKV instanceof YAMLKeyValue kv))
+            return null;
+
+        return kv.getKey();
     }
 }
