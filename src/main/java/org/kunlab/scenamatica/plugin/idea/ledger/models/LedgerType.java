@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -158,6 +160,12 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
         public Property()
         {
             this(null, null, null, false, false, null, null, null, null, null);
+        }
+
+        @Override
+        public boolean isRequiredOn(@NotNull ScenarioType type)
+        {
+            return this.required;
         }
     }
 }

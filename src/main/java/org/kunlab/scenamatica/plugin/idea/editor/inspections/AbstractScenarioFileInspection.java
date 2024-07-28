@@ -55,6 +55,9 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
         List<LedgerScenarioResolver.ResolveResult> unsupportedActions =
                 resolveResults.getErrors(causesOf);
 
+        if (unsupportedActions.isEmpty())
+            return;
+
         LocalQuickFix fix = fixSupply == null ? null: fixSupply.apply(unsupportedActions);
 
         for (LedgerScenarioResolver.ResolveResult unsupportedAction : unsupportedActions)

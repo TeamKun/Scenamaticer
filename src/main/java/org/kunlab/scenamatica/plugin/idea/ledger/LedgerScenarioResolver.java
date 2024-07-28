@@ -128,7 +128,7 @@ public class LedgerScenarioResolver
                 return false;
             };
 
-        return this.results.stream()
+        return new ArrayList<>(this.results).stream()
                 .filter(result -> !result.isValid())
                 .filter(causeFilter)
                 .toList();
@@ -312,7 +312,7 @@ public class LedgerScenarioResolver
                     ResolveResult.InvalidCause.ACTION_USAGE_VIOLATION,
                     ScenamaticerBundle.of(
                             "editor.inspections.unsupportedActionUsage.action.description.title",
-                            action.getName(),
+                            action.getId(),
                             actionUsage.getDisplayName()
                     ),
                     actionUsage
@@ -369,7 +369,7 @@ public class LedgerScenarioResolver
                         ScenamaticerBundle.of(
                                 "editor.inspections.missingArgument.title",
                                 key,
-                                action.getName(),
+                                action.getId(),
                                 usage.getDisplayName()
                         ),
                         usage
@@ -388,7 +388,7 @@ public class LedgerScenarioResolver
                         ScenamaticerBundle.of(
                                 "editor.inspections.redundantArgumentUsage.title",
                                 key,
-                                action.getName(),
+                                action.getId(),
                                 usage.getDisplayName()
                         ),
                         usage
@@ -410,7 +410,7 @@ public class LedgerScenarioResolver
                         ScenamaticerBundle.of(
                                 "editor.inspections.redundantArgumentUsage.title",
                                 keyValue.getKeyText(),
-                                action.getName(),
+                                action.getId(),
                                 usage.getDisplayName()
                         ),
                         usage
@@ -426,7 +426,7 @@ public class LedgerScenarioResolver
     private boolean resolveMapping(YAMLMapping current, @Nullable LedgerAction lastAction, @Nullable LedgerType lastType, @Nullable ScenarioType usage, boolean isActionProp)
     {
         LedgerType currentType = lastType == null ? this.ledgerManager.getPrimeType(): lastType;
-        if (currentType.getId().equals("ActionStructure") && !isActionProp)
+        if (currentType.getId().equals("ScenarioStructure") && !isActionProp)
             return this.processAction(current, lastAction, currentType);
 
         IDetailedPropertiesHolder view = isActionProp ? lastAction: currentType;
@@ -551,17 +551,28 @@ public class LedgerScenarioResolver
         LedgerType propertyType;
         if (optPropertyType.isPresent())
             propertyType = optPropertyType.get();
-        else if (optPropertyType.isEmpty() && PrimitiveType.isPrimitiveType(property.getType().getReferenceBody()))
+        else if (PrimitiveType.isPrimitiveType(property.getType().getReferenceBody()))
             propertyType = PrimitiveType.fromString(property.getType().getReferenceBody());
         else
             throw new IllegalStateException("Property type not found");
 
+        if (actualValue == null)
+        {
+            if (usage == null)
+                return true;
+            else
+                return property.isRequiredOn(usage);
+        }
 
         List<? extends YAMLPsiElement> targetValues = null;
         if (actualValue instanceof YAMLSequence sequence)
         {
             if (property.isArray())
-                targetValues = sequence.getItems();
+                targetValues = sequence.getItems().stream()
+                        .filter(yamlSeq -> yamlSeq.getChildren().length >= 1)
+                        .map(yamlSeq -> yamlSeq.getChildren()[0])
+                        .map(YAMLPsiElement.class::cast)
+                        .toList();
             else
             {
                 isValid = false;
@@ -613,8 +624,6 @@ public class LedgerScenarioResolver
                 }
                 continue;
             }
-
-            assert targetValue instanceof YAMLValue;
 
             /*
             YAMLValue value = (YAMLValue) targetValue;

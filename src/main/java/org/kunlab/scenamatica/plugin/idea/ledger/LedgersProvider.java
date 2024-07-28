@@ -18,8 +18,10 @@ public final class LedgersProvider
 {
     public static final Path LEDGER_PATH = PathManager.getSystemDir().resolve("scenamaticer-ledgers");
 
+    private final Object lock = new Object();
     private final List<Ledger> ledgers;
     private List<Ledger> unmodifiableLedgers;
+    private boolean isBusy;
 
     public LedgersProvider()
     {
@@ -41,14 +43,58 @@ public final class LedgersProvider
 
     public void buildCacheAll()
     {
+        if (this.isBusy)
+        {
+            try
+            {
+                synchronized (this.lock)
+                {
+                    this.lock.wait();
+                }
+            }
+            catch (InterruptedException e)
+            {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        this.isBusy = true;
         for (Ledger ledger : this.ledgers)
             ledger.buildCache();
+
+        this.isBusy = false;
+        synchronized (this.lock)
+        {
+            this.lock.notifyAll();
+        }
     }
 
     public void cleanCacheAll()
     {
+        if (this.isBusy)
+        {
+            try
+            {
+                synchronized (this.lock)
+                {
+                    this.lock.wait();
+                }
+            }
+            catch (InterruptedException e)
+            {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        this.isBusy = true;
         for (Ledger ledger : this.ledgers)
             ledger.cleanCache();
+
+        this.isBusy = false;
+        synchronized (this.lock)
+        {
+            this.lock.notifyAll();
+        }
     }
 
     public void setOfficialLedgerURL(String setOfficialLedgerURL)

@@ -194,6 +194,7 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
             this(null, null, null, null, null, null, null, false, null, null, null, false, null, null);
         }
 
+        @Override
         public boolean isRequiredOn(ScenarioType type)
         {
             return this.requiredOn != null && Arrays.stream(this.requiredOn).anyMatch(t -> t == type);

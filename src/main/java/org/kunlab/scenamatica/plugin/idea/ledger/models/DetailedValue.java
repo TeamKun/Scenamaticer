@@ -1,5 +1,8 @@
 package org.kunlab.scenamatica.plugin.idea.ledger.models;
 
+import org.jetbrains.annotations.NotNull;
+import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
+
 public interface DetailedValue
 {
     String getName();
@@ -15,4 +18,6 @@ public interface DetailedValue
     LedgerAdmonition[] getAdmonitions();
 
     boolean isArray();
+
+    boolean isRequiredOn(@NotNull ScenarioType type);
 }

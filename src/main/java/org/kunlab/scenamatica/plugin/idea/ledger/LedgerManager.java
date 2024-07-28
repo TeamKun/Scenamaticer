@@ -40,8 +40,16 @@ public class LedgerManager
     public LedgerType getPrimeType() // シナリオファイルの基底を取得
     {
         Ledger officialLedger = this.provider.getOfficialLedger();
-        return officialLedger.resolveReference(REF_PRIME_TYPE, LedgerType.class)
-                .orElseThrow(() -> new IllegalStateException("Prime type not found"));
+        Optional<LedgerType> primeType = officialLedger.resolveReference(REF_PRIME_TYPE, LedgerType.class);
+        if (primeType.isEmpty())
+        {
+            this.provider.buildCacheAll();
+            primeType = officialLedger.resolveReference(REF_PRIME_TYPE, LedgerType.class);
+            if (primeType.isEmpty())
+                throw new IllegalStateException("Prime type not found.");
+        }
+
+        return primeType.get();
     }
 
     @NotNull
