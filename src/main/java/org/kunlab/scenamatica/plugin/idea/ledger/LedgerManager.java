@@ -36,7 +36,7 @@ public class LedgerManager
         ProgressManager.getInstance().run(ledgerCacheBuildTask);
     }
 
-    @NotNull
+    @Nullable
     public LedgerType getPrimeType() // シナリオファイルの基底を取得
     {
         Ledger officialLedger = this.provider.getOfficialLedger();
@@ -46,7 +46,7 @@ public class LedgerManager
             this.provider.buildCacheAll();
             primeType = officialLedger.resolveReference(REF_PRIME_TYPE, LedgerType.class);
             if (primeType.isEmpty())
-                throw new IllegalStateException("Prime type not found.");
+                return null;
         }
 
         return primeType.get();

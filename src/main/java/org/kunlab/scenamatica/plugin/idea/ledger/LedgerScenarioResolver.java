@@ -20,7 +20,6 @@ import org.kunlab.scenamatica.plugin.idea.ledger.models.DetailedValue;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.IDetailedPropertiesHolder;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerAction;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerReference;
-import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerStringType;
 import org.kunlab.scenamatica.plugin.idea.ledger.models.LedgerType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
@@ -33,10 +32,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class LedgerScenarioResolver
 {
@@ -434,7 +435,9 @@ public class LedgerScenarioResolver
     private boolean resolveMapping(YAMLMapping current, @Nullable LedgerAction lastAction, @Nullable LedgerType lastType, @Nullable ScenarioType usage, boolean isActionProp)
     {
         LedgerType currentType = lastType == null ? this.ledgerManager.getPrimeType(): lastType;
-        if (currentType.getId().equals("ScenarioStructure") && !isActionProp)
+        if (currentType == null)
+            return false;
+        else if (currentType.getId().equals("ScenarioStructure") && !isActionProp)
             return this.processAction(current, lastAction, currentType);
 
         IDetailedPropertiesHolder view = isActionProp ? lastAction: currentType;
@@ -634,13 +637,26 @@ public class LedgerScenarioResolver
             {
                 // プリミティブ型の場合は特別に対応
                 String typeID = property.getType().getReferenceBody();
-                if (!checkPrimitiveTypeMatch(typeID, value, property))
+                String mayError;
+                if (typeID.startsWith("enums:")) // Enum の場合も特別に。
+                {
+                    Optional<LedgerType> enumType = this.ledgerManager.resolveReference(property.getType(), LedgerType.class);
+                    if (enumType.isEmpty())
+                        continue;
+                    mayError = checkErrorEnumType(value, enumType.get());
+                }
+                else
+                    mayError = checkErrorPrimitiveType(typeID, value, property);
+
+                if (mayError != null)
                 {
                     isValid = false;
-                    this.registerTypeMismatchResult(
+                    this.registerInvalidResult(
                             value,
                             propertyType,
                             lastAction,
+                            ResolveResult.InvalidCause.TYPE_MISMATCH,
+                            mayError,
                             usage
                     );
                     continue;
@@ -654,60 +670,135 @@ public class LedgerScenarioResolver
         return true;
     }
 
-    private boolean checkPrimitiveTypeMatch(String primitiveName, YAMLValue actualValue, @Nullable DetailedValue detailed)
+    private String checkErrorEnumType(YAMLValue actualValue, LedgerType currentType)
+    {
+        if (currentType.getEnums() == null)
+            return null;
+
+        YamlGenericValueAdapter adapter = new YamlGenericValueAdapter(actualValue);
+        if (!adapter.isStringLiteral())
+            return ScenamaticerBundle.of("editor.inspections.types.notATypeOf", currentType.getName());
+
+        String value = YAMLUtils.getUnquotedValueText(actualValue);
+        boolean isMatched = currentType.getEnums().keySet().stream()
+                .map(s -> s.toLowerCase(Locale.ROOT))
+                .anyMatch(s -> s.equals(value));
+
+        if (isMatched)
+            return null;
+
+        return ScenamaticerBundle.of(
+                "editor.inspections.types.notContains",
+                currentType.getEnums().keySet().stream()
+                        .map(e -> "\"" + e + "\"")
+                        .collect(Collectors.joining(", "))
+        );
+    }
+
+    private String checkErrorPrimitiveType(String primitiveName, YAMLValue actualValue, @Nullable DetailedValue detailed)
     {
         YamlGenericValueAdapter adapter = new YamlGenericValueAdapter(actualValue);
+        String notATypeOf = ScenamaticerBundle.of("editor.inspections.types.notATypeOf", primitiveName);
 
         return switch (primitiveName)
         {
             case "integer", "long", "float", "double", "short", "byte" ->
             {
                 if (!adapter.isNumberLiteral())
-                    yield false;
-                else if (detailed != null)
+                    yield notATypeOf;
+                else if (detailed == null)
+                    yield null;
+
+                Double value = parseNumberLiteral(adapter.getDelegate().getText());
+                if (value == null)
+                    yield notATypeOf;
+
+                Number min = detailed.getMin() == null ? getMinimumValueOf(primitiveName): detailed.getMin();
+                Number max = detailed.getMax() == null ? getMaximumValueOf(primitiveName): detailed.getMax();
+                if (min == null && max == null)
                 {
-                    Double value = parseNumberLiteral(adapter.getDelegate().getText());
-                    if (value == null)
-                        yield false;
-
-                    if (detailed.getMin() != null && value < detailed.getMin())
-                        yield false;
-
-                    yield detailed.getMax() == null || value <= detailed.getMax();
+                    yield null;
                 }
-                yield true;
+                else if (min == null)
+                {
+                    if (max.doubleValue() < value)
+                        yield ScenamaticerBundle.of("editor.inspections.types.ranged.max", max);
+                }
+                else if (max == null)
+                {
+                    if (min.doubleValue() > value)
+                        yield ScenamaticerBundle.of("editor.inspections.types.ranged.min", min);
+                }
+                else if (max.doubleValue() < value && min.doubleValue() > value)
+                    yield ScenamaticerBundle.of("editor.inspections.types.ranged", min, max);
+
+                yield null;
             }
-            case "boolean" -> adapter.isBooleanLiteral();
+            case "boolean" -> adapter.isBooleanLiteral() ? null: notATypeOf;
             case "string" ->
             {
                 if (!adapter.isStringLiteral())
-                    yield false;
+                    yield notATypeOf;
+                else if (detailed == null)
+                    yield null;
 
-                if (!(detailed instanceof LedgerStringType string))
-                    yield true;
-
-                if (string.getFormat() != null)
+                if (detailed.getFormat() != null)
                 {
                     String text = adapter.getDelegate().getText();
-                    Pattern pattern = string.getFormat().getPattern();
+                    Pattern pattern = detailed.getFormat().getPattern();
                     if (!pattern.matcher(text).matches())
-                        yield false;
+                        yield ScenamaticerBundle.of("editor.inspections.types.notMatched", pattern.toString());
                 }
 
-                if (!(string.getEnums() == null || string.getEnums().containsKey(adapter.getDelegate().getText())))
-                    yield false;
+                if (!(detailed.getEnums() == null || detailed.getEnums().containsKey(adapter.getDelegate().getText())))
+                    yield ScenamaticerBundle.of(
+                            "editor.inspections.types.notContains",
+                            detailed.getEnums().keySet().stream()
+                                    .map(e -> "\"" + e + "\"")
+                                    .collect(Collectors.joining(", "))
+                    );
 
-                if (string.getPattern() != null)
+
+                if (detailed.getPattern() != null)
                 {
                     String text = adapter.getDelegate().getText();
-                    Pattern pattern = string.getPattern();
+                    String patternStr = detailed.getPattern();
+                    Pattern pattern = Pattern.compile(patternStr);
                     if (!pattern.matcher(text).matches())
-                        yield false;
+                        yield ScenamaticerBundle.of("editor.inspections.types.notMatched", pattern.toString());
                 }
 
-                yield true;
+                yield null;
             }
-            default -> true; // プリミティブでない場合は無条件に合致
+            default -> null; // プリミティブでない場合は無条件に合致
+        };
+    }
+
+    private static Number getMaximumValueOf(String primitiveName)
+    {
+        return switch (primitiveName)
+        {
+            case "integer" -> Integer.MAX_VALUE;
+            case "long" -> Long.MAX_VALUE;
+            case "float" -> Float.MAX_VALUE;
+            case "double" -> Double.MAX_VALUE;
+            case "short" -> Short.MAX_VALUE;
+            case "byte" -> Byte.MAX_VALUE;
+            default -> null;
+        };
+    }
+
+    private static Number getMinimumValueOf(String primitiveName)
+    {
+        return switch (primitiveName)
+        {
+            case "integer" -> Integer.MIN_VALUE;
+            case "long" -> Long.MIN_VALUE;
+            case "float" -> Float.MIN_VALUE;
+            case "double" -> Double.MIN_VALUE;
+            case "short" -> Short.MIN_VALUE;
+            case "byte" -> Byte.MIN_VALUE;
+            default -> null;
         };
     }
 
@@ -817,7 +908,7 @@ public class LedgerScenarioResolver
 
         private PrimitiveType(String id, String name)
         {
-            super(LedgerReference.of("$ref:type:" + id), id, name, null, null, null, null, null, null);
+            super(LedgerReference.of("$ref:type:" + id), id, name, null, null, null, null, null, null, null);
         }
 
         public static boolean isPrimitiveType(String mayPrimitiveName)

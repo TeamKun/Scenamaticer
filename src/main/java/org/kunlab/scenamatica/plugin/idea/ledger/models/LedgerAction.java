@@ -182,8 +182,15 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
         MinecraftVersion supportsSince;
         MinecraftVersion supportsUntil;
         boolean array;
+
+        String pattern;
+        StringFormat format;
+        @JsonDeserialize(using = EnumsDeserializer.class)
+        Map<String, String> enums;
+
         Double min;
         Double max;
+
         Object constValue;
         boolean requiresActor;
         LedgerReference inheritedFrom;
@@ -191,7 +198,7 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
 
         public ActionInput()
         {
-            this(null, null, null, null, null, null, null, false, null, null, null, false, null, null);
+            this(null, null, null, null, null, null, null, false, null, null, null, null, null, null, false, null, null);
         }
 
         @Override
@@ -203,26 +210,6 @@ public class LedgerAction extends AbstractLedgerContent implements IDetailedProp
         public boolean isAvailableFor(ScenarioType type)
         {
             return this.availableFor == null || Arrays.stream(this.availableFor).anyMatch(t -> t == type);
-        }
-
-        public static ActionInput inherit(@NotNull ActionInput parent, @NotNull LedgerReference ref)
-        {
-            return new ActionInput(
-                    parent.name,
-                    parent.type,
-                    parent.description,
-                    parent.requiredOn,
-                    parent.availableFor,
-                    parent.supportsSince,
-                    parent.supportsUntil,
-                    parent.array,
-                    parent.min,
-                    parent.max,
-                    parent.constValue,
-                    parent.requiresActor,
-                    ref,
-                    parent.admonitions
-            );
         }
     }
 

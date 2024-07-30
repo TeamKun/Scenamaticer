@@ -96,7 +96,7 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
     {
         PsiElement mayKV = mayKVHolder.getElement();
         if (!(mayKV instanceof YAMLKeyValue kv))
-            return null;
+            return mayKV;
 
         return kv.getValue() == null ? kv: kv.getValue();
     }
@@ -105,7 +105,7 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
     {
         PsiElement mayKV = mayKVHolder.getElement();
         if (!(mayKV instanceof YAMLKeyValue kv))
-            return null;
+            return mayKV;
 
         return kv.getKey();
     }

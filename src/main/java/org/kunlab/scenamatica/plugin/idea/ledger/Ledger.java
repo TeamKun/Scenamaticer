@@ -74,6 +74,7 @@ public class Ledger
     private final Map<LedgerReference, JsonNode> ledgerData;
 
     private URL ledgerURL;
+    private boolean warned;
 
     public Ledger(String ledgerName, Path basePath, URL ledgerURL)
     {
@@ -106,13 +107,17 @@ public class Ledger
         {
             if (downloadLedger(this.ledgerURL, this.zipPath) == null)
             {
-                LOG.error("Failed to build cache for ledger: " + this.ledgerName);
-                Notifications.Bus.notify(new Notification(
-                        "Scenamatica",
-                        "Failed to build cache for ledger: " + this.ledgerName,
-                        "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
-                        NotificationType.ERROR
-                ));
+                LOG.warn("Failed to build cache for ledger: " + this.ledgerName);
+                if (!this.warned)
+                {
+                    this.warned = true;
+                    Notifications.Bus.notify(new Notification(
+                            "Scenamatica",
+                            "Failed to build cache for ledger: " + this.ledgerName,
+                            "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
+                            NotificationType.ERROR
+                    ));
+                }
                 return false;
             }
 
@@ -120,13 +125,17 @@ public class Ledger
             // 中のファイルを解凍する
             if (unzipTo(this.zipPath, this.cachePath) == null)
             {
-                LOG.error("Failed to build cache for ledger: " + this.ledgerName);
-                Notifications.Bus.notify(new Notification(
-                        "Scenamatica",
-                        "Failed to build cache for ledger: " + this.ledgerName,
-                        "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
-                        NotificationType.ERROR
-                ));
+                LOG.warn("Failed to build cache for ledger: " + this.ledgerName);
+                if (!this.warned)
+                {
+                    this.warned = true;
+                    Notifications.Bus.notify(new Notification(
+                            "Scenamatica",
+                            "Failed to build cache for ledger: " + this.ledgerName,
+                            "Failed to download ledger " + this.ledgerName + "from remote, please check your network connection and restart the IDE.",
+                            NotificationType.ERROR
+                    ));
+                }
                 return false;
             }
         }
@@ -152,7 +161,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to delete cache files: " + this.cachePath, e);
+            LOG.warn("Failed to delete cache files: " + this.cachePath, e);
         }
     }
 
@@ -248,7 +257,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to get directories: " + path, e);
+            LOG.warn("Failed to get directories: " + path, e);
             return List.of();
         }
     }
@@ -279,7 +288,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to read ledger contents: " + otherDirectory, e);
+            LOG.warn("Failed to read ledger contents: " + otherDirectory, e);
         }
     }
 
@@ -302,13 +311,13 @@ public class Ledger
                         }
                         catch (Exception e)
                         {
-                            LOG.error("Failed to read ledger content, skipping...: " + file, e);
+                            LOG.warn("Failed to read ledger content, skipping...: " + file, e);
                         }
                     });
         }
         catch (IOException e)
         {
-            LOG.error("Failed to read ledger contents: " + directory, e);
+            LOG.warn("Failed to read ledger contents: " + directory, e);
         }
     }
 
@@ -324,7 +333,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to create directory: " + path, e);
+            LOG.warn("Failed to create directory: " + path, e);
             return false;
         }
     }
@@ -338,12 +347,12 @@ public class Ledger
             {
                 paths.map(Path::toFile).forEach(file -> {
                     if (!file.delete())
-                        LOG.error("Failed to delete file: " + file);
+                        LOG.warn("Failed to delete file: " + file);
                 });
             }
             catch (IOException e)
             {
-                LOG.error("Failed to delete existing directory: " + destDir, e);
+                LOG.warn("Failed to delete existing directory: " + destDir, e);
             }
         }
 
@@ -356,7 +365,7 @@ public class Ledger
                 Path entryPath = destDir.resolve(entry.getName()).normalize();
                 if (!entryPath.startsWith(destDir)) // パストラバーサル回避
                 {
-                    LOG.error("Entry is outside of the target dir: " + entry.getName());
+                    LOG.warn("Entry is outside of the target dir: " + entry.getName());
                     return null;
                 }
                 else if (entry.isDirectory())
@@ -377,7 +386,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to unzip file: " + zipFile, e);
+            LOG.warn("Failed to unzip file: " + zipFile, e);
             return null;
         }
 
@@ -397,7 +406,7 @@ public class Ledger
         }
         catch (IOException e)
         {
-            LOG.error("Failed to get last modified time of file: " + target, e);
+            LOG.warn("Failed to get last modified time of file: " + target, e);
             return false;
         }
 
@@ -422,7 +431,7 @@ public class Ledger
         {
             if (response.getStatusLine().getStatusCode() != 200)
             {
-                LOG.error("Failed to download ledger: " + ledgerURL + ", status code: " + response.getStatusLine().getStatusCode());
+                LOG.warn("Failed to download ledger: " + ledgerURL + ", status code: " + response.getStatusLine().getStatusCode());
                 return null;
             }
             else if (shouldUseCachedLedger(downloadDist, response))
@@ -434,7 +443,7 @@ public class Ledger
             HttpEntity entity = response.getEntity();
             if (entity == null)
             {
-                LOG.error("Failed to download ledger: " + ledgerURL);
+                LOG.warn("Failed to download ledger: " + ledgerURL);
                 return null;
             }
 
@@ -453,7 +462,7 @@ public class Ledger
         }
         catch (Exception e)
         {
-            LOG.error("Failed to download ledger: " + ledgerURL, e);
+            LOG.warn("Failed to download ledger: " + ledgerURL, e);
             return null;
         }
     }

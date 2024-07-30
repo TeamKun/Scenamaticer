@@ -96,7 +96,13 @@
                 language="ScenamaticaScenario"
                 level="ERROR"
                 displayName="Unknown action"/>
-
+        <localInspection
+                implementationClass="org.kunlab.scenamatica.plugin.idea.editor.inspections.ValueValidationInspector"
+                groupName="Scenamatica"
+                enabledByDefault="true"
+                language="ScenamaticaScenario"
+                level="ERROR"
+                displayName="Value validation"/>
         <fileType language="ScenamaticaPolicy" extensions="scenamatica" fieldName="INSTANCE" fileNames=".scenamatica"
                   name="Scenamatica Policy File"
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>

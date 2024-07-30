@@ -3,6 +3,8 @@ package org.kunlab.scenamatica.plugin.idea.ledger.models;
 import org.jetbrains.annotations.NotNull;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.ScenarioType;
 
+import java.util.Map;
+
 public interface DetailedValue
 {
     String getName();
@@ -14,6 +16,12 @@ public interface DetailedValue
     Double getMin();
 
     Double getMax();
+
+    StringFormat getFormat();
+
+    String getPattern();
+
+    Map<String, String> getEnums();
 
     LedgerAdmonition[] getAdmonitions();
 

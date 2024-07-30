@@ -29,6 +29,7 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
     protected static final String KEY_NAME = "name";
     protected static final String KEY_CLASS_NAME = "class";
     protected static final String KEY_MAPPING_OF = "mapping_of";
+    protected static final String KEY_ENUMS = "enums";
     protected static final String KEY_PROPERTIES = "properties";
     protected static final String KEY_ADMONITIONS = "admonitions";
 
@@ -38,15 +39,16 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
     private final LedgerReference category;
     private final String className;
     private final String mappingOf;
+    private final Map<String, String> enums;
     private final Map<String, Property> properties;
     private final LedgerAdmonition[] admonitions;
 
     public LedgerType()
     {
-        this(null, null, null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, null, null, null);
     }
 
-    public LedgerType(LedgerReference reference, String id, String name, String description, LedgerReference category, String className, String mappingOf, Map<String, Property> properties, LedgerAdmonition[] admonitions)
+    public LedgerType(LedgerReference reference, String id, String name, String description, LedgerReference category, String className, String mappingOf, Map<String, String> enums, Map<String, Property> properties, LedgerAdmonition[] admonitions)
     {
         super(reference);
         this.id = id;
@@ -55,6 +57,7 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
         this.category = category;
         this.className = className;
         this.mappingOf = mappingOf;
+        this.enums = enums;
         this.properties = properties;
         this.admonitions = admonitions;
     }
@@ -74,10 +77,6 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
             if (node == null)
                 return null;
 
-            String type = node.get(KEY_TYPE).asText();
-            if ("string".equals(type))
-                return ctxt.readTreeAsValue(node, LedgerStringType.class);
-
             return deserializeCompileType(node, ctxt);
         }
 
@@ -91,6 +90,7 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
                     getAs(node, KEY_CATEGORY, n -> ctxt.readTreeAsValue(n, LedgerReference.class)),
                     getAs(node, KEY_CLASS_NAME, JsonNode::asText),
                     getAs(node, KEY_MAPPING_OF, JsonNode::asText),
+                    getAs(node, KEY_ENUMS, EnumsDeserializer::deserialize),
                     getAs(node, KEY_PROPERTIES, n -> {
                         Map<String, Property> map = new LinkedHashMap<>();
                         n.fields().forEachRemaining(e -> {
@@ -151,15 +151,21 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
         String description;
         boolean required;
         boolean array;
+
         String pattern;
+        StringFormat format;
+        @JsonDeserialize(using = EnumsDeserializer.class)
+        Map<String, String> enums;
+
         Double min;
         Double max;
+
         Object defaultValue;
         LedgerAdmonition[] admonitions;
 
         public Property()
         {
-            this(null, null, null, false, false, null, null, null, null, null);
+            this(null, null, null, false, false, null, null, null, null, null, null, null);
         }
 
         @Override
@@ -167,5 +173,6 @@ public class LedgerType extends AbstractLedgerContent implements IDetailedProper
         {
             return this.required;
         }
+
     }
 }

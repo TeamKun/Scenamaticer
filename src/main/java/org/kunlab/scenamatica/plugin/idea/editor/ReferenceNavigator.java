@@ -116,7 +116,7 @@ public class ReferenceNavigator
 
         DOC("/docs/");
 
-        public static final String URL_BASE = "https://scenamatica.kunlab.org/";
+        public static final String URL_BASE = "https://scenamatica.kunlab.org";
 
         private final String url;
 
