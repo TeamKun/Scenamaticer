@@ -29,7 +29,7 @@ import java.util.Map;
 public class ScenarioFileIndexer extends FileBasedIndexExtension<String, ScenarioFileIndex>
 {
 
-    public static final ID<String, ScenarioFileIndex> NAME = ID.create("org.kunlab.scenamatica.plugin.idea.scenarioFile.index.ScenarioFileIndex");
+    public static final ID<String, ScenarioFileIndex> NAME = ID.create("org.kunlab.scenamatica.ScenarioFileIndex");
 
     @Override
     public @NotNull ID<String, ScenarioFileIndex> getName()

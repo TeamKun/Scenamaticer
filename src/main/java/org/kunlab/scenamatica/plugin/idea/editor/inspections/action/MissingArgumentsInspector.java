@@ -53,6 +53,7 @@ public class MissingArgumentsInspector extends AbstractScenarioFileInspection
                         ),
                         YamlJsonPsiWalker.INSTANCE.getSyntaxAdapter(holder.getProject())
                 ),
+                this::traverseKVKey,
                 LedgerScenarioResolver.ResolveResult.InvalidCause.ACTION_INPUT_MISSING_REQUIRED
         );
     }

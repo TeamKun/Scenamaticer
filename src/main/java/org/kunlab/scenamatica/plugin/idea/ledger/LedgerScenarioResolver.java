@@ -371,7 +371,7 @@ public class LedgerScenarioResolver
             if (input.isRequiredOn(usage) && !hasKey)
             {
                 this.registerInvalidResult(
-                        inputs,
+                        inputs.getParent(),
                         null,
                         action,
                         ResolveResult.InvalidCause.ACTION_INPUT_MISSING_REQUIRED,
@@ -467,7 +467,11 @@ public class LedgerScenarioResolver
                             currentType,
                             lastAction,
                             ResolveResult.InvalidCause.UNKNOWN_PROPERTY,
-                            "The property is not defined in the type.",
+                            ScenamaticerBundle.of(
+                                    "editor.inspections.unknownProperty.title",
+                                    keyValue.getKeyText(),
+                                    currentType.getName()
+                            ),
                             usage
                     );
             }
