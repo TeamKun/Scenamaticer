@@ -564,7 +564,7 @@ public class LedgerScenarioResolver
         else if (PrimitiveType.isPrimitiveType(property.getType().getReferenceBody()))
             propertyType = PrimitiveType.fromString(property.getType().getReferenceBody());
         else
-            throw new IllegalStateException("Property type not found");
+            return true;
 
         YAMLValue actualValue = keyValue.getValue();
 
@@ -720,9 +720,7 @@ public class LedgerScenarioResolver
                 Number min = detailed.getMin() == null ? getMinimumValueOf(primitiveName): detailed.getMin();
                 Number max = detailed.getMax() == null ? getMaximumValueOf(primitiveName): detailed.getMax();
                 if (min == null && max == null)
-                {
                     yield null;
-                }
                 else if (min == null)
                 {
                     if (max.doubleValue() < value)

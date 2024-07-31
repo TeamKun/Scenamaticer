@@ -108,9 +108,6 @@
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileType"/>
         <lang.parserDefinition language="ScenamaticaPolicy"
                                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyParserDefinition"/>
-        <fileTypeUsageSchemaDescriptor
-                schema=""
-                implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.lang.ScenamaticaPolicyFileTypeFactory"/>
         <fileType language="ScenamaticaScenario" fieldName="INSTANCE"
                   name="Scenamatica Scenario File"
                   implementationClass="org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFileType"/>

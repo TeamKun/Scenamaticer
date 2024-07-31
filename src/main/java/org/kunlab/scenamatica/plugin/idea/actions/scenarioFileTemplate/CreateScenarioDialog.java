@@ -23,6 +23,8 @@ import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageEnvironment;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.models.StageType;
 import org.kunlab.scenamatica.plugin.idea.scenarioFile.policy.MinecraftVersion;
 
+import java.util.Objects;
+
 public class CreateScenarioDialog extends DialogWrapper
 {
     private final Project project;
@@ -61,7 +63,7 @@ public class CreateScenarioDialog extends DialogWrapper
 
     protected CreateScenarioDialog(@Nullable Project project, InputValidator validator, PsiDirectory directory)
     {
-        super(project, true, IdeModalityType.PROJECT);
+        super(project, true, IdeModalityType.IDE);
         this.project = project;
         this.validator = validator;
         this.directory = directory;
@@ -291,7 +293,7 @@ public class CreateScenarioDialog extends DialogWrapper
 
     public String getScenamaticaVersion()
     {
-        return this.cbScenamaticaVersion.getSelectedItem().toString();
+        return Objects.requireNonNull(this.cbScenamaticaVersion.getSelectedItem()).toString();
     }
 
     public String getScenarioName()
