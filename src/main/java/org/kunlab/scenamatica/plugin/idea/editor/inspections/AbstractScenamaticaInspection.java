@@ -29,7 +29,7 @@ public abstract class AbstractScenamaticaInspection extends LocalInspectionTool
     @Override
     public @NonNls @NotNull String getID()
     {
-        return "Scenamatica:" + this.id;
+        return this.id;
     }
 
     @Override

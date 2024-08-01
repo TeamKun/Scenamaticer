@@ -9,7 +9,7 @@ import org.kunlab.scenamatica.plugin.idea.scenarioFile.lang.ScenarioFile;
 
 public class ValueValidationInspector extends AbstractScenarioFileInspection
 {
-    public static final String ID = "ValueValidationInspector";
+    public static final String ID = "ValueConstraint";
 
     public ValueValidationInspector()
     {

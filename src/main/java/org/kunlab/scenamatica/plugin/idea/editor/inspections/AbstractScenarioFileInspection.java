@@ -6,6 +6,7 @@ import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemsHolder;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
+import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
@@ -31,7 +32,7 @@ public abstract class AbstractScenarioFileInspection extends AbstractScenamatica
         return new PsiElementVisitor()
         {
             @Override
-            public void visitElement(@NotNull PsiElement element)
+            public void visitFile(@NotNull PsiFile element)
             {
                 if (element instanceof ScenarioFile file)
                     visitScenarioFile(file, holder, session);

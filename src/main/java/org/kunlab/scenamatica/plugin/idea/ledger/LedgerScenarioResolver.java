@@ -204,8 +204,10 @@ public class LedgerScenarioResolver
 
         if (!actualVersion.isInRange(sinceParsed, untilParsed))
         {
-            YAMLMapping parent = (YAMLMapping) versionPolicy.getParent();
-            this.registerInvalidVersionRange(parent, actualVersion, sinceParsed, untilParsed);
+            PsiElement element = versionPolicy.getParent();
+            if (!(element instanceof YAMLMapping mapping))
+                return true;
+            this.registerInvalidVersionRange(mapping, actualVersion, sinceParsed, untilParsed);
             return false;
         }
 
