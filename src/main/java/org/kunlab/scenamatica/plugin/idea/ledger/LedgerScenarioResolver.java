@@ -73,7 +73,11 @@ public class LedgerScenarioResolver
         if (docs.isEmpty())
             return null;
 
-        return (YAMLMapping) docs.get(0).getTopLevelValue();
+        YAMLPsiElement topLevelElement = docs.get(0).getTopLevelValue();
+        if (!(topLevelElement instanceof YAMLMapping mapping))
+            return null;
+
+        return mapping;
     }
 
     @Contract(" -> this")
