@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.ScenamaticerBundle;
 import org.kunlab.scenamatica.plugin.idea.ledger.LedgerManagerService;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Locale;
 
 public class ScenamaticerSettingsConfigurable implements Configurable
@@ -92,7 +92,7 @@ public class ScenamaticerSettingsConfigurable implements Configurable
     {
         try
         {
-            new URL(url);
+            new URI(url);
             return true;
         }
         catch (Exception e)

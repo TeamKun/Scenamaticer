@@ -691,9 +691,13 @@ public class LedgerScenarioResolver
 
         // LedgerType#getEnums() の Key は必ず Upper-Case であることが保証されている
         String value = YAMLUtils.getUnquotedValueText(actualValue).toUpperCase(Locale.ENGLISH);
-        boolean isMatched = currentType.getEnums().keySet().stream()
-                .anyMatch(value::equalsIgnoreCase);
-
+        boolean isMatched;
+        if (currentType.getName().equals("enums:EntityType"))
+            isMatched = EntityTypeValidator.isValidEntityType(value);
+        else
+            isMatched = currentType.getEnums().keySet().stream()
+                    .anyMatch(value::equalsIgnoreCase);
+        
         if (isMatched)
             return null;
 

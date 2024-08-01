@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import org.kunlab.scenamatica.plugin.idea.settings.ScenamaticerSettingsState;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -136,9 +138,9 @@ public final class LedgersProvider
     {
         try
         {
-            return new URL(urlString);
+            return new URI(urlString).toURL();
         }
-        catch (MalformedURLException e)
+        catch (URISyntaxException | MalformedURLException e)
         {
             NotificationGroupManager.getInstance()
                     .getNotificationGroup("Scenamatica")
