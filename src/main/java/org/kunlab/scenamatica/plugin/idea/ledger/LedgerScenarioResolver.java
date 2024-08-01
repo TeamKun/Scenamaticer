@@ -687,10 +687,10 @@ public class LedgerScenarioResolver
         if (!adapter.isStringLiteral())
             return ScenamaticerBundle.of("editor.inspections.types.notATypeOf", currentType.getName());
 
-        String value = YAMLUtils.getUnquotedValueText(actualValue);
+        // LedgerType#getEnums() の Key は必ず Upper-Case であることが保証されている
+        String value = YAMLUtils.getUnquotedValueText(actualValue).toUpperCase(Locale.ENGLISH);
         boolean isMatched = currentType.getEnums().keySet().stream()
-                .map(s -> s.toLowerCase(Locale.ROOT))
-                .anyMatch(s -> s.equals(value));
+                .anyMatch(value::equalsIgnoreCase);
 
         if (isMatched)
             return null;

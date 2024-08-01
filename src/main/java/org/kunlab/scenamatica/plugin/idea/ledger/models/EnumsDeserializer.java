@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 
 public class EnumsDeserializer extends JsonDeserializer<Map<String, String>>
@@ -27,7 +28,7 @@ public class EnumsDeserializer extends JsonDeserializer<Map<String, String>>
             // JSONが配列である場合
             for (JsonNode element : node)
                 if (element.isTextual())
-                    resultMap.put(element.textValue(), null);
+                    resultMap.put(element.textValue().toUpperCase(Locale.ENGLISH), null);
         }
         else if (node.isObject())
         {
@@ -36,7 +37,7 @@ public class EnumsDeserializer extends JsonDeserializer<Map<String, String>>
             while (fields.hasNext())
             {
                 Map.Entry<String, JsonNode> field = fields.next();
-                resultMap.put(field.getKey(), field.getValue().textValue());
+                resultMap.put(field.getKey().toUpperCase(Locale.ENGLISH), field.getValue().textValue());
             }
         }
 

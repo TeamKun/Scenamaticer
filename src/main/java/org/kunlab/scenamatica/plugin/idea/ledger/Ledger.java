@@ -303,6 +303,7 @@ public class Ledger
         {
             paths.filter(Files::isRegularFile)
                     .map(Path::toFile)
+                    .filter(file -> file.getName().endsWith(".json"))
                     .forEach(file -> {
                         try
                         {

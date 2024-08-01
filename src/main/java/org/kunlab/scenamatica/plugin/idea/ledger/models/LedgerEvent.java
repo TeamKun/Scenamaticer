@@ -1,5 +1,6 @@
 package org.kunlab.scenamatica.plugin.idea.ledger.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,6 +54,7 @@ public class LedgerEvent extends AbstractLedgerContent
 
         private final String id;
 
+        @JsonCreator
         public static Source fromId(String id)
         {
             for (Source source : values())
