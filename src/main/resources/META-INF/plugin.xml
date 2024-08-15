@@ -15,6 +15,7 @@
     <depends>com.intellij.modules.platform</depends>
     <!-- Parsing YAML files. -->
     <depends>org.jetbrains.plugins.yaml</depends>
+    <depends>com.intellij.modules.json</depends>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
