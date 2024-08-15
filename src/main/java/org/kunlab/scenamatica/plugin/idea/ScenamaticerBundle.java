@@ -19,11 +19,18 @@ import java.util.function.Supplier;
 public class ScenamaticerBundle extends AbstractBundle
 {
     private static final ScenamaticerBundle INSTANCE = new ScenamaticerBundle();
-    private final Locale locale;
+    private Locale locale;
 
     private ScenamaticerBundle()
     {
         super("messages.ScenamaticerBundle");
+    }
+
+    private void initIfNeeded()
+    {
+        if (this.locale != null)
+            return;
+
         this.locale = Locale.forLanguageTag(ScenamaticerSettingsState.getInstance().getLanguage());
     }
 
@@ -32,6 +39,7 @@ public class ScenamaticerBundle extends AbstractBundle
     {
         ResourceBundle base = super.findBundle(pathToBundle, loader, control);
 
+        this.initIfNeeded();
         if (!this.locale.equals(Locale.ENGLISH))
         {
             String localizedPath = pathToBundle + "_" + this.locale.getLanguage();
